@@ -13,7 +13,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
-builder.Services.AddRouting();
+builder.Services.AddRouting(options =>
+{
+    options.LowercaseUrls = true;
+});
 
 var app = builder.Build();
 
@@ -35,6 +38,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "yearly-dreams-group",
+    pattern: "{year:int:required:range(2025,2030)}/{controller=Home}/{action=Index}/{id?}"
+    );
 
 app.MapControllerRoute(
     name: "default",
