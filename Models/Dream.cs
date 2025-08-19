@@ -14,6 +14,7 @@ public class Dream
 
     public int? BudgetID { get; set; }
     public DreamBudget? Budget { get; set; }
+    public int CloudID { get; set; }
 
     public List<Fund> Funds { get; set; } = new List<Fund>();
     public List<Comment> Comments { get; set; } = new List<Comment>();

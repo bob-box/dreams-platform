@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,20 +6,21 @@ using Borderland.Dreams.Models;
 
 namespace Borderland.Dreams.Controllers
 {
-    public class DreamController : Controller
+    public class DreamController : BaseController
     {
-        private readonly ApplicationDbContext _context;
-
-        public DreamController(ApplicationDbContext context)
+        public DreamController(ApplicationDbContext context) : base(context)
         {
-            _context = context;
         }
 
         // GET: Dream
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Dream.Include(d => d.Budget);
-            return View(await applicationDbContext.ToListAsync());
+            var list = await _context.Dream
+                .Include(d => d.Budget)
+                .Where(x => x.CloudID == GetCloudID())
+                .ToListAsync();
+
+            return View(list);
         }
 
         // GET: Dream/Details/5
@@ -36,7 +33,9 @@ namespace Borderland.Dreams.Controllers
 
             var dream = await _context.Dream
                 .Include(d => d.Budget)
-                .FirstOrDefaultAsync(m => m.ID == id);
+                .Where(x => x.CloudID == GetCloudID())
+                .SingleOrDefaultAsync(m => m.ID == id);
+
             if (dream == null)
             {
                 return NotFound();
@@ -61,6 +60,7 @@ namespace Borderland.Dreams.Controllers
         {
             if (ModelState.IsValid)
             {
+                dream.CloudID = GetCloudID(); // Set the CloudID from the current context
                 _context.Add(dream);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -77,7 +77,10 @@ namespace Borderland.Dreams.Controllers
                 return NotFound();
             }
 
-            var dream = await _context.Dream.FindAsync(id);
+            var dream = await _context.Dream
+                .Where(x => x.CloudID == GetCloudID())
+                .SingleOrDefaultAsync(m => m.ID == id);
+
             if (dream == null)
             {
                 return NotFound();
@@ -103,6 +106,7 @@ namespace Borderland.Dreams.Controllers
                 try
                 {
                     _context.Update(dream);
+                    _context.Entry(dream).Property(x => x.CloudID).IsModified = false; // Prevent modification of CloudID
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -132,7 +136,8 @@ namespace Borderland.Dreams.Controllers
 
             var dream = await _context.Dream
                 .Include(d => d.Budget)
-                .FirstOrDefaultAsync(m => m.ID == id);
+                .Where(x => x.CloudID == GetCloudID())
+                .SingleOrDefaultAsync(m => m.ID == id);
             if (dream == null)
             {
                 return NotFound();
@@ -146,7 +151,10 @@ namespace Borderland.Dreams.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var dream = await _context.Dream.FindAsync(id);
+            var dream = await _context.Dream
+                .Where(x => x.CloudID == GetCloudID())
+                .SingleOrDefaultAsync(m => m.ID == id);
+
             if (dream != null)
             {
                 _context.Dream.Remove(dream);
@@ -158,7 +166,7 @@ namespace Borderland.Dreams.Controllers
 
         private bool DreamExists(int id)
         {
-            return _context.Dream.Any(e => e.ID == id);
+            return _context.Dream.Any(e => e.ID == id && e.CloudID == GetCloudID());
         }
     }
 }

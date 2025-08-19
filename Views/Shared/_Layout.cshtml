@@ -1,5 +1,5 @@
 ﻿@{
-    var cloudName = Html.GetCloudName();
+    var year = Html.GetYear();
 }
 
 <!DOCTYPE html>
@@ -23,7 +23,7 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        @if (string.IsNullOrWhiteSpace(cloudName))
+                        @if (string.IsNullOrWhiteSpace(year))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Cloud" asp-action="Index" asp-route-year="">Clouds</a>
@@ -35,7 +35,7 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Cloud" asp-action="Index" asp-route-year="">« Back to Clouds</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Dream" asp-action="Index" asp-route-year="@cloudName">Dreams</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Dream" asp-action="Index" asp-route-year="@year">Dreams</a>
                             </li>
                         }
                     </ul>
