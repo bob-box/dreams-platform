@@ -52,6 +52,11 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
         /// </summary>
         public class InputModel
         {
+            [Required]
+            [DataType(DataType.Text)]
+            [Display(Name = "Full name")]
+            public string FullName { get; set; }
+
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -70,6 +75,7 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
 
             Input = new InputModel
             {
+                FullName = user.FullName,
                 PhoneNumber = phoneNumber
             };
         }
@@ -111,6 +117,12 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
                 }
             }
 
+            if (Input.FullName != user.FullName)
+            {
+                user.FullName = Input.FullName;
+            }
+
+            await _userManager.UpdateAsync(user);
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated";
             return RedirectToPage();
