@@ -102,7 +102,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int?>("BudgetID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("CloudID")
+                    b.Property<int>("CloudID")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedDate")
@@ -477,7 +477,7 @@ namespace Borderland.Dreams.Data.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -526,7 +526,9 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasOne("Borderland.Dreams.Models.Cloud", null)
                         .WithMany("Dreams")
-                        .HasForeignKey("CloudID");
+                        .HasForeignKey("CloudID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Budget");
                 });
