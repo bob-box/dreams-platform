@@ -5,7 +5,8 @@ namespace Borderland.Dreams.Models;
 
 public class User : IdentityUser
 {
-    public string Name { get; set; } = string.Empty;
+    [PersonalData]
+    public string FullName { get; set; } = string.Empty;
     public int? WalletID { get; set; }
     public Wallet? Wallet { get; set; }
     public UserType UserType { get; set; } = UserType.User;
