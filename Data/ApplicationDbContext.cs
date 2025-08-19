@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Borderland.Dreams.Models;
 
 namespace Borderland.Dreams.Data;
 
@@ -9,4 +10,8 @@ public class ApplicationDbContext : IdentityDbContext
         : base(options)
     {
     }
+
+public DbSet<Borderland.Dreams.Models.Cloud> Cloud { get; set; } = default!;
+
+public DbSet<Borderland.Dreams.Models.Dream> Dream { get; set; } = default!;
 }
