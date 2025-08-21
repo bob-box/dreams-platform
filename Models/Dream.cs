@@ -12,8 +12,8 @@ public class Dream
     public DateTime CreatedDate { get; set; } = DateTime.Now;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
 
-    public int? BudgetID { get; set; }
-    public DreamBudget? Budget { get; set; }
+    [Display(Name = "Budget")]
+    public List<BudgetItem> BudgetItems { get; set; } = new List<BudgetItem>();
     public int CloudID { get; set; }
 
     public List<Fund> Funds { get; set; } = new List<Fund>();

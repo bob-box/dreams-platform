@@ -25,7 +25,7 @@
                 @Html.DisplayNameFor(model => model.Status)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Budget)
+                @Html.DisplayNameFor(model => model.BudgetItems)
             </th>
             <th></th>
         </tr>
@@ -46,7 +46,8 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Budget.ID)
+                @{var budget = item.BudgetItems.Sum(b => b.MinAmount).ToString("C");}
+                @Html.DisplayFor(modelItem => budget)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |

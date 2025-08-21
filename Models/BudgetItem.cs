@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Borderland.Dreams.Enums;
 
 namespace Borderland.Dreams.Models;
 
@@ -7,6 +8,9 @@ public class BudgetItem
 {
     public int ID { get; set; }
     public string Name { get; set; } = string.Empty;
+    public BudgetType Type { get; set; }
+    public int DreamID { get; set; }
+
     [DataType(DataType.Date)]
     public DateTime CreatedDate { get; set; }
 

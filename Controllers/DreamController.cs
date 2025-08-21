@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Enums;
-using Borderland.Dreams.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
 
@@ -20,7 +18,7 @@ public class DreamController(ApplicationDbContext context,
     public async Task<IActionResult> Index()
     {
         var listQuery = _context.Dream
-            .Include(d => d.Budget)
+            .Include(d => d.BudgetItems)
             .Include(d => d.Dreamers)
             .Where(x => x.CloudID == GetCloudID());
 
@@ -51,10 +49,9 @@ public class DreamController(ApplicationDbContext context,
         var isAuthorizedToViewAllDreams = User.IsInRole(Constants.ManagersRole) ||
                        User.IsInRole(Constants.AdministratorsRole);
 
-        
         var dreamQuery = _context.Dream
-            .Include(d => d.Budget)
-            .Include(d => d.Dreamers)
+            .Include(d => d.BudgetItems)
+            .Include(d => d.Dreamers).ThenInclude(d => d.User)
             .Where(x => x.CloudID == GetCloudID());
 
         // Admins is allowed to see all dreams
@@ -72,6 +69,7 @@ public class DreamController(ApplicationDbContext context,
     }
 
     // GET: Dream/Create
+    [Authorize]
     public IActionResult Create()
     {
         return View();
@@ -111,8 +109,16 @@ public class DreamController(ApplicationDbContext context,
         }
 
         var dream = await _context.Dream
+            .Include(x => x.Dreamers)
             .Where(x => x.CloudID == GetCloudID())
             .SingleOrDefaultAsync(m => m.ID == id);
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(
+                                                    User, dream, DreamOperations.Update);
+        if (!authorizationResult.Succeeded)
+        {
+            return Forbid();
+        }
 
         return dream == null ? NotFound() : View(dream);
     }
@@ -132,8 +138,7 @@ public class DreamController(ApplicationDbContext context,
         if (ModelState.IsValid)
         {
             var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                        User, dream,
-                                                        DreamOperations.Update);
+                                                        User, dream, DreamOperations.Update);
             if (!authorizationResult.Succeeded)
             {
                 return Forbid();
@@ -170,9 +175,17 @@ public class DreamController(ApplicationDbContext context,
         }
 
         var dream = await _context.Dream
-            .Include(d => d.Budget)
+            .Include(d => d.BudgetItems)
+            .Include(d => d.Dreamers)
             .Where(x => x.CloudID == GetCloudID())
             .SingleOrDefaultAsync(m => m.ID == id);
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(
+                                                        User, dream, DreamOperations.Delete);
+        if (!authorizationResult.Succeeded)
+        {
+            return Forbid();
+        }
 
         return dream == null ? NotFound() : View(dream);
     }
@@ -190,8 +203,7 @@ public class DreamController(ApplicationDbContext context,
         if (dream != null)
         {
             var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                        User, dream,
-                                                        DreamOperations.Delete);
+                                                        User, dream, DreamOperations.Delete);
             if (!authorizationResult.Succeeded)
             {
                 return Forbid();
