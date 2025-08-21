@@ -28,7 +28,7 @@ namespace Borderland.Dreams.Authorization
                 return Task.CompletedTask;
             }
 
-            var mainDreamerUserId = dream.Dreamers.Single(x => x.IsMainDreamer).User.Id;
+            var mainDreamerUserId = dream.Dreamers.Single(x => x.IsMainDreamer).UserID;
             if (mainDreamerUserId == _userManager.GetUserId(context.User))
             {
                 context.Succeed(requirement);

@@ -21,20 +21,20 @@ public class DreamController(ApplicationDbContext context,
     {
         var listQuery = _context.Dream
             .Include(d => d.Budget)
-            .Include(d => d.Dreamers).ThenInclude(x => x.User)
+            .Include(d => d.Dreamers)
             .Where(x => x.CloudID == GetCloudID());
 
         var isAuthorizedToViewAllDreams = User.IsInRole(Constants.ManagersRole) ||
                        User.IsInRole(Constants.AdministratorsRole);
 
-        // Hide dreams in draft status
+        // Hide dreams in Draft or Hidden status
         // Admins is allowed to see all dreams, no matter what status they have.
         // Main dreamer and co-dreamers are also allowed to see their dreams :)
         if (!isAuthorizedToViewAllDreams)
         {
             var currentUserId = _userManager.GetUserId(User);
             listQuery = listQuery.Where(x => x.Status >= DreamStatus.Active
-                                || x.Dreamers.Any(d => d.User.Id == currentUserId));
+                                || x.Dreamers.Any(d => d.UserID == currentUserId));
         }
 
         return View(await listQuery.ToListAsync());
@@ -54,7 +54,7 @@ public class DreamController(ApplicationDbContext context,
         
         var dreamQuery = _context.Dream
             .Include(d => d.Budget)
-            .Include(d => d.Dreamers).ThenInclude(d => d.User)
+            .Include(d => d.Dreamers)
             .Where(x => x.CloudID == GetCloudID());
 
         // Admins is allowed to see all dreams
@@ -63,22 +63,17 @@ public class DreamController(ApplicationDbContext context,
         {
             var currentUserId = _userManager.GetUserId(User);
             dreamQuery = dreamQuery.Where(x => x.Status >= DreamStatus.Active
-                                || x.Dreamers.Any(d => d.User.Id == currentUserId));
+                                || x.Dreamers.Any(d => d.UserID == currentUserId));
         }
 
         var dream = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
-        if (dream == null)
-        {
-            return NotFound();
-        }
 
-        return View(dream);
+        return dream == null ? NotFound() : View(dream);
     }
 
     // GET: Dream/Create
     public IActionResult Create()
     {
-        ViewData["BudgetID"] = new SelectList(_context.Set<DreamBudget>(), "ID", "ID");
         return View();
     }
 
@@ -104,7 +99,6 @@ public class DreamController(ApplicationDbContext context,
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-        ViewData["BudgetID"] = new SelectList(_context.Set<DreamBudget>(), "ID", "ID", dream.BudgetID);
         return View(dream);
     }
 
@@ -120,12 +114,7 @@ public class DreamController(ApplicationDbContext context,
             .Where(x => x.CloudID == GetCloudID())
             .SingleOrDefaultAsync(m => m.ID == id);
 
-        if (dream == null)
-        {
-            return NotFound();
-        }
-        ViewData["BudgetID"] = new SelectList(_context.Set<DreamBudget>(), "ID", "ID", dream.BudgetID);
-        return View(dream);
+        return dream == null ? NotFound() : View(dream);
     }
 
     // POST: Dream/Edit/5
@@ -142,6 +131,14 @@ public class DreamController(ApplicationDbContext context,
 
         if (ModelState.IsValid)
         {
+            var authorizationResult = await _authorizationService.AuthorizeAsync(
+                                                        User, dream,
+                                                        DreamOperations.Update);
+            if (!authorizationResult.Succeeded)
+            {
+                return Forbid();
+            }
+
             try
             {
                 _context.Update(dream);
@@ -161,7 +158,6 @@ public class DreamController(ApplicationDbContext context,
             }
             return RedirectToAction(nameof(Index));
         }
-        ViewData["BudgetID"] = new SelectList(_context.Set<DreamBudget>(), "ID", "ID", dream.BudgetID);
         return View(dream);
     }
 
@@ -177,12 +173,8 @@ public class DreamController(ApplicationDbContext context,
             .Include(d => d.Budget)
             .Where(x => x.CloudID == GetCloudID())
             .SingleOrDefaultAsync(m => m.ID == id);
-        if (dream == null)
-        {
-            return NotFound();
-        }
 
-        return View(dream);
+        return dream == null ? NotFound() : View(dream);
     }
 
     // POST: Dream/Delete/5

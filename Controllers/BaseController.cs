@@ -31,7 +31,7 @@ public class BaseController(ApplicationDbContext context,
         }
 
         // Lookup in db and cache it
-        cloudID = _context.Cloud.FirstOrDefault(x => x.Name == cloudYear)?.ID ?? 0;
+        cloudID = _context.Cloud.SingleOrDefault(x => x.Name == cloudYear)?.ID ?? 0;
         _cloudCache[cloudYear] = cloudID;
         return cloudID;
     }

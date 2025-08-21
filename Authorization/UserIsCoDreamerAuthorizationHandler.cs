@@ -27,7 +27,7 @@ namespace Borderland.Dreams.Authorization
             }
 
             var coDreamerUserIds = dream.Dreamers.Where(x => !x.IsMainDreamer)
-                                                 .Select(x => x.User.Id);
+                                                 .Select(x => x.UserID);
 
             if (coDreamerUserIds.Contains(_userManager.GetUserId(context.User)))
             {

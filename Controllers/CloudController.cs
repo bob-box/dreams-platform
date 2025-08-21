@@ -32,14 +32,9 @@ public class CloudController(ApplicationDbContext context,
             return NotFound();
         }
 
-        var cloud = await _context.Cloud
-            .FirstOrDefaultAsync(m => m.ID == id);
-        if (cloud == null)
-        {
-            return NotFound();
-        }
+        var cloud = await _context.Cloud.SingleOrDefaultAsync(m => m.ID == id);
 
-        return View(cloud);
+        return cloud == null ? NotFound() : View(cloud);
     }
 
     // GET: Cloud/Create
@@ -73,11 +68,8 @@ public class CloudController(ApplicationDbContext context,
         }
 
         var cloud = await _context.Cloud.FindAsync(id);
-        if (cloud == null)
-        {
-            return NotFound();
-        }
-        return View(cloud);
+        
+        return cloud == null ? NotFound() : View(cloud);
     }
 
     // POST: Cloud/Edit/5
@@ -123,14 +115,9 @@ public class CloudController(ApplicationDbContext context,
             return NotFound();
         }
 
-        var cloud = await _context.Cloud
-            .FirstOrDefaultAsync(m => m.ID == id);
-        if (cloud == null)
-        {
-            return NotFound();
-        }
+        var cloud = await _context.Cloud.SingleOrDefaultAsync(m => m.ID == id);
 
-        return View(cloud);
+        return cloud == null ? NotFound() : View(cloud);
     }
 
     // POST: Cloud/Delete/5
