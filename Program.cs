@@ -8,10 +8,6 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var cultureInfo = new CultureInfo("sv-SE");
-CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -49,7 +45,12 @@ builder.Services.AddRouting(options =>
 });
 
 var app = builder.Build();
-
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("sv-SE"),
+    // Formatting numbers, dates, etc.
+    SupportedCultures = [new("sv-SE")],
+});
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
