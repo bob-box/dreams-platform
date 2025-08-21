@@ -1,17 +1,20 @@
 using Borderland.Dreams.Data;
+using Borderland.Dreams.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Borderland.Dreams.Controllers;
 
-public class BaseController : Controller
+public class BaseController(ApplicationDbContext context,
+    IAuthorizationService authorizationService,
+    UserManager<User> userManager) : Controller
 {
-    protected readonly ApplicationDbContext _context;
-    private Dictionary<string, int> _cloudCache = new Dictionary<string, int>();
+    protected readonly ApplicationDbContext _context = context;
+    protected IAuthorizationService _authorizationService { get; } = authorizationService;
+    protected UserManager<User> _userManager { get; } = userManager;
 
-    public BaseController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private Dictionary<string, int> _cloudCache = new Dictionary<string, int>();
 
     public int GetCloudID()
     {

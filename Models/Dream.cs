@@ -9,8 +9,8 @@ public class Dream
     public required string Name { get; set; }
     public required string Description { get; set; }
     [DataType(DataType.Date)]
-    public DateTime CreatedDate { get; set; }
-    public DreamStatus Status { get; set; }
+    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DreamStatus Status { get; set; } = DreamStatus.Draft;
 
     public int? BudgetID { get; set; }
     public DreamBudget? Budget { get; set; }

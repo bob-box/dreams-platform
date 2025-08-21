@@ -40,6 +40,17 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Budget.ID)
         </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Dreamers)
+        </dt>
+        <dd class = "col-sm-10">
+            @foreach (var dreamer in Model.Dreamers)
+            {
+                <span class="badge bg-primary">
+                    @Html.DisplayFor(model => dreamer.User.UserName) - @(dreamer.IsMainDreamer ? "Main Dreamer" : "Co-Dreamer")
+                </span>
+            }
+        </dd>
     </dl>
 </div>
 <div>
