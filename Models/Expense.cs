@@ -14,4 +14,5 @@ public class Expense
     public decimal Amount { get; set; }
     [DataType(DataType.Date)]
     public DateTime CreatedDate { get; set; }
+    public int DreamID { get; set; }
 }
