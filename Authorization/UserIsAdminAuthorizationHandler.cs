@@ -15,6 +15,9 @@ namespace Borderland.Dreams.Authorization
         {
             if (context.User == null)
             {
+                // Returning Task.CompletedTask without a prior call to context.Success or context.Fail
+                // is not a success or failure, it allows other authorization handlers to run.
+                // If you need to explicitly fail, call context.Fail.
                 return Task.CompletedTask;
             }
 

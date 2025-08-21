@@ -16,10 +16,13 @@ namespace Borderland.Dreams.Authorization
         {
             if (context.User == null || dream == null)
             {
+                // Returning Task.CompletedTask without a prior call to context.Success or context.Fail
+                // is not a success or failure, it allows other authorization handlers to run.
+                // If you need to explicitly fail, call context.Fail.
                 return Task.CompletedTask;
             }
 
-            // If not asking for CRUD permission, return.
+            // If not asking for the allowed operations, return.
             if (requirement.Name != Constants.CreateOperationName &&
                 requirement.Name != Constants.ReadOperationName &&
                 requirement.Name != Constants.UpdateOperationName &&
@@ -28,6 +31,8 @@ namespace Borderland.Dreams.Authorization
                 return Task.CompletedTask;
             }
 
+            // If you get "sequence contains no elements" error here, then you forgot to .Include(d => d.Dreamers) in the initial query
+            // Because there cannot be a dream without a main dreamer.
             var mainDreamerUserId = dream.Dreamers.Single(x => x.IsMainDreamer).UserID;
             if (mainDreamerUserId == _userManager.GetUserId(context.User))
             {

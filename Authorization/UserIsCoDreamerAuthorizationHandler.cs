@@ -16,10 +16,13 @@ namespace Borderland.Dreams.Authorization
         {
             if (context.User == null || dream == null)
             {
+                // Returning Task.CompletedTask without a prior call to context.Success or context.Fail
+                // is not a success or failure, it allows other authorization handlers to run.
+                // If you need to explicitly fail, call context.Fail.
                 return Task.CompletedTask;
             }
 
-            // If not asking for read or update permission, return.
+            // If not asking for the allowed operations, return.
             if (requirement.Name != Constants.ReadOperationName &&
                 requirement.Name != Constants.UpdateOperationName)
             {

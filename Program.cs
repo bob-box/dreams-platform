@@ -4,8 +4,13 @@ using Borderland.Dreams.Data;
 using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var cultureInfo = new CultureInfo("sv-SE");
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

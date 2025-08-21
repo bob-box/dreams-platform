@@ -2,5 +2,9 @@
 @using Borderland.Dreams.Models
 @using Borderland.Dreams.Enums
 @using Borderland.Dreams.Extensions
+@using Borderland.Dreams.Authorization;
+@using Microsoft.AspNetCore.Authorization
+
+@inject IAuthorizationService _authorizationService
 
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

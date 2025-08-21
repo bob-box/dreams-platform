@@ -50,9 +50,15 @@
                 @Html.DisplayFor(modelItem => budget)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                @if (_authorizationService.AuthorizeAsync(User, item, DreamOperations.Update).Result.Succeeded)
+                {
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> <text>|</text>
+                }
+                <a asp-action="Details" asp-route-id="@item.ID">Details</a>
+                @if (_authorizationService.AuthorizeAsync(User, item, DreamOperations.Delete).Result.Succeeded)
+                {
+                   <text>|</text> <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                }
             </td>
         </tr>
 }
