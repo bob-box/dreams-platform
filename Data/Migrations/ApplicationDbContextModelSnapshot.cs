@@ -73,7 +73,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DreamID")
@@ -83,7 +83,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("UserID")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -91,7 +91,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("DreamID");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserID");
 
                     b.ToTable("Comment");
                 });
@@ -167,7 +167,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("DreamID")
+                    b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("ID");
@@ -192,7 +192,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("UserID")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -200,7 +200,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("DreamID");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserID");
 
                     b.ToTable("Fund");
                 });
@@ -312,13 +312,13 @@ namespace Borderland.Dreams.Data.Migrations
 
             modelBuilder.Entity("DreamTag", b =>
                 {
-                    b.Property<int>("DreamsID")
+                    b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("TagsID")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("DreamsID", "TagsID");
+                    b.HasKey("DreamID", "TagsID");
 
                     b.HasIndex("TagsID");
 
@@ -476,7 +476,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasOne("Borderland.Dreams.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -517,7 +517,9 @@ namespace Borderland.Dreams.Data.Migrations
                 {
                     b.HasOne("Borderland.Dreams.Models.Dream", null)
                         .WithMany("Expenses")
-                        .HasForeignKey("DreamID");
+                        .HasForeignKey("DreamID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Fund", b =>
@@ -530,7 +532,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasOne("Borderland.Dreams.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -552,7 +554,7 @@ namespace Borderland.Dreams.Data.Migrations
                 {
                     b.HasOne("Borderland.Dreams.Models.Dream", null)
                         .WithMany()
-                        .HasForeignKey("DreamsID")
+                        .HasForeignKey("DreamID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

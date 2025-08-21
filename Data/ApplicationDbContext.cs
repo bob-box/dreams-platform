@@ -16,9 +16,11 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<Borderland.Dreams.Models.Dream> Dream { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    modelBuilder.Entity<Dream>()
-        .HasMany(e => e.Tags)
-        .WithMany();
-}
+    {
+        modelBuilder.Entity<Dream>()
+            .HasMany(e => e.Tags)
+            .WithMany();
+
+            base.OnModelCreating(modelBuilder);
+    }
 }
