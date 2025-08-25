@@ -21,7 +21,7 @@ public class BaseController(ApplicationDbContext context,
         var cloudYear = HttpContext.Request.RouteValues["year"]?.ToString() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(cloudYear))
         {
-            return 0;
+            throw new ArgumentNullException(nameof(cloudYear));
         }
 
         // See if the CloudID is already cached

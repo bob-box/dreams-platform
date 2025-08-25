@@ -26,6 +26,13 @@
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
+            <div id="budget-items">
+                @if (Model.BudgetItems != null)
+                {
+                    @Html.EditorFor(model => model.BudgetItems)
+                }
+            </div>
+            <button type="button" class="btn btn-secondary mt-2" id="add-budget-item">Add Budget Item new</button>
         </form>
     </div>
 </div>
@@ -35,5 +42,8 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        await Html.RenderPartialAsync("_EditBudgetItemsScript");
+    }
 }

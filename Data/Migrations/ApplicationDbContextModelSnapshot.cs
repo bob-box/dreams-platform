@@ -29,7 +29,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("MaxAmount")
+                    b.Property<decimal?>("MaxAmount")
                         .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("MinAmount")

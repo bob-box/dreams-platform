@@ -1,0 +1,27 @@
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // Add event listener for the "Add Budget Item" button that gets the HTML for a new budget item
+        document.getElementById("add-budget-item").addEventListener("click", function () {
+            fetch('@Url.Action("NewBudgetItem", "Dream")')
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById('budget-items');
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+        });
+    });
+
+    // Called by the BudgetItem Editor Template
+    function showMaxAmountField(btn) {
+        const itemDiv = btn.closest('.budget-item');
+        itemDiv.querySelector('.max-amount-group').style.display = 'block';
+        btn.style.display = 'none';
+    }
+
+    // Called by the BudgetItem Editor Template
+    function removeBudgetItem(btn) {
+        const itemDiv = btn.closest('.budget-item');
+        itemDiv.remove();
+    }
+</script>

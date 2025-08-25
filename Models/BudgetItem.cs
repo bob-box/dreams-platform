@@ -22,6 +22,6 @@ public class BudgetItem
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]
     [Column(TypeName = "decimal(18, 2)")]
-    public decimal MaxAmount { get; set; }
+    public decimal? MaxAmount { get; set; }
     
 }

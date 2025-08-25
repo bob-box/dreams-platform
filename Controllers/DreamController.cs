@@ -72,7 +72,7 @@ public class DreamController(ApplicationDbContext context,
     [Authorize]
     public IActionResult Create()
     {
-        return View();
+        return View(new Dream());
     }
 
     // POST: Dream/Create
@@ -80,7 +80,7 @@ public class DreamController(ApplicationDbContext context,
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ID,Name,Description")] Dream dream)
+    public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems")] Dream dream)
     {
         if (ModelState.IsValid)
         {
@@ -110,8 +110,14 @@ public class DreamController(ApplicationDbContext context,
 
         var dream = await _context.Dream
             .Include(x => x.Dreamers)
+            .Include(x => x.BudgetItems)
             .Where(x => x.CloudID == GetCloudID())
             .SingleOrDefaultAsync(m => m.ID == id);
+
+        if (dream == null)
+        {
+            return NotFound();
+        }
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(
                                                     User, dream, DreamOperations.Update);
@@ -120,7 +126,7 @@ public class DreamController(ApplicationDbContext context,
             return Forbid();
         }
 
-        return dream == null ? NotFound() : View(dream);
+        return View(dream);
     }
 
     // POST: Dream/Edit/5
@@ -128,9 +134,19 @@ public class DreamController(ApplicationDbContext context,
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description")] Dream dream)
+    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,BudgetItems")] Dream dream)
     {
         if (id != dream.ID)
+        {
+            return NotFound();
+        }
+
+        var dreamFromDb = await _context.Dream
+            .Include(x => x.Dreamers)
+            .Include(x => x.BudgetItems)
+            .SingleOrDefaultAsync(m => m.ID == id);
+
+        if (dreamFromDb == null)
         {
             return NotFound();
         }
@@ -138,7 +154,7 @@ public class DreamController(ApplicationDbContext context,
         if (ModelState.IsValid)
         {
             var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                        User, dream, DreamOperations.Update);
+                                                        User, dreamFromDb, DreamOperations.Update);
             if (!authorizationResult.Succeeded)
             {
                 return Forbid();
@@ -146,8 +162,10 @@ public class DreamController(ApplicationDbContext context,
 
             try
             {
-                _context.Update(dream);
-                _context.Entry(dream).Property(x => x.CloudID).IsModified = false; // Prevent modification of CloudID
+                dreamFromDb.Name = dream.Name;
+                dreamFromDb.Description = dream.Description;
+                dreamFromDb.BudgetItems = dream.BudgetItems;
+                _context.Update(dreamFromDb);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -180,6 +198,11 @@ public class DreamController(ApplicationDbContext context,
             .Where(x => x.CloudID == GetCloudID())
             .SingleOrDefaultAsync(m => m.ID == id);
 
+        if (dream == null)
+        {
+            return NotFound();
+        }
+
         var authorizationResult = await _authorizationService.AuthorizeAsync(
                                                         User, dream, DreamOperations.Delete);
         if (!authorizationResult.Succeeded)
@@ -187,7 +210,7 @@ public class DreamController(ApplicationDbContext context,
             return Forbid();
         }
 
-        return dream == null ? NotFound() : View(dream);
+        return View(dream);
     }
 
     // POST: Dream/Delete/5
@@ -200,19 +223,30 @@ public class DreamController(ApplicationDbContext context,
             .Where(x => x.CloudID == GetCloudID())
             .SingleOrDefaultAsync(m => m.ID == id);
 
-        if (dream != null)
+        if (dream == null)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                        User, dream, DreamOperations.Delete);
-            if (!authorizationResult.Succeeded)
-            {
-                return Forbid();
-            }
-            _context.Dream.Remove(dream);
+            return NotFound();
         }
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(
+                                                    User, dream, DreamOperations.Delete);
+        if (!authorizationResult.Succeeded)
+        {
+            return Forbid();
+        }
+        _context.Dream.Remove(dream);
 
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Renders a blank editor row for a budget item.
+    /// </summary>
+    /// <returns> eventually returns the HTML code of Views/Shared/EditorTemplates/BudgetItem.cshtml </returns>
+    public PartialViewResult NewBudgetItem()
+    {
+        return PartialView("_BudgetItemEditorRow", new BudgetItem());
     }
 
     private bool DreamExists(int id)

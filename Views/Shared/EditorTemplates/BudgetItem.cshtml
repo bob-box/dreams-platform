@@ -1,0 +1,24 @@
+@using HtmlHelpers.BeginCollectionItemCore;
+@model Borderland.Dreams.Models.BudgetItem
+
+<div class="budget-item border rounded p-2 mb-2">
+    @using (Html.BeginCollectionItem("BudgetItems"))
+    {
+            <div class="form-group">
+                <label asp-for="Name" class="control-label">Budget Item Name</label>
+                <input asp-for="Name" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="MinAmount" class="control-label">Minimum Amount</label>
+                <input asp-for="MinAmount" class="form-control" type="number" />
+            </div>
+            <div class="form-group max-amount-group"
+                style="display:@(Model.MaxAmount != null ? "block" : "none")">
+                <label asp-for="MaxAmount" class="control-label">Maximum Amount</label>
+                <input asp-for="MaxAmount" class="form-control" type="number" />
+            </div>
+            <button type="button" class="btn btn-link btn-show-max" onclick="showMaxAmountField(this)"
+                @(Model.MaxAmount != null ? "style='display:none'" : "")>Add Maximum Amount</button>
+            <button type="button" class="btn btn-danger btn-remove-item" onclick="removeBudgetItem(this)">Remove budget item</button>
+    }
+</div>

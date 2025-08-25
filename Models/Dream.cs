@@ -6,8 +6,8 @@ namespace Borderland.Dreams.Models;
 public class Dream
 {
     public int ID { get; set; }
-    public required string Name { get; set; }
-    public required string Description { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
     [DataType(DataType.Date)]
     public DateTime CreatedDate { get; set; } = DateTime.Now;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
