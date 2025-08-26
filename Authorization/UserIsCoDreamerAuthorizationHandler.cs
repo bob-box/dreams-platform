@@ -24,8 +24,8 @@ namespace Borderland.Dreams.Authorization
 
             var allowedOperations = new string[]
             {
-                Constants.ReadOperationName,
-                Constants.UpdateOperationName
+                Constants.READ,
+                Constants.UPDATE
             };
 
             // If not asking for the allowed operations, return.

@@ -24,10 +24,10 @@ namespace Borderland.Dreams.Authorization
 
             var allowedOperations = new string[]
             {
-                Constants.CreateOperationName,
-                Constants.ReadOperationName,
-                Constants.UpdateOperationName,
-                Constants.DeleteOperationName
+                Constants.CREATE,
+                Constants.READ,
+                Constants.UPDATE,
+                Constants.DELETE
             };
 
             // If not asking for the allowed operations, return.
