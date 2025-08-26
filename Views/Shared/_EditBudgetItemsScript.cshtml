@@ -15,8 +15,21 @@
     // Called by the BudgetItem Editor Template
     function showMaxAmountField(btn) {
         const itemDiv = btn.closest('.budget-item');
-        itemDiv.querySelector('.max-amount-group').style.display = 'block';
-        btn.style.display = 'none';
+        toggleDisplay(itemDiv.querySelector('.max-amount-group'));
+        toggleDisplay(btn.querySelectorAll('span')[0]);
+        toggleDisplay(btn.querySelectorAll('span')[1]);
+    }
+    
+    function toggleDisplay(element) {
+        if (element.style.display === 'none') {
+            element.style.display = '';
+        } else {
+            element.style.display = 'none';
+            let input = element.querySelector('input');
+            if (input) {
+                input.value = '';
+            }
+        }
     }
 
     // Called by the BudgetItem Editor Template

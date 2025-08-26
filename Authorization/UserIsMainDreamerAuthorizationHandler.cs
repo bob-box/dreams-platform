@@ -22,11 +22,16 @@ namespace Borderland.Dreams.Authorization
                 return Task.CompletedTask;
             }
 
+            var allowedOperations = new string[]
+            {
+                Constants.CreateOperationName,
+                Constants.ReadOperationName,
+                Constants.UpdateOperationName,
+                Constants.DeleteOperationName
+            };
+
             // If not asking for the allowed operations, return.
-            if (requirement.Name != Constants.CreateOperationName &&
-                requirement.Name != Constants.ReadOperationName &&
-                requirement.Name != Constants.UpdateOperationName &&
-                requirement.Name != Constants.DeleteOperationName)
+            if (!allowedOperations.Contains(requirement.Name))
             {
                 return Task.CompletedTask;
             }

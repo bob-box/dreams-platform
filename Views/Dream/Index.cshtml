@@ -25,7 +25,7 @@
                 @Html.DisplayNameFor(model => model.Status)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.BudgetItems)
+                @Html.DisplayNameFor(model => model.BudgetItems) (min)
             </th>
             <th></th>
         </tr>
@@ -46,8 +46,8 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                @{var budget = item.BudgetItems.Sum(b => b.MinAmount).ToString("C");}
-                @Html.DisplayFor(modelItem => budget)
+                @{var sumOfBudget = item.BudgetItems.Sum(b => b.MinAmount).ToString("C");}
+                @Html.DisplayFor(modelItem => sumOfBudget)
             </td>
             <td>
                 @if (_authorizationService.AuthorizeAsync(User, item, DreamOperations.Update).Result.Succeeded)

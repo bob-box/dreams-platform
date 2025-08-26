@@ -9,12 +9,14 @@ using Borderland.Dreams.Authorization;
 
 namespace Borderland.Dreams.Controllers;
 
+[Authorize]
 public class DreamController(ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager)
     : BaseController(context, authorizationService, userManager)
 {
     // GET: Dream
+    [AllowAnonymous]
     public async Task<IActionResult> Index()
     {
         var listQuery = _context.Dream
@@ -39,6 +41,7 @@ public class DreamController(ApplicationDbContext context,
     }
 
     // GET: Dream/Details/5
+    [AllowAnonymous]
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
@@ -69,7 +72,6 @@ public class DreamController(ApplicationDbContext context,
     }
 
     // GET: Dream/Create
-    [Authorize]
     public IActionResult Create()
     {
         return View(new Dream());
@@ -244,6 +246,7 @@ public class DreamController(ApplicationDbContext context,
     /// Renders a blank editor row for a budget item.
     /// </summary>
     /// <returns> eventually returns the HTML code of Views/Shared/EditorTemplates/BudgetItem.cshtml </returns>
+    [Authorize]
     public PartialViewResult NewBudgetItem()
     {
         return PartialView("_BudgetItemEditorRow", new BudgetItem());

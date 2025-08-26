@@ -5,20 +5,20 @@
     @using (Html.BeginCollectionItem("BudgetItems"))
     {
             <div class="form-group">
-                <label asp-for="Name" class="control-label">Budget Item Name</label>
+                <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
             </div>
             <div class="form-group">
                 <label asp-for="MinAmount" class="control-label">Minimum Amount</label>
                 <input asp-for="MinAmount" class="form-control" type="number" />
             </div>
-            <div class="form-group max-amount-group"
-                style="display:@(Model.MaxAmount != null ? "block" : "none")">
+            <div class="form-group max-amount-group" style="display:@(Model.MaxAmount != null ? "block" : "none")">
                 <label asp-for="MaxAmount" class="control-label">Maximum Amount</label>
                 <input asp-for="MaxAmount" class="form-control" type="number" />
             </div>
-            <button type="button" class="btn btn-link btn-show-max" onclick="showMaxAmountField(this)"
-                @(Model.MaxAmount != null ? "style='display:none'" : "")>Add Maximum Amount</button>
+            <button type="button" class="btn btn-link btn-show-max" onclick="showMaxAmountField(this)">
+                <span style="display:@(Model.MaxAmount != null ? "none" : "")">Add</span>
+                <span style="display:@(Model.MaxAmount != null ? "" : "none")">Remove</span> Maximum Amount</button>
             <button type="button" class="btn btn-danger btn-remove-item" onclick="removeBudgetItem(this)">Remove budget item</button>
     }
 </div>
