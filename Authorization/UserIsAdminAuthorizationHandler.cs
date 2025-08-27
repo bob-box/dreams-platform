@@ -1,16 +1,16 @@
-using System.Threading.Tasks;
 using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace Borderland.Dreams.Authorization
 {
+    // Based on https://learn.microsoft.com/en-us/aspnet/core/security/authorization/secure-data?view=aspnetcore-8.0
     public class UserIsAdminAuthorizationHandler
         : AuthorizationHandler<OperationAuthorizationRequirement, Dream>
     {
         protected override Task HandleRequirementAsync(
                                     AuthorizationHandlerContext context,
-                                    OperationAuthorizationRequirement requirement, 
+                                    OperationAuthorizationRequirement requirement,
                                     Dream dream)
         {
             if (context.User == null)

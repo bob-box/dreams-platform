@@ -18,6 +18,9 @@ namespace Borderland.Dreams.Authorization
         public static readonly string DELETE = "Delete";
 
         public static readonly string AdministratorsRole = "Admin";
-        public static readonly string ManagersRole = "Manager";
+        /// <summary>
+        /// Role for users who have an active BL membership.
+        /// </summary>
+        public static readonly string MemberRole = "Member";
     }
 }

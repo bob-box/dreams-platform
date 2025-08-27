@@ -24,8 +24,7 @@ public class DreamController(ApplicationDbContext context,
             .Include(d => d.Dreamers)
             .Where(x => x.CloudID == GetCloudID());
 
-        var isAuthorizedToViewAllDreams = User.IsInRole(Constants.ManagersRole) ||
-                       User.IsInRole(Constants.AdministratorsRole);
+        var isAuthorizedToViewAllDreams = User.IsInRole(Constants.AdministratorsRole);
 
         // Hide dreams in Draft or Hidden status
         // Admins is allowed to see all dreams, no matter what status they have.
@@ -49,8 +48,7 @@ public class DreamController(ApplicationDbContext context,
             return NotFound();
         }
 
-        var isAuthorizedToViewAllDreams = User.IsInRole(Constants.ManagersRole) ||
-                       User.IsInRole(Constants.AdministratorsRole);
+        var isAuthorizedToViewAllDreams = User.IsInRole(Constants.AdministratorsRole);
 
         var dreamQuery = _context.Dream
             .Include(d => d.BudgetItems)

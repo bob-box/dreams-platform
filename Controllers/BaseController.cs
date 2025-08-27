@@ -18,21 +18,21 @@ public class BaseController(ApplicationDbContext context,
 
     public int GetCloudID()
     {
-        var cloudYear = HttpContext.Request.RouteValues["year"]?.ToString() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(cloudYear))
+        var cloudName = HttpContext.Request.RouteValues["cloudName"]?.ToString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(cloudName))
         {
-            throw new ArgumentNullException(nameof(cloudYear));
+            throw new ArgumentNullException(nameof(cloudName));
         }
 
         // See if the CloudID is already cached
-        if (_cloudCache.TryGetValue(cloudYear, out var cloudID))
+        if (_cloudCache.TryGetValue(cloudName, out var cloudID))
         {
             return cloudID;
         }
 
         // Lookup in db and cache it
-        cloudID = _context.Cloud.SingleOrDefault(x => x.Name == cloudYear)?.ID ?? 0;
-        _cloudCache[cloudYear] = cloudID;
+        cloudID = _context.Cloud.SingleOrDefault(x => x.Name == cloudName)?.ID ?? 0;
+        _cloudCache[cloudName] = cloudID;
         return cloudID;
     }
 }

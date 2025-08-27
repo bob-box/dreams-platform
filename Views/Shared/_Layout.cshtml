@@ -1,5 +1,5 @@
 ﻿@{
-    var year = Html.GetYear();
+    var cloudName = Html.GetCloudName();
 }
 
 <!DOCTYPE html>
@@ -23,19 +23,25 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        @if (string.IsNullOrWhiteSpace(year))
+                        @if (string.IsNullOrWhiteSpace(cloudName))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Cloud" asp-action="Index" asp-route-year="">Clouds</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Cloud" asp-action="Index" asp-route-cloudName="">Clouds</a>
                             </li>
                         }
                         else 
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Cloud" asp-action="Index" asp-route-year="">« Back to Clouds</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Cloud" asp-action="Index" asp-route-cloudName="">« Back to Clouds</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Dream" asp-action="Index" asp-route-year="@year">Dreams</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Dream" asp-action="Index" asp-route-cloudName="@cloudName">Dreams</a>
+                            </li>
+                        }
+                        @if (User.IsInRole(Constants.AdministratorsRole))
+                        {
+                            <li class="nav-item ms-auto">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Dream" asp-action="Create" asp-route-cloudName="@cloudName">Admin Control Panel</a>
                             </li>
                         }
                     </ul>

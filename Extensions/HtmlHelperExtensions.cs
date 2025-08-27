@@ -4,8 +4,8 @@ namespace Borderland.Dreams.Extensions;
 
 public static class HtmlHelperExtensions
 {
-    public static string GetYear(this IHtmlHelper htmlHelper)
+    public static string GetCloudName(this IHtmlHelper htmlHelper)
     {
-        return htmlHelper.ViewContext.HttpContext.Request.RouteValues["year"]?.ToString() ?? string.Empty;
+        return htmlHelper.ViewContext.HttpContext.Request.RouteValues["cloudName"]?.ToString() ?? string.Empty;
     }
 }

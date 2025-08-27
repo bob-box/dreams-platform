@@ -5,6 +5,7 @@ using Borderland.Dreams.Models;
 
 namespace Borderland.Dreams.Authorization
 {
+    // Based on https://learn.microsoft.com/en-us/aspnet/core/security/authorization/secure-data?view=aspnetcore-8.0
     public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager)
                 : AuthorizationHandler<OperationAuthorizationRequirement, Dream>
     {

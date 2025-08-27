@@ -11,16 +11,20 @@ public class ApplicationDbContext : IdentityDbContext<User>
     {
     }
 
-    public DbSet<Borderland.Dreams.Models.Cloud> Cloud { get; set; } = default!;
+    public DbSet<Cloud> Cloud { get; set; } = default!;
 
-    public DbSet<Borderland.Dreams.Models.Dream> Dream { get; set; } = default!;
+    public DbSet<Dream> Dream { get; set; } = default!;
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Dream>()
             .HasMany(e => e.Tags)
             .WithMany();
 
-            base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Cloud>()
+            .HasIndex(e => e.Name)
+            .IsUnique();
+
+        base.OnModelCreating(modelBuilder);
     }
 }

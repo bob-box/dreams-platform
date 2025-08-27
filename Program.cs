@@ -4,7 +4,6 @@ using Borderland.Dreams.Data;
 using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +33,8 @@ builder.Services.AddDefaultIdentity<User>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Authorization handlers.
-// Services using Entity Framework must be registered for dependency injection using AddScoped. 
+// Services using Entity Framework must be registered for dependency injection using AddScoped.
+// UserIsMainDreamer and UserIsCoDreamer uses ASP.NET Core Identity (UserManager), which is built on Entity Framework Core.
 builder.Services.AddScoped<IAuthorizationHandler, UserIsMainDreamerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, UserIsCoDreamerAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, UserIsAdminAuthorizationHandler>();
@@ -45,6 +45,7 @@ builder.Services.AddRouting(options =>
 });
 
 var app = builder.Build();
+
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("sv-SE"),
@@ -55,6 +56,11 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        await DataSeeder.SeedAsync(services);
+    }
 }
 else
 {
@@ -71,8 +77,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: "yearly-dreams-group",
-    pattern: "{year:int:required:range(2025,2030)}/{controller=Home}/{action=Index}/{id?}"
+    name: "cloudName-dreams-group",
+    pattern: "{cloudName:required}/{controller:required}/{action=Index}/{id?}"
     );
 
 app.MapControllerRoute(
