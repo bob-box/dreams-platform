@@ -282,9 +282,6 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("UserType")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("WalletID")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -293,8 +290,6 @@ namespace Borderland.Dreams.Data.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
-
-                    b.HasIndex("WalletID");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -308,7 +303,17 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)");
 
+                    b.Property<int>("CloudID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserID")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasKey("ID");
+
+                    b.HasIndex("UserID", "CloudID")
+                        .IsUnique();
 
                     b.ToTable("Wallet", (string)null);
                 });
@@ -544,13 +549,15 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Borderland.Dreams.Models.User", b =>
+            modelBuilder.Entity("Borderland.Dreams.Models.Wallet", b =>
                 {
-                    b.HasOne("Borderland.Dreams.Models.Wallet", "Wallet")
-                        .WithMany()
-                        .HasForeignKey("WalletID");
+                    b.HasOne("Borderland.Dreams.Models.User", "User")
+                        .WithMany("Wallets")
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Wallet");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DreamTag", b =>
@@ -635,6 +642,11 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Navigation("Expenses");
 
                     b.Navigation("Funds");
+                });
+
+            modelBuilder.Entity("Borderland.Dreams.Models.User", b =>
+                {
+                    b.Navigation("Wallets");
                 });
 #pragma warning restore 612, 618
         }

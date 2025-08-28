@@ -25,6 +25,10 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasIndex(e => e.Name)
             .IsUnique();
 
+        modelBuilder.Entity<Wallet>()
+            .HasIndex(x => new { x.UserID, x.CloudID })
+            .IsUnique();
+
         base.OnModelCreating(modelBuilder);
     }
 }

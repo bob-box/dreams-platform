@@ -7,7 +7,6 @@ public class User : IdentityUser
 {
     [PersonalData]
     public string FullName { get; set; } = string.Empty;
-    public int? WalletID { get; set; }
-    public Wallet? Wallet { get; set; }
+    public List<Wallet> Wallets { get; set; } = new List<Wallet>();
     public UserType UserType { get; set; } = UserType.User;
 }
