@@ -34,3 +34,4 @@ A **Funding Round** is a period where users (that has an active BL membership) g
 ### General info
 * SQLite database
 * Using [Entity Framework (EF) Core Migrations](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli) for database stuff
+* An admin user is created in development mode, see [DataSeeder.cs](Data/DataSeeder.cs)

@@ -1,0 +1,38 @@
+﻿@{
+    var cloudName = Html.GetCloudName();
+}
+<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <div class="container-fluid">
+        <a class="navbar-brand" asp-controller="Home" asp-action="">Borderland.Dreams</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+            <ul class="navbar-nav flex-grow-1">
+                @if (string.IsNullOrWhiteSpace(cloudName))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Cloud" asp-action="" asp-route-cloudName="">Clouds</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Cloud" asp-action="" asp-route-cloudName="">« Back to Clouds</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Dream" asp-action="" asp-route-cloudName="@cloudName">Dreams</a>
+                    </li>
+                }
+                @if (User.IsInRole(Constants.AdministratorsRole))
+                {
+                    <li class="nav-item ms-sm-auto">
+                        <a class="nav-link text-dark" asp-controller="Admin" asp-action="" asp-route-cloudName="@cloudName">Admin Control Panel</a>
+                    </li>
+                }
+            </ul>
+            <partial name="_LoginPartial" />
+        </div>
+    </div>
+</nav>

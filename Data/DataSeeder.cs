@@ -1,9 +1,8 @@
-using System.Reflection.Metadata;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 public static class DataSeeder
 {
@@ -60,7 +59,11 @@ public static class DataSeeder
     public static async Task AddTestCloudAsync(IServiceProvider serviceProvider)
     {
         var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-        context.Cloud.Add(new Cloud { Name = "test" });
-        await context.SaveChangesAsync();
+        var cloudExists = await context.Cloud.SingleOrDefaultAsync(x => x.Name == "test");
+        if (cloudExists == null)
+        {
+            context.Cloud.Add(new Cloud { Name = "test" });
+            await context.SaveChangesAsync();
+        }
     }
 }
