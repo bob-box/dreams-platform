@@ -50,12 +50,12 @@
                 @Html.DisplayFor(modelItem => sumOfBudget)
             </td>
             <td>
-                @if (_authorizationService.AuthorizeAsync(User, item, DreamOperations.Update).Result.Succeeded)
+                @if (_authorizationService.AuthorizeAsync(User, item, Operations.Update).Result.Succeeded)
                 {
                     <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> <text>|</text>
                 }
                 <a asp-action="Details" asp-route-id="@item.ID">Details</a>
-                @if (_authorizationService.AuthorizeAsync(User, item, DreamOperations.Delete).Result.Succeeded)
+                @if (_authorizationService.AuthorizeAsync(User, item, Operations.Delete).Result.Succeeded)
                 {
                    <text>|</text> <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
                 }

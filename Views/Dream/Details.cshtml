@@ -74,11 +74,11 @@
     </dl>
 </div>
 <div>
-    @if (_authorizationService.AuthorizeAsync(User, Model, DreamOperations.Update).Result.Succeeded)
+    @if (_authorizationService.AuthorizeAsync(User, Model, Operations.Update).Result.Succeeded)
     {
         <a asp-action="Edit" asp-route-id="@Model.ID">Edit</a> <text>|</text>
     }
-    @if (_authorizationService.AuthorizeAsync(User, Model, DreamOperations.Delete).Result.Succeeded)
+    @if (_authorizationService.AuthorizeAsync(User, Model, Operations.Delete).Result.Succeeded)
     {
         <a asp-action="Delete" asp-route-id="@Model.ID">Delete</a> <text>|</text> 
     }

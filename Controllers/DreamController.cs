@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
+using Borderland.Dreams.Authorization.Dream;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -119,8 +120,7 @@ public class DreamController(ApplicationDbContext context,
             return NotFound();
         }
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                    User, dream, DreamOperations.Update);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dream, Operations.Update);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -153,8 +153,7 @@ public class DreamController(ApplicationDbContext context,
 
         if (ModelState.IsValid)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                        User, dreamFromDb, DreamOperations.Update);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb, Operations.Update);
             if (!authorizationResult.Succeeded)
             {
                 return Forbid();
@@ -203,8 +202,7 @@ public class DreamController(ApplicationDbContext context,
             return NotFound();
         }
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                        User, dream, DreamOperations.Delete);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dream, Operations.Delete);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -228,8 +226,7 @@ public class DreamController(ApplicationDbContext context,
             return NotFound();
         }
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(
-                                                    User, dream, DreamOperations.Delete);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dream, Operations.Delete);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();

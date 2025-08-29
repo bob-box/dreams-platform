@@ -4,6 +4,7 @@ using Borderland.Dreams.Data;
 using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
+using Borderland.Dreams.Authorization.Dream;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,8 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
+        var dbContext = services.GetService<ApplicationDbContext>();
+        await dbContext.Database.EnsureCreatedAsync();
         await DataSeeder.SeedAsync(services);
     }
 }

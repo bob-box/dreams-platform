@@ -10,6 +10,7 @@ public static class DataSeeder
     {
         await AddRolesAsync(serviceProvider);
         await AddAdminUserAsync(serviceProvider);
+        await AddUserAsync(serviceProvider);
         await AddTestCloudAsync(serviceProvider);
     }
 
@@ -31,8 +32,8 @@ public static class DataSeeder
     {
         var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
 
-        var adminEmail = "admin@admin.com";
-        var adminPassword = "admin@123";
+        var adminEmail = "admin@dreams.com";
+        var adminPassword = "password1";
 
         var userExist = await userManager.FindByEmailAsync(adminEmail);
         if (userExist == null)
@@ -52,6 +53,35 @@ public static class DataSeeder
             else
             {
                 throw new Exception("Failed to create the admin user: " + string.Join(", ", result.Errors));
+            }
+        }
+    }
+
+    private static async Task AddUserAsync(IServiceProvider serviceProvider)
+    {
+        var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+
+        var userEmail = "user@dreams.com";
+        var userPassword = "password1";
+
+        var userExist = await userManager.FindByEmailAsync(userEmail);
+        if (userExist == null)
+        {
+            var user = new User
+            {
+                UserName = "user",
+                Email = userEmail,
+                EmailConfirmed = true
+            };
+
+            var result = await userManager.CreateAsync(user, userPassword);
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(user, Constants.MemberRole);
+            }
+            else
+            {
+                throw new Exception("Failed to create the user: " + string.Join(", ", result.Errors));
             }
         }
     }
