@@ -7,10 +7,10 @@ namespace Borderland.Dreams.Authorization
         public static readonly string UPDATE = "Update";
         public static readonly string DELETE = "Delete";
 
-        public static readonly string AdministratorsRole = "Admin";
+        public const string AdminRole = "Admin";
         /// <summary>
         /// Role for users who have an active BL membership.
         /// </summary>
-        public static readonly string MemberRole = "Member";
+        public const string MemberRole = "Member";
     }
 }

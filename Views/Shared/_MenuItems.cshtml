@@ -25,7 +25,7 @@
                         <a class="nav-link text-dark" asp-controller="Dream" asp-action="" asp-route-cloudName="@cloudName">Dreams</a>
                     </li>
                 }
-                @if (User.IsInRole(Constants.AdministratorsRole))
+                @if (User.IsInRole(Constants.AdminRole))
                 {
                     <li class="nav-item ms-sm-auto">
                         <a class="nav-link text-dark" asp-controller="Admin" asp-action="" asp-route-cloudName="@cloudName">Admin Control Panel</a>

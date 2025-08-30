@@ -5,7 +5,8 @@ namespace Borderland.Dreams.Models;
 public class Cloud
 {
     public int ID { get; set; }
-    public required string Name { get; set; }
+    [Required]
+    public string Name { get; set; }
 
     [DataType(DataType.Date)]
     public DateTime CreatedDate { get; set; } = DateTime.Now;

@@ -18,7 +18,7 @@ public static class DataSeeder
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        var roles = new[] { Constants.AdministratorsRole, Constants.MemberRole };
+        var roles = new[] { Constants.AdminRole, Constants.MemberRole };
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -48,7 +48,7 @@ public static class DataSeeder
             var result = await userManager.CreateAsync(adminUser, adminPassword);
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(adminUser, Constants.AdministratorsRole);
+                await userManager.AddToRoleAsync(adminUser, Constants.AdminRole);
             }
             else
             {

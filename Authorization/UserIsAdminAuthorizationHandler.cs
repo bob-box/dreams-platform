@@ -1,4 +1,3 @@
-using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 
@@ -21,7 +20,7 @@ public class UserIsAdminAuthorizationHandler
         }
 
         // Administrators can do anything.
-        if (context.User.IsInRole(Constants.AdministratorsRole))
+        if (context.User.IsInRole(Constants.AdminRole))
         {
             context.Succeed(requirement);
         }
