@@ -5,6 +5,10 @@ namespace Borderland.Dreams.Models;
 public class Cloud
 {
     public int ID { get; set; }
+
+    /// <summary>
+    /// Name is a unique index, see ApplicationDbContext.OnModelCreating()
+    /// </summary>
     [Required]
     public string Name { get; set; }
 

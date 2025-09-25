@@ -12,5 +12,7 @@ namespace Borderland.Dreams.Authorization
         /// Role for users who have an active BL membership.
         /// </summary>
         public const string MemberRole = "Member";
+
+        public const string JoinedCloudClaim = "JoinedCloud";
     }
 }

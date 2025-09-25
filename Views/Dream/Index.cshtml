@@ -2,10 +2,20 @@
 
 @{
     ViewData["Title"] = "Index";
+    string cloudID = ViewData["CloudID"]?.ToString() ?? throw new ArgumentNullException(nameof(cloudID)); // Should always have a cloud id here.
+    bool showJoinCloudButton = (ViewData["showJoinCloudButton"] as bool?) ?? false;
 }
 
 <h1>Dreams List</h1>
-
+@if (showJoinCloudButton)
+{
+    <p>
+        <form asp-action="Join" asp-controller="Cloud" method="post">
+            <input type="hidden" name="id" value="@cloudID" />
+            <button type="submit">Join Cloud</button>
+        </form>
+    </p>
+}
 <p>
     <a asp-action="Create">Create New</a>
 </p>

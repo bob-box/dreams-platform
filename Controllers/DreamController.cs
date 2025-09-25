@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Authorization.Dream;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -20,10 +19,15 @@ public class DreamController(ApplicationDbContext context,
     [AllowAnonymous]
     public async Task<IActionResult> Index()
     {
+        if (!TryGetCloudID(out int cloudID))
+        {
+            return RedirectToAction("Index", "Home", new { cloudName = "" });
+        }
+
         var listQuery = _context.Dream
             .Include(d => d.BudgetItems)
             .Include(d => d.Dreamers)
-            .Where(x => x.CloudID == GetCloudID());
+            .Where(x => x.CloudID == cloudID);
 
         var isAuthorizedToViewAllDreams = User.IsInRole(Constants.AdminRole);
 
@@ -37,6 +41,10 @@ public class DreamController(ApplicationDbContext context,
                                 || x.Dreamers.Any(d => d.UserID == currentUserId));
         }
 
+        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JoinedCloudClaim && c.Value == cloudID.ToString());
+        ViewData["showJoinCloudButton"] = !userHasAlreadyJoinedTheCloud && User.Identity?.IsAuthenticated == true;
+
+        ViewData["CloudID"] = cloudID;
         return View(await listQuery.ToListAsync());
     }
 
@@ -48,13 +56,18 @@ public class DreamController(ApplicationDbContext context,
         {
             return NotFound();
         }
+        
+        if (!TryGetCloudID(out int cloudID))
+        {
+            return RedirectToAction("Index", "Home", new { cloudName = "" });
+        }
 
         var isAuthorizedToViewAllDreams = User.IsInRole(Constants.AdminRole);
 
         var dreamQuery = _context.Dream
             .Include(d => d.BudgetItems)
             .Include(d => d.Dreamers).ThenInclude(d => d.User)
-            .Where(x => x.CloudID == GetCloudID());
+            .Where(x => x.CloudID == cloudID);
 
         // Admins is allowed to see all dreams
         // Main dreamer and co-dreamers are also allowed to see their dreams :)
@@ -83,22 +96,28 @@ public class DreamController(ApplicationDbContext context,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems")] Dream dream)
     {
+        if (!TryGetCloudID(out int cloudID))
+        {
+            return RedirectToAction("Index", "Home", new { cloudName = "" });
+        }
+
         if (ModelState.IsValid)
         {
-            dream.Dreamers.Add(new Dreamer
-            {
-                User = await _userManager.GetUserAsync(User),
-                IsMainDreamer = true,
-                Dream = dream
-            });
-            dream.CloudID = GetCloudID(); // Set the CloudID from the current context
-            dream.Status = DreamStatus.Draft;
-
-            _context.Add(dream);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return View(dream);
         }
-        return View(dream);
+
+        dream.Dreamers.Add(new Dreamer
+        {
+            User = await _userManager.GetUserAsync(User),
+            IsMainDreamer = true,
+            Dream = dream
+        });
+        dream.CloudID = cloudID; // Set the CloudID from the current context
+        dream.Status = DreamStatus.Draft;
+
+        _context.Add(dream);
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Details), new { id = dream.ID });
     }
 
     // GET: Dream/Edit/5
@@ -108,11 +127,15 @@ public class DreamController(ApplicationDbContext context,
         {
             return NotFound();
         }
+        if (!TryGetCloudID(out int cloudID))
+        {
+            return RedirectToAction("Index", "Home", new { cloudName = "" });
+        }
 
         var dream = await _context.Dream
             .Include(x => x.Dreamers)
             .Include(x => x.BudgetItems)
-            .Where(x => x.CloudID == GetCloudID())
+            .Where(x => x.CloudID == cloudID)
             .SingleOrDefaultAsync(m => m.ID == id);
 
         if (dream == null)
@@ -140,10 +163,17 @@ public class DreamController(ApplicationDbContext context,
         {
             return NotFound();
         }
+        if (!TryGetCloudID(out var cloudID))
+        {
+            return RedirectToAction("Index", "Home", new { cloudName = "" });
+        }
 
+
+        // We need to fetch the dreams dreamers to check authorization
         var dreamFromDb = await _context.Dream
             .Include(x => x.Dreamers)
-            .Include(x => x.BudgetItems)
+            // .Include(x => x.BudgetItems)
+            .Where(x => x.CloudID == cloudID)
             .SingleOrDefaultAsync(m => m.ID == id);
 
         if (dreamFromDb == null)
@@ -151,36 +181,38 @@ public class DreamController(ApplicationDbContext context,
             return NotFound();
         }
 
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb, Operations.Update);
-            if (!authorizationResult.Succeeded)
-            {
-                return Forbid();
-            }
-
-            try
-            {
-                dreamFromDb.Name = dream.Name;
-                dreamFromDb.Description = dream.Description;
-                dreamFromDb.BudgetItems = dream.BudgetItems;
-                _context.Update(dreamFromDb);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DreamExists(dream.ID))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
+            return View(dream);
         }
-        return View(dream);
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb, Operations.Update);
+        if (!authorizationResult.Succeeded)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            dreamFromDb.Name = dream.Name;
+            dreamFromDb.Description = dream.Description;
+            dreamFromDb.BudgetItems = dream.BudgetItems;
+            _context.Update(dreamFromDb);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!DreamExists(dream.ID, cloudID))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+        return RedirectToAction(nameof(Index));
+
     }
 
     // GET: Dream/Delete/5
@@ -190,11 +222,15 @@ public class DreamController(ApplicationDbContext context,
         {
             return NotFound();
         }
+        if (!TryGetCloudID(out int cloudID))
+        {
+            return RedirectToAction("Index", "Home", new { cloudName = "" });
+        }
 
         var dream = await _context.Dream
             .Include(d => d.BudgetItems)
             .Include(d => d.Dreamers)
-            .Where(x => x.CloudID == GetCloudID())
+            .Where(x => x.CloudID == cloudID)
             .SingleOrDefaultAsync(m => m.ID == id);
 
         if (dream == null)
@@ -216,9 +252,14 @@ public class DreamController(ApplicationDbContext context,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
+        if (!TryGetCloudID(out int cloudID))
+        {
+            return RedirectToAction("Index", "Home", new { cloudName = "" });
+        }
+
         var dream = await _context.Dream
             .Include(x => x.Dreamers).ThenInclude(d => d.User)
-            .Where(x => x.CloudID == GetCloudID())
+            .Where(x => x.CloudID == cloudID)
             .SingleOrDefaultAsync(m => m.ID == id);
 
         if (dream == null)
@@ -247,8 +288,8 @@ public class DreamController(ApplicationDbContext context,
         return PartialView("_BudgetItemEditorRow", new BudgetItem());
     }
 
-    private bool DreamExists(int id)
+    private bool DreamExists(int id, int cloudID)
     {
-        return _context.Dream.Any(e => e.ID == id && e.CloudID == GetCloudID());
+        return _context.Dream.Any(e => e.ID == id && e.CloudID == cloudID);
     }
 }

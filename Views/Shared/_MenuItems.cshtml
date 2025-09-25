@@ -1,5 +1,6 @@
 ﻿@{
     var cloudName = Html.GetCloudName();
+    var isWithinACloud = !string.IsNullOrWhiteSpace(cloudName);
 }
 <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
     <div class="container-fluid">
@@ -10,7 +11,7 @@
         </button>
         <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
             <ul class="navbar-nav flex-grow-1">
-                @if (string.IsNullOrWhiteSpace(cloudName))
+                @if (!isWithinACloud)
                 {
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-controller="Cloud" asp-action="" asp-route-cloudName="">Clouds</a>
