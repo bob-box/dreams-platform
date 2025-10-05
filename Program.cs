@@ -5,6 +5,7 @@ using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Authorization.Dream;
+using Borderland.Dreams.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,9 @@ builder.Services.AddDefaultIdentity<User>(options =>
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Application services.
+builder.Services.AddScoped<DreamService>();
 
 // Authorization handlers.
 // Services using Entity Framework must be registered for dependency injection using AddScoped.
