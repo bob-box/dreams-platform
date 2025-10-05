@@ -1,6 +1,6 @@
 namespace Borderland.Dreams.Enums;
 
-public enum BudgetType
+public enum BudgetItemType
 {
     Requesting = 0,
     Existing = 1

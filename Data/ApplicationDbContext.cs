@@ -12,8 +12,9 @@ public class ApplicationDbContext : IdentityDbContext<User>
     }
 
     public DbSet<Cloud> Cloud { get; set; } = default!;
-
     public DbSet<Dream> Dream { get; set; } = default!;
+    public DbSet<BudgetItem> BudgetItem { get; set; } = default!;
+    public DbSet<Dreamer> Dreamer { get; set; } = default!;
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {

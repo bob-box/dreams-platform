@@ -1,4 +1,4 @@
-@model IEnumerable<Borderland.Dreams.Models.Dream>
+@model IEnumerable<Borderland.Dreams.ViewModels.DreamViewModel>
 
 @{
     ViewData["Title"] = "Index";
@@ -15,10 +15,11 @@
             <button type="submit">Join Cloud</button>
         </form>
     </p>
+} else {
+    <p>
+        <a asp-action="Create">Create New Dream</a>
+    </p>
 }
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table">
     <thead>
         <tr>
@@ -35,7 +36,7 @@
                 @Html.DisplayNameFor(model => model.Status)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.BudgetItems) (min)
+                @Html.DisplayNameFor(model => model.RequestedBudgetItems) (min)
             </th>
             <th></th>
         </tr>
@@ -56,8 +57,7 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                @{var sumOfBudget = item.BudgetItems.Sum(b => b.MinAmount).ToString("C");}
-                @Html.DisplayFor(modelItem => sumOfBudget)
+                @Html.DisplayFor(modelItem => item.TotalRequestedBudget)
             </td>
             <td>
                 @if (_authorizationService.AuthorizeAsync(User, item, Operations.Update).Result.Succeeded)

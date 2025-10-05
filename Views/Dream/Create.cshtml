@@ -4,13 +4,22 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>Dream</h4>
-<hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
+    <div class="col-md-6">
+        <h1>Create dream</h1>
+    </div>
+    <div class="col-md-6 text-end mt-2">
+        <button type="submit" class="btn btn-primary" form="form-create-dream">Create</button>
+        <a class="btn btn-secondary" asp-action="Index">Cancel</a>
+    </div>
+</div>
+
+<hr />
+
+<form asp-action="Create" id="form-create-dream">
+    <div class="row">
+        <div class="col-md-4">
+            <h4>Dream</h4>
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -22,9 +31,28 @@
                 <input asp-for="Description" class="form-control" />
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
+            <hr />
+            <h4>Dreamers</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dreamer in Model.Dreamers)
+                    {
+                        <tr>
+                            <td>@dreamer.User.FullName</td>
+                            <td>@(dreamer.IsMainDreamer ? "Main Dreamer" : "Co-Dreamer")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-8">
+            <h4>Budget Items</h4>
             <div id="budget-items">
                 @if (Model.BudgetItems != null)
                 {
@@ -32,15 +60,16 @@
                 }
             </div>
             <button type="button" class="btn btn-secondary mt-2" id="add-budget-item">Add Budget Item</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    @{await Html.RenderPartialAsync("_EditBudgetItemsScript");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    @{
+        await Html.RenderPartialAsync("_EditBudgetItemsScript");
+    }
 }

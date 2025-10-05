@@ -1,24 +1,51 @@
 @using HtmlHelpers.BeginCollectionItemCore;
+
 @model Borderland.Dreams.Models.BudgetItem
 
-<div class="budget-item border rounded p-2 mb-2">
-    @using (Html.BeginCollectionItem("BudgetItems"))
-    {
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
+@{
+    bool hasMaxAmount = Model.MaxAmount != null;
+}
+
+@using (Html.BeginCollectionItem("BudgetItems"))
+{
+    <div class="budget-item-container">
+        <input type="hidden" asp-for="ID" />
+        <input asp-for="IsDeleted" class="is-deleted d-none" />
+        <div class="budget-item border rounded p-2 mb-2">
+            <input type="hidden" asp-for="DreamID" />
+            <div class="row">
+                <label asp-for="Name" class="col-sm-2 col-form-label"></label>
+                <div class="col-sm-10">
+                    <input asp-for="Name" class="form-control" />
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="MinAmount" class="control-label">Minimum Amount</label>
-                <input asp-for="MinAmount" class="form-control" type="number" />
+            <div class="row">
+                <label asp-for="MinAmount" class="col-sm-2 col-form-label"></label>
+                <div class="col-sm-10">
+                    <div class="input-group">
+                        <input asp-for="MinAmount" class="form-control" type="number" placeholder="Minimum Amount" />
+                        <div class="col-sm-6 max-amount-group" style="display:@(hasMaxAmount ? "flex" : "none")">
+                            <div class="input-group">
+                                <span class="input-group-text">-</span>
+                                <input asp-for="MaxAmount" class="form-control" type="number" placeholder="Maximum Amount" />
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-success add-max" type="button" onclick="toggleMaxAmountField(this)"
+                            style="display:@(hasMaxAmount ? "none" : "flex")">Add max amount</button>
+                        <button class="btn btn-outline-danger del-max" type="button" onclick="toggleMaxAmountField(this)"
+                            style="display:@(hasMaxAmount ? "flex" : "none")">&#x2715;</button>
+                    </div>
+                </div>
             </div>
-            <div class="form-group max-amount-group" style="display:@(Model.MaxAmount != null ? "block" : "none")">
-                <label asp-for="MaxAmount" class="control-label">Maximum Amount</label>
-                <input asp-for="MaxAmount" class="form-control" type="number" />
+            <div class="row">
+                <label asp-for="Type" class="col-sm-2 col-form-label"></label>
+                <div class="col-sm-4">
+                    <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<BudgetItemType>()"></select>
+                </div>
+                <div class="col-sm-6 text-end">
+                    <button type="button" class="btn btn-danger btn-remove-item ms-auto" onclick="removeBudgetItem(this)">Delete item</button>
+                </div>
             </div>
-            <button type="button" class="btn btn-link btn-show-max" onclick="showMaxAmountField(this)">
-                <span style="display:@(Model.MaxAmount != null ? "none" : "")">Add</span>
-                <span style="display:@(Model.MaxAmount != null ? "" : "none")">Remove</span> Maximum Amount</button>
-            <button type="button" class="btn btn-danger btn-remove-item" onclick="removeBudgetItem(this)">Remove budget item</button>
-    }
-</div>
+        </div>
+    </div>
+}

@@ -13,11 +13,11 @@
     });
 
     // Called by the BudgetItem Editor Template
-    function showMaxAmountField(btn) {
+    function toggleMaxAmountField(btn) {
         const itemDiv = btn.closest('.budget-item');
         toggleDisplay(itemDiv.querySelector('.max-amount-group'));
-        toggleDisplay(btn.querySelectorAll('span')[0]);
-        toggleDisplay(btn.querySelectorAll('span')[1]);
+        toggleDisplay(itemDiv.querySelector('.add-max'));
+        toggleDisplay(itemDiv.querySelector('.del-max'));
     }
     
     function toggleDisplay(element) {
@@ -34,7 +34,11 @@
 
     // Called by the BudgetItem Editor Template
     function removeBudgetItem(btn) {
-        const itemDiv = btn.closest('.budget-item');
+        const container = btn.closest('.budget-item-container')
+        const itemDiv = container.querySelector('.budget-item');
+        const isDeletedInput = container.querySelector('.is-deleted');
+
+        isDeletedInput.checked = true;
         itemDiv.remove();
     }
 </script>
