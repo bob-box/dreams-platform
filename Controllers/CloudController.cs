@@ -66,6 +66,7 @@ public class CloudController(ApplicationDbContext context,
             try
             {
                 _context.Update(cloud);
+                _context.Entry(cloud).Property(x => x.CreatedDate).IsModified = false; // Prevent modification of CreatedDate
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
