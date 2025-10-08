@@ -208,8 +208,7 @@ public class DreamController(ApplicationDbContext context,
                 throw;
             }
         }
-        return RedirectToAction(nameof(Index));
-
+        return RedirectToAction(nameof(Details), new { id = dream.ID });
     }
 
     // GET: Dream/Delete/5

@@ -24,16 +24,8 @@
                 <div class="col-sm-10">
                     <div class="input-group">
                         <input asp-for="MinAmount" class="form-control" type="number" placeholder="Minimum Amount" />
-                        <div class="col-sm-6 max-amount-group" style="display:@(hasMaxAmount ? "flex" : "none")">
-                            <div class="input-group">
-                                <span class="input-group-text">-</span>
-                                <input asp-for="MaxAmount" class="form-control" type="number" placeholder="Maximum Amount" />
-                            </div>
-                        </div>
-                        <button class="btn btn-outline-success add-max" type="button" onclick="toggleMaxAmountField(this)"
-                            style="display:@(hasMaxAmount ? "none" : "flex")">Add max amount</button>
-                        <button class="btn btn-outline-danger del-max" type="button" onclick="toggleMaxAmountField(this)"
-                            style="display:@(hasMaxAmount ? "flex" : "none")">&#x2715;</button>
+                        <span class="input-group-text">-</span>
+                        <input asp-for="MaxAmount" class="form-control" type="number" />
                     </div>
                 </div>
             </div>

@@ -9,10 +9,11 @@
         <h1>Edit dream</h1>
     </div>
     <div class="col-md-6 text-end mt-2">
-        <button type="submit" class="btn btn-primary" form="form-edit-dream">Save</button>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('form-edit-dream').submit()">Save</button>
         <a class="btn btn-secondary" asp-action="Index">Cancel</a>
     </div>
 </div>
+<div asp-validation-summary="All" class="text-danger"></div>
 
 <hr />
 
@@ -68,6 +69,26 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        await Html.RenderPartialAsync("_EditBudgetItemsScript");
     }
+    <script type="text/javascript">
+        // Add event listener for the "Add Budget Item" button that gets the HTML for a new budget item
+        document.getElementById("add-budget-item").addEventListener("click", function () {
+            fetch('@Url.Action("NewBudgetItem", "Dream")')
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById('budget-items');
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+        });
+
+        // Called by the BudgetItem Editor Template
+        function removeBudgetItem(btn) {
+            const container = btn.closest('.budget-item-container')
+            const itemDiv = container.querySelector('.budget-item');
+            const isDeletedInput = container.querySelector('.is-deleted');
+
+            isDeletedInput.checked = true;
+            itemDiv.remove();
+        }
+    </script>
 }
