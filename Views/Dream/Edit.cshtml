@@ -61,7 +61,7 @@
                     @Html.EditorFor(model => model.BudgetItems)
                 }
             </div>
-            <button type="button" class="btn btn-outline-secondary mt-2" id="add-budget-item">&#65291; Add new item</button>
+            <button type="button" class="btn btn-outline-secondary mt-2" id="add-budget-item" onclick="addBudgetItem()">&#65291; Add new item</button>
         </div>
 </form>
 </div>
@@ -71,8 +71,8 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script type="text/javascript">
-        // Add event listener for the "Add Budget Item" button that gets the HTML for a new budget item
-        document.getElementById("add-budget-item").addEventListener("click", function () {
+        // "Add Budget Item" button that gets the HTML for a new budget item
+        function addBudgetItem() {
             fetch('@Url.Action("NewBudgetItem", "Dream")')
                 .then(response => response.text())
                 .then(html => {

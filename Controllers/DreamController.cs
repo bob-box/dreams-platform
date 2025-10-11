@@ -272,11 +272,10 @@ public class DreamController(ApplicationDbContext context,
     /// <summary>
     /// Renders a blank editor row for a budget item.
     /// </summary>
-    /// <returns> eventually returns the HTML code of Views/Shared/EditorTemplates/BudgetItem.cshtml </returns>
     [Authorize]
     public PartialViewResult NewBudgetItem()
     {
-        return PartialView("_BudgetItemEditorRow", new BudgetItem());
+        return PartialView("~/Views/Shared/EditorTemplates/BudgetItem.cshtml", new BudgetItem());
     }
 
     private bool DreamExists(int id, int cloudID)
