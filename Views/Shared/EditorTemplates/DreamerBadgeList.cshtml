@@ -1,0 +1,12 @@
+@model List<Borderland.Dreams.Models.Dreamer>
+
+<ul class="list-unstyled">
+    @foreach (var dreamer in Model)
+    {
+        <li>
+            <span class="badge bg-@(dreamer.IsMainDreamer ? "primary" : "secondary")">
+                @Html.DisplayFor(model => dreamer.User.FullName)
+            </span>
+        </li>
+    }
+</ul>

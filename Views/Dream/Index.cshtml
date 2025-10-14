@@ -38,6 +38,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.RequestedBudgetItems) (min)
             </th>
+            <th>
+                By dreamer
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -58,6 +61,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.TotalRequestedBudget)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Dreamers.Single(d => d.IsMainDreamer).User.FullName)
             </td>
             <td>
                 @if (_authorizationService.AuthorizeAsync(User, item, Operations.Update).Result.Succeeded)

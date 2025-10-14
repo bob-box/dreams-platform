@@ -7,6 +7,6 @@ public class Dreamer
     public bool IsMainDreamer { get; set; }
     public string UserID { get; set; } = null!;
 
-    public User User { get; set; } = null!;
-    public Dream Dream { get; set; } = null!;
+    public User? User { get; set; } = null!;
+    // public Dream Dream { get; set; } = null!;
 }

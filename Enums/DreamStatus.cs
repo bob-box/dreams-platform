@@ -2,7 +2,9 @@ namespace Borderland.Dreams.Enums;
 
 public enum DreamStatus
 {
-    Hidden, // The idea was that this status could only be changed to and away from by only an admin user
+    // The idea was that the Hidden status could only be changed to and away from by only an admin user.
+    // Perhaps use it as a "deleted" status so we can ealsily restore dreams that were deleted by mistake?
+    Hidden,
     Draft,
     Active,
     PartiallyFunded,

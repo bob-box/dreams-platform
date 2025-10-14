@@ -1,0 +1,6 @@
+@model List<Borderland.Dreams.Models.Dreamer>
+
+@foreach (var dreamer in Model)
+{
+    @Html.EditorFor(modelItem => dreamer, "DreamerSingle")
+}

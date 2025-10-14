@@ -3,7 +3,7 @@ using Borderland.Dreams.Enums;
 
 namespace Borderland.Dreams.Models;
 
-public class Dream
+public class Dream : IDreamWithDreamersForAuthorization
 {
     public int ID { get; set; }
     public string Name { get; set; }

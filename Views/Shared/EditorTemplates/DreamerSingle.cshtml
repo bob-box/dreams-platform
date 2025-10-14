@@ -1,0 +1,33 @@
+@using Microsoft.AspNetCore.Identity
+@using HtmlHelpers.BeginCollectionItemCore;
+@model Dreamer
+@inject UserManager<Borderland.Dreams.Models.User> _userManager
+
+@{
+    bool canEditDreamers = (bool)(ViewData["canEditDreamers"] ?? false);
+    var currentUserId = _userManager.GetUserId(User);
+}
+
+@using (Html.BeginCollectionItem("Dreamers"))
+{
+    <tr>
+        <input type="hidden" asp-for="ID" />
+        <input type="hidden" asp-for="IsMainDreamer" />
+        <input type="hidden" asp-for="DreamID" />
+        <input type="hidden" asp-for="UserID" />
+        <td>@Model.User.FullName</td>
+        <td>
+            @(Model.IsMainDreamer ? "Main Dreamer" : "Co-Dreamer")
+        </td>
+        <td>
+            @* 
+                Main dreamer can remove all (but not themselves, obviously since its their dream).
+                Co-dreamers can only remove themselves
+            *@
+            @if (!Model.IsMainDreamer && (canEditDreamers || Model.UserID == currentUserId))
+            {
+                <button type="button" title="Remove" class="btn btn-danger btn-sm" onclick="removeDreamer(this)">&#x2715;</button>
+            }
+        </td>
+    </tr>
+}

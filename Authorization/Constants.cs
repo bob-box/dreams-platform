@@ -13,6 +13,7 @@ namespace Borderland.Dreams.Authorization
         /// </summary>
         public const string MemberRole = "Member";
 
-        public const string JoinedCloudClaim = "JoinedCloud";
-    }
+        public const string JOINED_CLOUD_CLAIM = "JoinedCloud";
+        public const string EDIT_DREAMER = "EditDreamer";
+        }
 }

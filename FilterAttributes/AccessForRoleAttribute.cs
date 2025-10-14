@@ -7,8 +7,8 @@ public class AccessForRoleAttribute(string role) : ActionFilterAttribute
 {
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var isAdmin = context.HttpContext.User.IsInRole(role);
-        if (!isAdmin)
+        var userIsInRole = context.HttpContext.User.IsInRole(role);
+        if (!userIsInRole)
         {
             context.Result = new ForbidResult();
             return;

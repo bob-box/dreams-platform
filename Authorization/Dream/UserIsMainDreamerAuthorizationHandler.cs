@@ -7,13 +7,13 @@ namespace Borderland.Dreams.Authorization.Dream;
 
 // Based on https://learn.microsoft.com/en-us/aspnet/core/security/authorization/secure-data?view=aspnetcore-8.0
 public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager)
-            : AuthorizationHandler<OperationAuthorizationRequirement, Models.Dream>
+            : AuthorizationHandler<OperationAuthorizationRequirement, IDreamWithDreamersForAuthorization>
 {
     UserManager<User> _userManager = userManager;
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
                                OperationAuthorizationRequirement requirement,
-                               Models.Dream dream)
+                               IDreamWithDreamersForAuthorization dream)
     {
         if (context.User == null || dream == null)
         {
@@ -28,7 +28,8 @@ public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager
             Constants.CREATE,
             Constants.READ,
             Constants.UPDATE,
-            Constants.DELETE
+            Constants.DELETE,
+            Constants.EDIT_DREAMER
         };
 
         // If not asking for the allowed operations, return.

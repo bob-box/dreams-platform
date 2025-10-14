@@ -4,7 +4,7 @@ using Borderland.Dreams.Models;
 
 namespace Borderland.Dreams.ViewModels;
 
-public class DreamViewModel
+public class DreamViewModel: IDreamWithDreamersForAuthorization
 {
     public int ID { get; set; }
     public string Name { get; set; }

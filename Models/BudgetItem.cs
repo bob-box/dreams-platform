@@ -27,9 +27,6 @@ public class BudgetItem : IValidatableObject
 
     public decimal? MaxAmount { get; set; }
 
-    [NotMapped] // TODO : Perhaps put this in a ViewModel?
-    public bool IsDeleted { get; set; }
-
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (MaxAmount.HasValue && MaxAmount <= MinAmount)

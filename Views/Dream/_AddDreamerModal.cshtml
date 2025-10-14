@@ -1,0 +1,23 @@
+@using Microsoft.CodeAnalysis.Scripting
+<div class="modal fade" id="add-dreamer-modal" tabindex="-1" aria-labelledby="add-dreamer-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="add-dreamer-modal-label">Add Dreamer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="dreamer-username" class="control-label">Search for Dreamer</label>
+                    <input type="text" id="dreamer-username" class="form-control" placeholder="Enter username"
+                        onkeydown="if(event.key === 'Enter'){ event.preventDefault(); addDreamer(); }">
+                    <span class="text-danger" id="dreamer-username-validation"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="addDreamer()">Add Dreamer</button>
+            </div>
+        </div>
+    </div>
+</div>
