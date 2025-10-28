@@ -4,6 +4,7 @@ using Borderland.Dreams.Models;
 using Borderland.Dreams.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Controllers;
 

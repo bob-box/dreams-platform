@@ -276,7 +276,7 @@ public class DreamController(ApplicationDbContext context,
     }
 
     [HttpPost]
-    public async Task<IActionResult> FindDreamer([FromBody] FindDreamerRequest request)
+    public async Task<IActionResult> FindDreamer([FromBody] FindDreamerViewModel request)
     {
         var dreamID = request.DreamID;
         var username = request.Username;
@@ -361,11 +361,12 @@ public class DreamController(ApplicationDbContext context,
 
     private IQueryable<Dream> IsAuthorizedToViewDream(IQueryable<Dream> dreamQuery)
     {
-        var isAuthorizedToViewAllDreams = User.IsInRole(Constants.AdminRole);
-        // Do not show dreams that are in Draft or Hidden status
         // Admins are allowed to see all dreams
+        var isAdmin = User.IsInRole(Constants.AdminRole);
+
+        // Do not show dreams that are in Draft or Hidden status
         // Main dreamer and co-dreamers are also allowed to see their own dreams :)
-        if (!isAuthorizedToViewAllDreams)
+        if (!isAdmin)
         {
             var currentUserId = _userManager.GetUserId(User);
             dreamQuery = dreamQuery.Where(x => (x.Status != DreamStatus.Hidden && x.Status != DreamStatus.Draft)
