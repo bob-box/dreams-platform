@@ -1,0 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace Borderland.Dreams.ViewModels;
+
+public class FundViewModel
+{
+    public int ID { get; set; }
+    public int DreamID { get; set; }
+    public string UserID { get; set; }
+   
+    [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
+    [DataType(DataType.Currency)]
+    public decimal Amount { get; set; }
+    public DateTime CreatedDate { get; set; }
+}

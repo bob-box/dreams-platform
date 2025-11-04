@@ -24,5 +24,5 @@ public class FundingRound
     [Column(TypeName = "decimal(18, 2)")]
     public decimal MaxAmountPerDreamPerUser { get; set; }
 
-    public required Cloud Cloud { get; set; }
+    public Cloud Cloud { get; set; }
 }

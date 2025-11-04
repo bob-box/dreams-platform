@@ -13,19 +13,19 @@ public class DreamViewModel: IDreamWithDreamersForAuthorization
     public DateTime CreatedDate { get; set; } = DateTime.Now;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
     [Display(Name = "Budget")]
-    public List<BudgetItem> BudgetItems { get; set; } = new List<BudgetItem>();
+    public List<BudgetItemViewModel> BudgetItems { get; set; } = new List<BudgetItemViewModel>();
     public int CloudID { get; set; }
-    public List<Fund> Funds { get; set; } = new List<Fund>();
-    public List<Comment> Comments { get; set; } = new List<Comment>();
-    public List<Expense> Expenses { get; set; } = new List<Expense>();
-    public List<Tag> Tags { get; set; } = new List<Tag>();
-    public List<Dreamer> Dreamers { get; set; } = new List<Dreamer>();
+    public List<FundViewModel> Funds { get; set; } = new List<FundViewModel>();
+    public List<CommentViewModel> Comments { get; set; } = new List<CommentViewModel>();
+    public List<ExpenseViewModel> Expenses { get; set; } = new List<ExpenseViewModel>();
+    public List<TagViewModel> Tags { get; set; } = new List<TagViewModel>();
+    public List<DreamerViewModel> Dreamers { get; set; } = new List<DreamerViewModel>();
 
 
     [Display(Name = "Requested Budget")]
-    public List<BudgetItem> RequestedBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Requesting).ToList();
+    public List<BudgetItemViewModel> RequestedBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Requesting).ToList();
     [Display(Name = "Existing Budget")]
-    public List<BudgetItem> ExistingBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Existing).ToList();
+    public List<BudgetItemViewModel> ExistingBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Existing).ToList();
 
     [Display(Name = "Total Requested Budget")]
     [DataType(DataType.Currency)]

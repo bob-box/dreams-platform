@@ -17,6 +17,6 @@ public class Fund
     [DataType(DataType.Date)]
     public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-    public required User User { get; set; }
-    public required Dream Dream { get; set; }
+    public User User { get; set; }
+    public Dream Dream { get; set; }
 }
