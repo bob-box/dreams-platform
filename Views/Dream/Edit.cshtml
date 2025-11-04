@@ -123,6 +123,14 @@
             }
         }
 
+        $("#add-dreamer-modal").on("shown.bs.modal", function () {
+            document.getElementById("dreamer-username").focus();
+        });
+        $("#add-dreamer-modal").on("hidden.bs.modal", function () {
+            document.getElementById("dreamer-username-validation").innerText = '';
+        });
+
+        // Called from the DreamerSingle Editor Template
         async function removeDreamer(btn) {
             btn.closest('tr').remove();
         }

@@ -1,6 +1,6 @@
-using Borderland.Dreams.Models;
+using Borderland.Dreams.ViewModels;
 
 public interface IDreamWithDreamersForAuthorization
 {
-    public List<Dreamer> Dreamers { get; set; }
+    public List<DreamerViewModel> Dreamers { get; set; }
 }

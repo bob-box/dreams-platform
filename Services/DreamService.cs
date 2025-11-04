@@ -19,26 +19,4 @@ public class DreamService(ApplicationDbContext _context)
             .Include(d => d.Dreamers).ThenInclude(d => d.User)
             .Where(d => d.CloudID == cloudId);
     }
-
-    // Should perhaps be moved to a mapper class.
-    public DreamViewModel? MapToViewModel(Dream dream)
-    {
-        if (dream == null) return null;
-        
-        return new DreamViewModel
-        {
-            ID = dream.ID,
-            Name = dream.Name,
-            Description = dream.Description,
-            CreatedDate = dream.CreatedDate,
-            Status = dream.Status,
-            BudgetItems = dream.BudgetItems,
-            CloudID = dream.CloudID,
-            Funds = dream.Funds,
-            Comments = dream.Comments,
-            Expenses = dream.Expenses,
-            Tags = dream.Tags,
-            Dreamers = dream.Dreamers
-        };
-    }
 }

@@ -34,7 +34,7 @@ public class DreamController(ApplicationDbContext context,
         ViewData["showJoinCloudButton"] = !userHasAlreadyJoinedTheCloud && User.Identity?.IsAuthenticated == true;
         ViewData["CloudID"] = cloudID;
 
-        var viewModels = listQuery.Select(d => dreamService.MapToViewModel(d)).ToList();
+        var viewModels = listQuery.Select(d => d.ToViewModel()).ToList();
         if (viewModels.Any(vm => vm == null))
         {
             return Problem("One or more dreams could not be mapped to a view model.");
@@ -60,7 +60,7 @@ public class DreamController(ApplicationDbContext context,
         dreamQuery = IsAuthorizedToViewDream(dreamQuery);
 
         var dream = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
-        var viewModel = dreamService.MapToViewModel(dream);
+        var viewModel = dream.ToViewModel();
 
         return viewModel == null ? NotFound() : View(viewModel);
     }
@@ -316,15 +316,17 @@ public class DreamController(ApplicationDbContext context,
         {
             return BadRequest("This user has not confirmed their email address and cannot be added as a dreamer.");
         }
+        if (dream.Dreamers.Any(d => d.UserID == userToAdd.Id))
+        {
+            return BadRequest("This user is already a dreamer for this dream.");
+        }
+        
         var currentUserId = _userManager.GetUserId(User);
         if (userToAdd.Id == currentUserId)
         {
             return BadRequest("This is your own dream, silly!");
         }
-        if (dream.Dreamers.Any(d => d.UserID == userToAdd.Id))
-        {
-            return BadRequest("This user is already a dreamer for this dream.");
-        }
+        
         var userClaims = await _userManager.GetClaimsAsync(userToAdd);
         bool hasJoinedCloud = userClaims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudID.ToString());
         if (!hasJoinedCloud)
@@ -341,7 +343,7 @@ public class DreamController(ApplicationDbContext context,
             IsMainDreamer = false
         };
 
-        ViewData["canEditDreamers"] = authorizationResult.Succeeded; // Needed for the delete button to be shown
+        ViewData["canEditDreamers"] = true; // Needed for the delete button to be shown
         return PartialView("~/Views/Shared/EditorTemplates/DreamerSingle.cshtml", newDreamer);
     }
 
@@ -365,7 +367,7 @@ public class DreamController(ApplicationDbContext context,
         var isAdmin = User.IsInRole(Constants.AdminRole);
 
         // Do not show dreams that are in Draft or Hidden status
-        // Main dreamer and co-dreamers are also allowed to see their own dreams :)
+        // But dreamers are still allowed to see their own dreams :)
         if (!isAdmin)
         {
             var currentUserId = _userManager.GetUserId(User);
