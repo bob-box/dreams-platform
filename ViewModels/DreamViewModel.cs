@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using Borderland.Dreams.Enums;
 using Borderland.Dreams.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Borderland.Dreams.ViewModels;
 
-public class DreamViewModel: IDreamWithDreamersForAuthorization
+public class DreamViewModel
 {
     public int ID { get; set; }
     public string Name { get; set; }
@@ -23,9 +24,11 @@ public class DreamViewModel: IDreamWithDreamersForAuthorization
 
 
     [Display(Name = "Requested Budget")]
-    public List<BudgetItemViewModel> RequestedBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Requesting).ToList();
+    [ValidateNever]
+    public IEnumerable<BudgetItemViewModel> RequestedBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Requesting);
     [Display(Name = "Existing Budget")]
-    public List<BudgetItemViewModel> ExistingBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Existing).ToList();
+    [ValidateNever]
+    public IEnumerable<BudgetItemViewModel> ExistingBudgetItems => BudgetItems.Where(b => b.Type == BudgetItemType.Existing);
 
     [Display(Name = "Total Requested Budget")]
     [DataType(DataType.Currency)]

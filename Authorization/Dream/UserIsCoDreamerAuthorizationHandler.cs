@@ -7,15 +7,15 @@ namespace Borderland.Dreams.Authorization.Dream;
 
 // Based on https://learn.microsoft.com/en-us/aspnet/core/security/authorization/secure-data?view=aspnetcore-8.0
 public class UserIsCoDreamerAuthorizationHandler(UserManager<User> userManager) :
-    AuthorizationHandler<OperationAuthorizationRequirement, IDreamWithDreamersForAuthorization>
+    AuthorizationHandler<OperationAuthorizationRequirement, IEnumerable<IDreamersForAuthorization>>
 {
     UserManager<User> _userManager = userManager;
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
                                OperationAuthorizationRequirement requirement,
-                               IDreamWithDreamersForAuthorization dream)
+                               IEnumerable<IDreamersForAuthorization> dreamers)
     {
-        if (context.User == null || dream == null)
+        if (context.User == null || dreamers == null || !dreamers.Any())
         {
             // Returning Task.CompletedTask without a prior call to context.Success or context.Fail
             // is not a success or failure, it allows other authorization handlers to run.
@@ -35,7 +35,7 @@ public class UserIsCoDreamerAuthorizationHandler(UserManager<User> userManager) 
             return Task.CompletedTask;
         }
 
-        var coDreamerUserIds = dream.Dreamers.Where(x => !x.IsMainDreamer)
+        var coDreamerUserIds = dreamers.Where(x => !x.IsMainDreamer)
                                              .Select(x => x.UserID);
 
         if (coDreamerUserIds.Contains(_userManager.GetUserId(context.User)))

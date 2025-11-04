@@ -1,8 +1,10 @@
+@using Borderland.Dreams.Middleware
+@inject ICloudNameResolver cloudNameResolver
+
 @model IEnumerable<Borderland.Dreams.ViewModels.DreamViewModel>
 
 @{
     ViewData["Title"] = "Index";
-    string cloudID = ViewData["CloudID"]?.ToString() ?? throw new ArgumentNullException(nameof(cloudID)); // Should always have a cloud id here.
     bool showJoinCloudButton = (ViewData["showJoinCloudButton"] as bool?) ?? false;
 }
 
@@ -11,7 +13,7 @@
 {
     <p>
         <form asp-action="Join" asp-controller="Cloud" method="post">
-            <input type="hidden" name="id" value="@cloudID" />
+            <input type="hidden" name="id" value="@cloudNameResolver.CloudID" />
             <button type="submit">Join Cloud</button>
         </form>
     </p>
@@ -63,15 +65,15 @@
                 @Html.DisplayFor(modelItem => item.TotalRequestedBudget)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Dreamers.Single(d => d.IsMainDreamer).User.FullName)
+                @Html.DisplayFor(modelItem => item.Dreamers.Single(d => d.IsMainDreamer).FullName)
             </td>
             <td>
-                @if (_authorizationService.AuthorizeAsync(User, item, Operations.Update).Result.Succeeded)
+                @if (_authorizationService.AuthorizeAsync(User, item.Dreamers, Operations.Update).Result.Succeeded)
                 {
                     <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> <text>|</text>
                 }
                 <a asp-action="Details" asp-route-id="@item.ID">Details</a>
-                @if (_authorizationService.AuthorizeAsync(User, item, Operations.Delete).Result.Succeeded)
+                @if (_authorizationService.AuthorizeAsync(User, item.Dreamers, Operations.Delete).Result.Succeeded)
                 {
                    <text>|</text> <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
                 }

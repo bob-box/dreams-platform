@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Authorization.Dream;
 using Borderland.Dreams.Services;
+using Borderland.Dreams.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +37,8 @@ builder.Services.AddDefaultIdentity<User>(options =>
 
 // Application services.
 builder.Services.AddScoped<DreamService>();
+builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
+builder.Services.AddScoped<CloudNameResolverActionFilter>();
 
 // Authorization handlers.
 // Services using Entity Framework must be registered for dependency injection using AddScoped.
@@ -78,8 +81,13 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
+
+app.UseWhen(context => context.Request.RouteValues["controller"]?.ToString() == "Dream", appBuilder =>
+{
+    // Custom middleware to resolve CloudName to CloudID. Must be placed after UseRouting to get route data.
+    appBuilder.UseCloudNameResolver(); 
+});
 
 app.UseAuthorization();
 

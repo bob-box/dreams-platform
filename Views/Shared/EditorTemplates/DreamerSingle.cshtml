@@ -1,6 +1,6 @@
 @using Microsoft.AspNetCore.Identity
 @using HtmlHelpers.BeginCollectionItemCore;
-@model Dreamer
+@model DreamerViewModel
 @inject UserManager<Borderland.Dreams.Models.User> _userManager
 
 @{
@@ -15,7 +15,9 @@
         <input type="hidden" asp-for="IsMainDreamer" />
         <input type="hidden" asp-for="DreamID" />
         <input type="hidden" asp-for="UserID" />
-        <td>@Model.User.FullName</td>
+        <input type="hidden" asp-for="FullName" />
+        <input type="hidden" asp-for="UserName" />
+        <td>@Model.FullName</td>
         <td>
             @(Model.IsMainDreamer ? "Main Dreamer" : "Co-Dreamer")
         </td>

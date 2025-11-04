@@ -1,4 +1,4 @@
-@model Borderland.Dreams.Models.Dream
+@model DreamViewModel
 
 @{
     ViewData["Title"] = "Create";
@@ -13,6 +13,7 @@
         <a class="btn btn-secondary" asp-action="Index">Cancel</a>
     </div>
 </div>
+<div asp-validation-summary="All" class="text-danger"></div>
 
 <hr />
 
@@ -33,7 +34,7 @@
             </div>
             <hr />
             <h4>Dreamers</h4>
-            <table class="table">
+            <table class="table dreamers-table">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -41,15 +42,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var dreamer in Model.Dreamers)
-                    {
-                        <tr>
-                            <td>@dreamer.User.FullName</td>
-                            <td>@(dreamer.IsMainDreamer ? "Main Dreamer" : "Co-Dreamer")</td>
-                        </tr>
-                    }
+                    @Html.EditorFor(model => model.Dreamers, "DreamerTableRow")
                 </tbody>
             </table>
+            <button type="button" class="btn btn-outline-secondary mt-2" data-bs-toggle="modal" data-bs-target="#add-dreamer-modal">
+                &#65291; Add dreamer
+            </button>
         </div>
         <div class="col-md-8">
             <h4>Budget Items</h4>
@@ -64,9 +62,74 @@
     </div>
 </form>
 
+<partial name="_AddDreamerModal" />
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script type="text/javascript">
+        // "Add Budget Item" button that gets the HTML for a new budget item
+        function addBudgetItem() {
+            fetch('@Url.Action("NewBudgetItem", "Dream")')
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById('budget-items');
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+        }
+
+        // Called by the BudgetItem Editor Template
+        function removeBudgetItem(btn) {
+            const container = btn.closest('.budget-item-container')
+            container.remove();
+        }
+
+        async function addDreamer() {
+            const username = document.getElementById("dreamer-username").value;
+            if (!username) {
+                return;
+            }
+            try {
+
+                let response = await fetch('@Url.Action("FindDreamer", "Dream")', {
+                    method: 'POST',
+                    body: JSON.stringify({ dreamID: 0, username: username }),
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                })
+                if (!response.ok) {
+                    const errorText = JSON.parse(await response.text());
+                    throw new Error(errorText);
+                }
+
+                const html = await response.text();
+                // Append the new dreamer row to the table
+                const tbody = document.querySelector("table.dreamers-table tbody");
+                tbody.insertAdjacentHTML('beforeend', html);
+                // Close the modal
+                const addDreamerModalEl = document.getElementById('add-dreamer-modal');
+                const addDreamerModal = bootstrap.Modal.getInstance(addDreamerModalEl);
+                addDreamerModal.hide();
+                // Clear the input field
+                document.getElementById("dreamer-username").value = '';
+            } catch (error) {
+                document.getElementById("dreamer-username-validation").innerText = error.message;
+            }
+        }
+
+        $("#add-dreamer-modal").on("shown.bs.modal", function () {
+            document.getElementById("dreamer-username").focus();
+        });
+        $("#add-dreamer-modal").on("hidden.bs.modal", function () {
+            document.getElementById("dreamer-username-validation").innerText = '';
+        });
+
+        // Called from the DreamerSingle Editor Template
+        async function removeDreamer(btn) {
+            btn.closest('tr').remove();
+        }
+    </script>
 }

@@ -7,15 +7,15 @@ namespace Borderland.Dreams.Authorization.Dream;
 
 // Based on https://learn.microsoft.com/en-us/aspnet/core/security/authorization/secure-data?view=aspnetcore-8.0
 public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager)
-            : AuthorizationHandler<OperationAuthorizationRequirement, IDreamWithDreamersForAuthorization>
+            : AuthorizationHandler<OperationAuthorizationRequirement, IEnumerable<IDreamersForAuthorization>>
 {
     UserManager<User> _userManager = userManager;
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
                                OperationAuthorizationRequirement requirement,
-                               IDreamWithDreamersForAuthorization dream)
+                               IEnumerable<IDreamersForAuthorization> dreamers)
     {
-        if (context.User == null || dream == null)
+        if (context.User == null || dreamers == null || !dreamers.Any())
         {
             // Returning Task.CompletedTask without a prior call to context.Success or context.Fail
             // is not a success or failure, it allows other authorization handlers to run.
@@ -38,9 +38,7 @@ public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager
             return Task.CompletedTask;
         }
 
-        // If you get "sequence contains no elements" error here, then you forgot to .Include(d => d.Dreamers) in the initial query
-        // Because there cannot be a dream without a main dreamer.
-        var mainDreamerUserId = dream.Dreamers.Single(x => x.IsMainDreamer).UserID;
+        var mainDreamerUserId = dreamers.Single(x => x.IsMainDreamer).UserID;
         if (mainDreamerUserId == _userManager.GetUserId(context.User))
         {
             context.Succeed(requirement);

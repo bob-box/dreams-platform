@@ -1,4 +1,4 @@
-@model Borderland.Dreams.Models.Dream
+@model Borderland.Dreams.ViewModels.DreamViewModel
 @{
     ViewData["Title"] = "Edit";
     bool canEditDreamers = (bool)(ViewData["canEditDreamers"] ?? false);
@@ -49,8 +49,9 @@
             </table>
             @if (canEditDreamers)
             {
-                <button type="button" class="btn btn-outline-secondary mt-2" data-bs-toggle="modal" data-bs-target="#add-dreamer-modal">&#65291; Add
-                    dreamer</button>
+                <button type="button" class="btn btn-outline-secondary mt-2" data-bs-toggle="modal" data-bs-target="#add-dreamer-modal">
+                    &#65291; Add dreamer
+                </button>
             }
         </div>
         <div class="col-md-8">

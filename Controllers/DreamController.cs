@@ -7,32 +7,30 @@ using Borderland.Dreams.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Services;
+using Borderland.Dreams.Services.Mappers;
+using Borderland.Dreams.Middleware;
+using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Controllers;
 
 [Authorize]
+//[ServiceFilter(typeof(CloudNameResolverActionFilter))]
 public class DreamController(ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    DreamService dreamService)
+    DreamService dreamService,
+    ICloudNameResolver cloudNameService)
     : BaseController(context, authorizationService, userManager)
 {
     // GET: Dream
     [AllowAnonymous]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index()//[FromRoute] string? cloudName)
     {
-        // TODO : put this in a filter?
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
-
-        var listQuery = dreamService.GetDreamsByCloudIdBaseQuery(cloudID);
+        var listQuery = dreamService.GetDreamsByCloudIdBaseQuery();
         listQuery = IsAuthorizedToViewDream(listQuery);
 
-        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudID.ToString());
+        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
         ViewData["showJoinCloudButton"] = !userHasAlreadyJoinedTheCloud && User.Identity?.IsAuthenticated == true;
-        ViewData["CloudID"] = cloudID;
 
         var viewModels = listQuery.Select(d => d.ToViewModel()).ToList();
         if (viewModels.Any(vm => vm == null))
@@ -51,12 +49,7 @@ public class DreamController(ApplicationDbContext context,
             return NotFound();
         }
 
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
-
-        var dreamQuery = dreamService.GetDreamsByCloudIdBaseQuery(cloudID);
+        var dreamQuery = dreamService.GetDreamsByCloudIdBaseQuery();
         dreamQuery = IsAuthorizedToViewDream(dreamQuery);
 
         var dream = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
@@ -66,19 +59,24 @@ public class DreamController(ApplicationDbContext context,
     }
 
     // GET: Dream/Create
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
-        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudID.ToString());
+        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
         if (!userHasAlreadyJoinedTheCloud)
         {
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
         }
-
-        return View(new Dream());
+        var viewModel = new DreamViewModel();
+        var user = await _userManager.GetUserAsync(User);
+        var dreamer = new DreamerViewModel
+        {
+            UserID = user.Id,
+            IsMainDreamer = true,
+            FullName = user.FullName,
+            UserName = user.UserName
+        };
+        viewModel.Dreamers.Add(dreamer); // Add the main dreamer (current user)
+        return View(viewModel);
     }
 
     // POST: Dream/Create
@@ -86,14 +84,9 @@ public class DreamController(ApplicationDbContext context,
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems")] Dream dream)
+    public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems,Dreamers")] DreamViewModel viewModel)
     {
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
-
-        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudID.ToString());
+        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
         if (!userHasAlreadyJoinedTheCloud)
         {
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
@@ -101,16 +94,11 @@ public class DreamController(ApplicationDbContext context,
 
         if (!ModelState.IsValid)
         {
-            return View(dream);
+            return View(viewModel);
         }
+        var dream = viewModel.ToModel();
 
-        dream.Dreamers.Add(new Dreamer
-        {
-            User = await _userManager.GetUserAsync(User),
-            IsMainDreamer = true,
-            DreamID = dream.ID
-        });
-        dream.CloudID = cloudID; // Set the CloudID from the current context
+        dream.CloudID = cloudNameService.CloudID; // Set the CloudID from the current context
         dream.Status = DreamStatus.Draft;
 
         _context.Add(dream);
@@ -125,27 +113,24 @@ public class DreamController(ApplicationDbContext context,
         {
             return NotFound();
         }
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
 
-        var dreamQuery = dreamService.GetDreamsByCloudIdBaseQuery(cloudID);
-        var dream = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
+        var dreamQuery = dreamService.GetDreamsByCloudIdBaseQuery();
+        var dreamFromDb = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
 
-        if (dream == null)
+        if (dreamFromDb == null)
         {
             return NotFound();
         }
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dream, Operations.Update);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.Update);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
         }
 
-        CheckIfUserCanEditDreamers(dream);
-        return View(dream);
+        await CheckIfUserCanEditDreamers(dreamFromDb.Dreamers);
+        var viewModel = dreamFromDb.ToViewModel();
+        return View(viewModel);
     }
 
     // POST: Dream/Edit/5
@@ -153,45 +138,41 @@ public class DreamController(ApplicationDbContext context,
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,BudgetItems,Dreamers")] Dream dream)
+    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,BudgetItems,Dreamers")] DreamViewModel viewModel)
     {
-        if (id != dream.ID)
+        if (id != viewModel.ID)
         {
             return NotFound();
         }
-        if (!TryGetCloudID(out var cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
 
         // We need to fetch the dreams dreamers to check authorization
-        var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery(cloudID)
+        var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
                 .SingleOrDefaultAsync(m => m.ID == id);
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb, Operations.Update);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.Update);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
         }
         if (!ModelState.IsValid)
         {
-            CheckIfUserCanEditDreamers(dreamFromDb);
-            return View(dream);
+            await CheckIfUserCanEditDreamers(dreamFromDb.Dreamers);
+            return View(viewModel);
         }
 
         try
         {
             // Update the dream
-            dreamFromDb.Name = dream.Name;
-            dreamFromDb.Description = dream.Description;
-            dreamFromDb.Dreamers = dream.Dreamers.Where(x => x != null).ToList();
-            dreamFromDb.BudgetItems = dream.BudgetItems.Where(b => b != null).ToList();
+            dreamFromDb.Name = viewModel.Name;
+            dreamFromDb.Description = viewModel.Description;
+            dreamFromDb.Dreamers = viewModel.Dreamers.Where(x => x != null).Select(x => x.ToModel()).ToList();
+            dreamFromDb.BudgetItems = viewModel.BudgetItems.Where(b => b != null).Select(x => x.ToModel()).ToList();
 
             if (!dreamFromDb.Dreamers.Any(x => x.IsMainDreamer))
             {
                 return BadRequest("A dream must have at least one main dreamer.");
             }
-    
+
             _context.Entry(dreamFromDb).State = EntityState.Modified;
 
             // Ensure some properties are not modified
@@ -205,7 +186,7 @@ public class DreamController(ApplicationDbContext context,
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!DreamExists(dream.ID, cloudID))
+            if (!DreamExists(viewModel.ID, cloudNameService.CloudID))
             {
                 return NotFound();
             }
@@ -214,7 +195,7 @@ public class DreamController(ApplicationDbContext context,
                 throw;
             }
         }
-        return RedirectToAction(nameof(Details), new { id = dream.ID });
+        return RedirectToAction(nameof(Details), new { id = viewModel.ID });
     }
 
     // GET: Dream/Delete/5
@@ -224,26 +205,22 @@ public class DreamController(ApplicationDbContext context,
         {
             return NotFound();
         }
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
 
-        var dream = await dreamService.GetDreamsByCloudIdBaseQuery(cloudID)
+        var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
             .SingleOrDefaultAsync(m => m.ID == id);
 
-        if (dream == null)
+        if (dreamFromDb == null)
         {
             return NotFound();
         }
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dream, Operations.Delete);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.Delete);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
         }
 
-        return View(dream);
+        return View(dreamFromDb);
     }
 
     // POST: Dream/Delete/5
@@ -251,25 +228,20 @@ public class DreamController(ApplicationDbContext context,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return RedirectToAction("Index", "Home", new { cloudName = "" });
-        }
-
-        var dream = await dreamService.GetDreamsByCloudIdBaseQuery(cloudID)
+        var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
             .SingleOrDefaultAsync(m => m.ID == id);
 
-        if (dream == null)
+        if (dreamFromDb == null)
         {
             return NotFound();
         }
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dream, Operations.Delete);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.Delete);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
         }
-        _context.Dream.Remove(dream);
+        _context.Dream.Remove(dreamFromDb);
 
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
@@ -282,28 +254,9 @@ public class DreamController(ApplicationDbContext context,
         var username = request.Username;
 
         // Check data
-        if (string.IsNullOrWhiteSpace(username) || dreamID <= 0)
+        if (string.IsNullOrWhiteSpace(username))
         {
             return BadRequest("Invalid data provided.");
-        }
-        if (!TryGetCloudID(out int cloudID))
-        {
-            return BadRequest("Cloud context is missing.");
-        }
-
-        // Check dream stuff
-        var dream = await dreamService.GetDreamsByCloudIdBaseQuery(cloudID)
-            .SingleOrDefaultAsync(d => d.ID == dreamID);
-
-        if (dream == null)
-        {
-            return NotFound("Dream not found or you do not have access to it.");
-        }
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dream, Operations.EditDreamers);
-        if (!authorizationResult.Succeeded)
-        {
-            return new ForbiddenResult("You are not allowed to add dreamers to this dream.");
         }
 
         // Check user stuff
@@ -316,30 +269,48 @@ public class DreamController(ApplicationDbContext context,
         {
             return BadRequest("This user has not confirmed their email address and cannot be added as a dreamer.");
         }
-        if (dream.Dreamers.Any(d => d.UserID == userToAdd.Id))
+        if (dreamID > 0)
         {
-            return BadRequest("This user is already a dreamer for this dream.");
+            // Check dream stuff
+            var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
+                .SingleOrDefaultAsync(d => d.ID == dreamID);
+
+            if (dreamFromDb == null)
+            {
+                return NotFound("Dream not found or you do not have access to it.");
+            }
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.EditDreamers);
+            if (!authorizationResult.Succeeded)
+            {
+                return new ForbiddenResult("You are not allowed to add dreamers to this dream.");
+            }
+            if (dreamFromDb.Dreamers.Any(d => d.UserID == userToAdd.Id))
+            {
+                return BadRequest("This user is already a dreamer for this dream.");
+            }
         }
-        
+
         var currentUserId = _userManager.GetUserId(User);
         if (userToAdd.Id == currentUserId)
         {
             return BadRequest("This is your own dream, silly!");
         }
-        
+
         var userClaims = await _userManager.GetClaimsAsync(userToAdd);
-        bool hasJoinedCloud = userClaims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudID.ToString());
+        bool hasJoinedCloud = userClaims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
         if (!hasJoinedCloud)
         {
             return BadRequest("This user has not joined the cloud and cannot be added as a dreamer.");
         }
 
         // All good, add the dreamer
-        var newDreamer = new Dreamer
+        var newDreamer = new DreamerViewModel
         {
             UserID = userToAdd.Id,
-            User = userToAdd,
-            DreamID = dream.ID,
+            FullName = userToAdd.FullName,
+            UserName = userToAdd.UserName,
+            DreamID = dreamID,
             IsMainDreamer = false
         };
 
@@ -353,7 +324,7 @@ public class DreamController(ApplicationDbContext context,
     [Authorize]
     public PartialViewResult NewBudgetItem()
     {
-        return PartialView("~/Views/Shared/EditorTemplates/BudgetItem.cshtml", new BudgetItem());
+        return PartialView("~/Views/Shared/EditorTemplates/BudgetItemViewModel.cshtml", new BudgetItemViewModel());
     }
 
     private bool DreamExists(int id, int cloudID)
@@ -378,9 +349,9 @@ public class DreamController(ApplicationDbContext context,
         return dreamQuery;
     }
 
-    private void CheckIfUserCanEditDreamers(Dream dreamFromDb)
+    private async Task CheckIfUserCanEditDreamers(IEnumerable<IDreamersForAuthorization> dreamers)
     {
-        var authorizationResult = _authorizationService.AuthorizeAsync(User, dreamFromDb, Operations.EditDreamers).Result;
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamers, Operations.EditDreamers);
         ViewData["canEditDreamers"] = authorizationResult.Succeeded; // Needed for the delete button to be shown
     }
 }

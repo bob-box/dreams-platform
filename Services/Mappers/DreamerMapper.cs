@@ -14,7 +14,8 @@ public static class DreamerMapper
             DreamID = model.DreamID,
             UserID = model.UserID,
             IsMainDreamer = model.IsMainDreamer,
-            User = model.User?.ToViewModel()
+            FullName = model.User.FullName,
+            UserName = model.User.UserName,
         };
     }
 
@@ -27,7 +28,6 @@ public static class DreamerMapper
             DreamID = vm.DreamID,
             UserID = vm.UserID,
             IsMainDreamer = vm.IsMainDreamer,
-            User = vm.User?.ToModel()
         };
     }
 }
