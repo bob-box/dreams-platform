@@ -13,7 +13,6 @@ public static class UserMapper
             Id = model.Id,
             UserName = model.UserName,
             FullName = model.FullName,
-            UserType = model.UserType,
             Email = model.Email
         };
     }
@@ -26,7 +25,6 @@ public static class UserMapper
             Id = vm.Id,
             UserName = vm.UserName,
             FullName = vm.FullName,
-            UserType = vm.UserType,
             Email = vm.Email
         };
     }

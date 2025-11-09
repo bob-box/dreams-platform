@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<Dream> Dream { get; set; } = default!;
     public DbSet<BudgetItem> BudgetItem { get; set; } = default!;
     public DbSet<Dreamer> Dreamer { get; set; } = default!;
+    public DbSet<Wallet> Wallet { get; set; } = default!;
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {

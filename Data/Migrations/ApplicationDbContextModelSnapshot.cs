@@ -46,7 +46,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("DreamID");
 
-                    b.ToTable("BudgetItem", (string)null);
+                    b.ToTable("BudgetItem");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Cloud", b =>
@@ -67,7 +67,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Cloud", (string)null);
+                    b.ToTable("Cloud");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Comment", b =>
@@ -96,7 +96,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Comment", (string)null);
+                    b.ToTable("Comment");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dream", b =>
@@ -126,7 +126,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("CloudID");
 
-                    b.ToTable("Dream", (string)null);
+                    b.ToTable("Dream");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dreamer", b =>
@@ -151,7 +151,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Dreamer", (string)null);
+                    b.ToTable("Dreamer");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Expense", b =>
@@ -177,7 +177,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("DreamID");
 
-                    b.ToTable("Expense", (string)null);
+                    b.ToTable("Expense");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Fund", b =>
@@ -205,7 +205,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Fund", (string)null);
+                    b.ToTable("Fund");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Tag", b =>
@@ -220,7 +220,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("Tag", (string)null);
+                    b.ToTable("Tag");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.User", b =>
@@ -279,9 +279,6 @@ namespace Borderland.Dreams.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserType")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -300,7 +297,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("Amount")
+                    b.Property<decimal>("Balance")
                         .HasColumnType("decimal(18, 2)");
 
                     b.Property<int>("CloudID")
@@ -315,7 +312,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.HasIndex("UserID", "CloudID")
                         .IsUnique();
 
-                    b.ToTable("Wallet", (string)null);
+                    b.ToTable("Wallet");
                 });
 
             modelBuilder.Entity("DreamTag", b =>
@@ -330,7 +327,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("TagsID");
 
-                    b.ToTable("DreamTag", (string)null);
+                    b.ToTable("DreamTag");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -504,7 +501,7 @@ namespace Borderland.Dreams.Data.Migrations
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dreamer", b =>
                 {
-                    b.HasOne("Borderland.Dreams.Models.Dream", "Dream")
+                    b.HasOne("Borderland.Dreams.Models.Dream", null)
                         .WithMany("Dreamers")
                         .HasForeignKey("DreamID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -515,8 +512,6 @@ namespace Borderland.Dreams.Data.Migrations
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Dream");
 
                     b.Navigation("User");
                 });

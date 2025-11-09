@@ -1,35 +1,45 @@
-﻿@{
-    var cloudName = Html.GetCloudName();
+﻿@using Microsoft.Identity.Client
+@{
+    var cloudName = cloudNameResolver.CloudName;
     var isWithinACloud = !string.IsNullOrWhiteSpace(cloudName);
 }
+@functions {
+    public string GetActiveClass(string controllerName)
+    {
+        return ViewContext.RouteData.Values["controller"]?.ToString() == controllerName ? "active" : "";
+    }
+}
+
 <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
     <div class="container-fluid">
-        <a class="navbar-brand" asp-controller="Home" asp-action="">Borderland.Dreams</a>
+        <a class="navbar-brand" asp-controller="Cloud" asp-action="" asp-route-cloudName="">Cloud list</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
             aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
             <ul class="navbar-nav flex-grow-1">
-                @if (!isWithinACloud)
+                @if (isWithinACloud)
                 {
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-controller="Cloud" asp-action="" asp-route-cloudName="">Clouds</a>
-                    </li>
-                }
-                else
-                {
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-controller="Cloud" asp-action="" asp-route-cloudName="">« Back to Clouds</a>
+                        <a class="nav-link text-dark @(GetActiveClass("Dream"))" asp-controller="Dream" asp-action="" asp-route-cloudName="@cloudName">Dreams</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-controller="Dream" asp-action="" asp-route-cloudName="@cloudName">Dreams</a>
+                        <a class="nav-link text-dark" asp-controller="Dream" asp-action="" asp-route-cloudName="@cloudName">test</a>
                     </li>
                 }
                 @if (User.IsInRole(Constants.AdminRole))
                 {
-                    <li class="nav-item ms-sm-auto">
-                        <a class="nav-link text-dark" asp-controller="Admin" asp-action="" asp-route-cloudName="@cloudName">Admin Control Panel</a>
+                    <li class="nav-item ms-sm-auto dropdown">
+                        <a class="nav-link text-dark dropdown-toggle" data-bs-toggle="dropdown" href="#">Admin Control Panel</a>
+                            <ul class="dropdown-menu">
+                                @if (isWithinACloud)
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageUsersInCloud" asp-route-cloudName="@cloudName">Manage Users</a></li>
+                                }
+                                <li><a class="dropdown-item" href="#">Another action</a></li>
+                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            </ul>
                     </li>
                 }
             </ul>

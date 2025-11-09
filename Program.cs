@@ -37,6 +37,7 @@ builder.Services.AddDefaultIdentity<User>(options =>
 
 // Application services.
 builder.Services.AddScoped<DreamService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<CloudNameResolverActionFilter>();
 
@@ -83,7 +84,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseWhen(context => context.Request.RouteValues["controller"]?.ToString() == "Dream", appBuilder =>
+app.UseWhen(context => new[] {"Dream", "Admin"}.Contains(context.Request.RouteValues["controller"]?.ToString()), appBuilder =>
 {
     // Custom middleware to resolve CloudName to CloudID. Must be placed after UseRouting to get route data.
     appBuilder.UseCloudNameResolver(); 
