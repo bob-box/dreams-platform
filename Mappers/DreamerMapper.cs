@@ -1,7 +1,7 @@
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
-namespace Borderland.Dreams.Services.Mappers;
+namespace Borderland.Dreams.Mappers;
 
 public static class DreamerMapper
 {

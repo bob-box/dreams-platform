@@ -1,32 +1,32 @@
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
-namespace Borderland.Dreams.Services.Mappers;
+namespace Borderland.Dreams.Mappers;
 
-public static class ExpenseMapper
+public static class FundMapper
 {
-    public static ExpenseViewModel ToViewModel(this Expense model)
+    public static FundViewModel ToViewModel(this Fund model)
     {
         if (model == null) return null!;
-        return new ExpenseViewModel
+        return new FundViewModel
         {
             ID = model.ID,
             DreamID = model.DreamID,
+            UserID = model.UserID,
             Amount = model.Amount,
-            Description = model.Description,
             CreatedDate = model.CreatedDate
         };
     }
 
-    public static Expense ToModel(this ExpenseViewModel vm)
+    public static Fund ToModel(this FundViewModel vm)
     {
         if (vm == null) return null!;
-        return new Expense
+        return new Fund
         {
             ID = vm.ID,
             DreamID = vm.DreamID,
+            UserID = vm.UserID,
             Amount = vm.Amount,
-            Description = vm.Description,
             CreatedDate = vm.CreatedDate
         };
     }

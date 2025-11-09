@@ -7,7 +7,7 @@ using Borderland.Dreams.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Services;
-using Borderland.Dreams.Services.Mappers;
+using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.ViewModels;
 
