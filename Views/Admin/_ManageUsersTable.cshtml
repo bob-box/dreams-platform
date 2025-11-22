@@ -1,0 +1,14 @@
+@model IEnumerable<Borderland.Dreams.ViewModels.ManageUsersViewModel>
+
+<tbody>
+@foreach (var user in Model)
+{
+    <tr>
+        <td>@user.FullName</td>
+        <td>@user.UserName</td>
+        <td>@user.Email</td>
+        <td>@user.Role</td>
+        <td>@(user.Wallet != null ? user.Wallet.Balance.ToString("F2") : "no wallet for this cloud")</td>
+    </tr>
+}
+</tbody>

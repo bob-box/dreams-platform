@@ -3,7 +3,15 @@
     ViewData["Title"] = "Manage Users";
 }
 
-<table class="table">
+<form id="users-search-form" method="get" class="mb-3" action="@Url.Action("ManageUsersInCloud", "Admin")">
+    <div class="input-group">
+        <input id="users-search-input" type="search" name="q" class="form-control" placeholder="Search by name, username or email" />
+        <button id="users-search-submit" class="btn btn-outline-secondary" type="submit">Search</button>
+        <button id="users-search-clear" style="display:none;" class="btn btn-danger" type="button">Clear</button>
+    </div>
+</form>
+
+<table id="usersTable" class="table">
     <thead>
         <tr>
             <th>Name</th>
@@ -13,16 +21,43 @@
             <th>Wallet Balance</th>
         </tr>
     </thead>
-    <tbody>
-    @foreach (var user in Model)
-    {
-        <tr>
-            <td>@user.FullName</td>
-            <td>@user.UserName</td>
-            <td>@user.Email</td>
-            <td>@user.Role</td>
-            <td>@(user.Wallet != null ? user.Wallet.Balance.ToString("F2") : "no wallet for this cloud")</td>
-        </tr>
-    }
-    </tbody>
+
+    @* initial table body rendered server-side using the same partial *@
+    @Html.Partial("_ManageUsersTable", Model)
 </table>
+
+@section Scripts {
+    <script>
+        (function () {
+            const searchForm = document.getElementById('users-search-form');
+            const inputField = document.getElementById('users-search-input');
+            const oldTbody = document.querySelector('#usersTable tbody');
+            const clearButton = document.getElementById('users-search-clear');
+
+            async function fetchResults(q) {
+                const url = '@Url.Action("ManageUsersInCloudSearch", "Admin")' + (q ? '?q=' + encodeURIComponent(q) : '');
+                const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!res.ok) return;
+                const html = await res.text();
+                oldTbody.innerHTML = html;
+
+                toggleClearButton();
+            }
+
+            function toggleClearButton() {
+                clearButton.style.display = inputField.value.trim() ? '' : 'none';
+            }
+
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                fetchResults(inputField.value);
+            });
+
+            clearButton.addEventListener('click', function (e) {
+                e.preventDefault();
+                inputField.value = '';
+                fetchResults('');
+            });
+        })();
+    </script>
+}
