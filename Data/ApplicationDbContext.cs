@@ -19,6 +19,10 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<User>()
+            .Navigation(e => e.Wallets)
+            .AutoInclude();
+
         modelBuilder.Entity<Dream>()
             .HasMany(e => e.Tags)
             .WithMany();

@@ -17,6 +17,20 @@ public static class UserMapper
         };
     }
 
+    public static ManageUsersViewModel ToManageUsersViewModel(this User model, string role, int cloudId)
+    {
+        if (model == null) return null!;
+        return new ManageUsersViewModel
+        {
+            UserId = model.Id,
+            UserName = model.UserName,
+            Email = model.Email,
+            FullName = model.FullName,
+            Wallet = model.Wallets.FirstOrDefault(w => w.CloudID == cloudId),
+            Role = role
+        };
+    }
+
     public static User ToModel(this UserViewModel vm)
     {
         if (vm == null) return null!;

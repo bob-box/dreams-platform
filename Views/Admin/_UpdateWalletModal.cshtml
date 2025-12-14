@@ -1,0 +1,51 @@
+<div class="modal fade" id="update-wallet-modal" tabindex="-1" aria-labelledby="update-wallet-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="update-wallet-form" asp-controller="Admin" asp-action="UpdateWallets">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="modal-user-id" name="userId">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="update-wallet-modal-label">Update wallet(s)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p id="update-multiple-wallets-description">
+                        Update the wallets of <strong>all users</strong> in this cloud that has an active BL membership.
+                    </p>
+                    <p id="update-single-wallet-description" style="display: none;">
+                        Update the wallet of user <strong><span id="modal-user-fullname"></span> (<span id="modal-user-username"></span>)</strong>
+                    </p>
+                    <div class="form-group">
+                        <input type="number" id="modal-amount" name="amount" class="form-control" placeholder="Enter an amount">
+                        <span class="fw-lighter small">
+                            Whole numbers only
+                        </span>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <h6>Choose how to update</h6>
+                        <label>
+                            <input type="radio" name="action" value="add" />
+                            Add to
+                            <span class="fw-lighter">(will be added ontop of existing funds)</span>
+                        </label>
+                        <br />
+                        <label>
+                            <input type="radio" name="action" value="replace">
+                            Replace with
+                            <span class="fw-lighter">(will be set to the given amount)</span>
+                        </label>
+                    </div>
+                    <span class="text-danger" id="modal-action-validation"></span>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

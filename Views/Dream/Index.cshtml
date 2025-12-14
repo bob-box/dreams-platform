@@ -1,11 +1,11 @@
 @model IEnumerable<Borderland.Dreams.ViewModels.DreamViewModel>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Dreams List";
     bool showJoinCloudButton = (ViewData["showJoinCloudButton"] as bool?) ?? false;
 }
 
-<h1>Dreams List</h1>
+<h1>@ViewBag.Title</h1>
 @if (showJoinCloudButton)
 {
     <p>
