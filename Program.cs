@@ -1,3 +1,13 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Borderland.Dreams.Data;
+using Borderland.Dreams.Models;
+using Microsoft.AspNetCore.Authorization;
+using Borderland.Dreams.Authorization;
+using Borderland.Dreams.Authorization.Dream;
+using Borderland.Dreams.Services;
+using Borderland.Dreams.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -29,7 +39,6 @@ builder.Services.AddDefaultIdentity<User>(options =>
 builder.Services.AddScoped<DreamService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
-builder.Services.AddScoped<CloudNameResolverActionFilter>();
 
 // Authorization handlers.
 // Services using Entity Framework must be registered for dependency injection using AddScoped.

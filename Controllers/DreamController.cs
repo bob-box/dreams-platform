@@ -14,7 +14,6 @@ using Borderland.Dreams.ViewModels;
 namespace Borderland.Dreams.Controllers;
 
 [Authorize]
-//[ServiceFilter(typeof(CloudNameResolverActionFilter))]
 public class DreamController(ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
@@ -254,9 +253,23 @@ public class DreamController(ApplicationDbContext context,
         var username = request.Username;
 
         // Check data
-        if (string.IsNullOrWhiteSpace(username))
+        if (string.IsNullOrWhiteSpace(username) || dreamID < 0)
         {
             return BadRequest("Invalid data provided.");
+        }
+
+        // Check dream stuff
+        var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
+            .SingleOrDefaultAsync(d => d.ID == dreamID);
+
+        if (dreamFromDb == null)
+        {
+            return NotFound("Dream not found or you do not have access to it.");
+        }
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.EditDreamers);
+        if (!authorizationResult.Succeeded)
+        {
+            return new ForbiddenResult("You are not allowed to add dreamers to this dream.");
         }
 
         // Check user stuff
@@ -269,36 +282,17 @@ public class DreamController(ApplicationDbContext context,
         {
             return BadRequest("This user has not confirmed their email address and cannot be added as a dreamer.");
         }
-        if (dreamID > 0)
-        {
-            // Check dream stuff
-            var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
-                .SingleOrDefaultAsync(d => d.ID == dreamID);
-
-            if (dreamFromDb == null)
-            {
-                return NotFound("Dream not found or you do not have access to it.");
-            }
-
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.EditDreamers);
-            if (!authorizationResult.Succeeded)
-            {
-                return new ForbiddenResult("You are not allowed to add dreamers to this dream.");
-            }
-            if (dreamFromDb.Dreamers.Any(d => d.UserID == userToAdd.Id))
-            {
-                return BadRequest("This user is already a dreamer for this dream.");
-            }
-        }
-
         var currentUserId = _userManager.GetUserId(User);
         if (userToAdd.Id == currentUserId)
         {
             return BadRequest("This is your own dream, silly!");
         }
-
-        var userClaims = await _userManager.GetClaimsAsync(userToAdd);
-        bool hasJoinedCloud = userClaims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
+        if (dreamFromDb.Dreamers.Any(d => d.UserID == userToAdd.Id))
+        {
+            return BadRequest("This user is already a dreamer for this dream.");
+        }
+        var userToAddClaims = await _userManager.GetClaimsAsync(userToAdd);
+        bool hasJoinedCloud = userToAddClaims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
         if (!hasJoinedCloud)
         {
             return BadRequest("This user has not joined the cloud and cannot be added as a dreamer.");
