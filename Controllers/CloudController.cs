@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.FilterAttributes;
 using System.Security.Claims;
+using Borderland.Dreams.Middleware;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -59,30 +60,43 @@ public class CloudController(ApplicationDbContext context,
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AccessForRole(Constants.AdminRole)]
-    public async Task<IActionResult> Edit(int id, [Bind("ID,Name")] Cloud cloud)
+    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,TotalFundsAvailable")] Cloud cloud)
     {
-        if (ModelState.IsValid)
+        if (id != cloud.ID)
         {
-            try
-            {
-                _context.Update(cloud);
-                _context.Entry(cloud).Property(x => x.CreatedDate).IsModified = false; // Prevent modification of CreatedDate
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CloudExists(cloud.ID))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
+            return NotFound();
         }
-        return View(cloud);
+
+        if (!ModelState.IsValid)
+        {
+            return View(cloud);
+        }
+
+            var existingCloud = await _context.Cloud.FindAsync(id);
+            if (existingCloud == null)
+            {
+                return NotFound();
+            }
+
+            existingCloud.TotalFundsAvailable = cloud.TotalFundsAvailable;
+        try
+        {
+            _context.Entry(existingCloud).Property(x => x.CreatedDate).IsModified = false; // Prevent modification of CreatedDate
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!await _context.Cloud.AnyAsync(e => e.ID == cloud.ID))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     [AccessForRole(Constants.AdminRole)]
@@ -142,10 +156,5 @@ public class CloudController(ApplicationDbContext context,
         }
 
         return RedirectToAction("Index", "Dream");
-    }
-
-    private bool CloudExists(int id)
-    {
-        return _context.Cloud.Any(e => e.ID == id);
     }
 }

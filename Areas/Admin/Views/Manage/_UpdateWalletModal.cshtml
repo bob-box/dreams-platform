@@ -1,7 +1,7 @@
 <div class="modal fade" id="update-wallet-modal" tabindex="-1" aria-labelledby="update-wallet-modal-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="update-wallet-form" asp-controller="Admin" asp-action="UpdateWallets">
+            <form id="update-wallet-form" asp-area="Admin" asp-controller="Manage" asp-action="UpdateWallets">
                 @Html.AntiForgeryToken()
                 <input type="hidden" id="modal-user-id" name="userId">
 
@@ -15,7 +15,9 @@
                         Update the wallets of <strong>all users</strong> in this cloud that has an active BL membership.
                     </p>
                     <p id="update-single-wallet-description" style="display: none;">
-                        Update the wallet of user <strong><span id="modal-user-fullname"></span> (<span id="modal-user-username"></span>)</strong>
+                        Update the wallet of: <strong><span id="modal-user-fullname"></span> (<span id="modal-user-username"></span>)</strong>
+                        <br />
+                        Current balance: <strong><span id="modal-user-balance"></span></strong>
                     </p>
                     <div class="form-group">
                         <input type="number" id="modal-amount" name="amount" class="form-control" placeholder="Enter an amount">

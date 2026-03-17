@@ -7,7 +7,7 @@
 
 <div class="row">
     <div class="col-9">
-        <form id="users-search-form" method="get" class="mb-3" action="@Url.Action("ManageUsersInCloud", "Admin")">
+        <form id="users-search-form" method="get" class="mb-3" action="@Url.Action("ManageUsersInCloud", "Manage", new { area = "Admin" })">
             <div class="input-group">
                 <input id="users-search-input" type="search" name="q" class="form-control" placeholder="Search by name, username or email" />
                 <button id="users-search-submit" class="btn btn-outline-secondary" type="submit">Search</button>
@@ -32,10 +32,11 @@
     </thead>
 
     @* initial table body rendered server-side using the same partial *@
-    <partial name="_ManageUsersTable" />
+    @Html.Partial("~/Areas/Admin/Views/Manage/_ManageUsersTable.cshtml", Model)
 
 </table>
-<partial name="_UpdateWalletModal" />
+@Html.Partial("~/Areas/Admin/Views/Manage/_UpdateWalletModal.cshtml")
+
 
 @section Scripts {
     <script>
@@ -47,7 +48,7 @@
         const updateModal = document.getElementById('update-wallet-modal');
 
         async function fetchResults(filter) {
-            const url = '@Url.Action("ManageUsersInCloudSearch", "Admin")' + (filter ? '?filter=' + encodeURIComponent(filter) : '');
+            const url = '@Url.Action("ManageUsersInCloudSearch", "Manage", new { area = "Admin" })' + (filter ? '?filter=' + encodeURIComponent(filter) : '');
             const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (!res.ok) return;
             const html = await res.text();
@@ -77,7 +78,7 @@
             let action = [...document.getElementsByName("action")].filter(x => x.checked)[0]?.value;
             if (!action) {
                 e.preventDefault();
-                document.getElementById("action-validation").innerText = "You must choose an update action.";
+                document.getElementById("modal-action-validation").innerText = "You must choose an update action.";
             }
         });
 
@@ -96,6 +97,7 @@
 
             if (button.dataset.userId) {
                 document.getElementById('modal-user-id').value = button.dataset.userId;
+                document.getElementById('modal-user-balance').textContent = button.dataset.userBalance;
                 document.getElementById('modal-user-fullname').textContent = button.dataset.userFullname;
                 document.getElementById('modal-user-username').textContent = button.dataset.userUsername;
                 document.getElementById('update-single-wallet-description').style.display = '';

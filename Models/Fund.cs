@@ -8,6 +8,7 @@ public class Fund
     public int ID { get; set; }
     public int DreamID { get; set; }
     public string UserID { get; set; } = null!;
+    public int? FundingRoundID { get; set; }
     
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]
@@ -19,4 +20,5 @@ public class Fund
 
     public User User { get; set; }
     public Dream Dream { get; set; }
+    public FundingRound? FundingRound { get; set; }
 }

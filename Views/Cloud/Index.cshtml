@@ -18,6 +18,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.CreatedDate)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TotalFundsAvailable)
+            </th>
             <th></th>
             <th></th>
         </tr>
@@ -30,6 +33,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TotalFundsAvailable)
             </td>
             <td>
                 <a asp-controller="Dream" asp-action="Index" asp-route-cloudName="@item.Name">Go to Cloud</a>

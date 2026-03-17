@@ -62,6 +62,9 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("TotalFundsAvailable")
+                        .HasColumnType("decimal(18, 2)");
+
                     b.HasKey("ID");
 
                     b.HasIndex("Name")
@@ -195,6 +198,9 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("FundingRoundID")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("UserID")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -203,9 +209,46 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasIndex("DreamID");
 
+                    b.HasIndex("FundingRoundID");
+
                     b.HasIndex("UserID");
 
                     b.ToTable("Fund");
+                });
+
+            modelBuilder.Entity("Borderland.Dreams.Models.FundingRound", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("AllocationPerUser")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CloudID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("MaxPercentagePerDream")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ProcessedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("CloudID");
+
+                    b.ToTable("FundingRound");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Tag", b =>
@@ -533,6 +576,10 @@ namespace Borderland.Dreams.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Borderland.Dreams.Models.FundingRound", "FundingRound")
+                        .WithMany()
+                        .HasForeignKey("FundingRoundID");
+
                     b.HasOne("Borderland.Dreams.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID")
@@ -541,7 +588,20 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.Navigation("Dream");
 
+                    b.Navigation("FundingRound");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Borderland.Dreams.Models.FundingRound", b =>
+                {
+                    b.HasOne("Borderland.Dreams.Models.Cloud", "Cloud")
+                        .WithMany("FundingRounds")
+                        .HasForeignKey("CloudID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cloud");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Wallet", b =>
@@ -624,6 +684,8 @@ namespace Borderland.Dreams.Data.Migrations
             modelBuilder.Entity("Borderland.Dreams.Models.Cloud", b =>
                 {
                     b.Navigation("Dreams");
+
+                    b.Navigation("FundingRounds");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dream", b =>

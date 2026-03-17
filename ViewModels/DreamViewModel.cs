@@ -37,4 +37,8 @@ public class DreamViewModel
     [DataType(DataType.Currency)]
     public decimal TotalExistingBudget => ExistingBudgetItems.Sum(b => b.MinAmount);
 
+    [Display(Name = "Total Received Funds")]
+    [DataType(DataType.Currency)]
+    public decimal TotalReceivedFunds => Funds.Sum(f => f.Amount);
+
 }

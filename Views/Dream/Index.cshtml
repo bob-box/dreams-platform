@@ -5,7 +5,10 @@
     bool showJoinCloudButton = (ViewData["showJoinCloudButton"] as bool?) ?? false;
 }
 
-<h1>@ViewBag.Title</h1>
+<h1>@cloudNameResolver.CloudName - Dreams List</h1>
+<cache expires-after="@TimeSpan.FromSeconds(60)">
+    <vc:cloud-funds />
+</cache>
 @if (showJoinCloudButton)
 {
     <p>
@@ -38,6 +41,9 @@
                 @Html.DisplayNameFor(model => model.RequestedBudgetItems) (min)
             </th>
             <th>
+                @Html.DisplayNameFor(model => model.TotalReceivedFunds)
+            </th>
+            <th>
                 By dreamer
             </th>
             <th></th>
@@ -61,6 +67,8 @@
             <td>
                 @Html.DisplayFor(modelItem => item.TotalRequestedBudget)
             </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TotalReceivedFunds)
             <td>
                 @Html.DisplayFor(modelItem => item.Dreamers.Single(d => d.IsMainDreamer).FullName)
             </td>

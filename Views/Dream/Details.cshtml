@@ -23,75 +23,133 @@
 </div>
 
 <hr />
-<div>
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.CreatedDate)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.RequestedBudgetItems)
-        </dt>
-        <dd class="col-sm-10">
-            <ul>
-            @foreach (var item in Model.RequestedBudgetItems)
-            {
-                <li>
-                @item.Name:
-                @if (item.MaxAmount != null)
-                {
-                    @($"{item.MinAmount:C} - {item.MaxAmount.Value:C}")
-                }
-                else
-                {
-                    @item.MinAmount.ToString("C")
-                }
-                </li>
-            }
-            </ul>
-            Total (min): @Html.DisplayFor(model => model.TotalRequestedBudget)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.ExistingBudgetItems)
-        </dt>
-        <dd class="col-sm-10">
-            <ul>
-            @foreach (var item in Model.ExistingBudgetItems)
-            {
-                <li>
-                @item.Name:
-                @if (item.MaxAmount != null)
-                {
-                    @($"{item.MinAmount:C} - {item.MaxAmount.Value:C}")
-                }
-                else
-                {
-                    @item.MinAmount.ToString("C")
-                }
-                </li>
-            }
-            </ul>
-            Total (min): @Html.DisplayFor(model => model.TotalExistingBudget)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Dreamers)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.EditorFor(model => model.Dreamers, "DreamerBadgeList")
-        </dd>
-    </dl>
+<div class="row">
+    <div class="col-9">
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Description)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Description)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.CreatedDate)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.CreatedDate)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Status)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Status)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.RequestedBudgetItems)
+            </dt>
+            <dd class="col-sm-10">
+                <ul>
+                    @foreach (var item in Model.RequestedBudgetItems)
+                    {
+                        <li>
+                            @item.Name:
+                            @if (item.MaxAmount != null)
+                            {
+                                @($"{item.MinAmount:C} - {item.MaxAmount.Value:C}")
+                            }
+                            else
+                            {
+                                @item.MinAmount.ToString("C")
+                            }
+                        </li>
+                    }
+                </ul>
+                Total (min): @Html.DisplayFor(model => model.TotalRequestedBudget)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.ExistingBudgetItems)
+            </dt>
+            <dd class="col-sm-10">
+                <ul>
+                    @foreach (var item in Model.ExistingBudgetItems)
+                    {
+                        <li>
+                            @item.Name:
+                            @if (item.MaxAmount != null)
+                            {
+                                @($"{item.MinAmount:C} - {item.MaxAmount.Value:C}")
+                            }
+                            else
+                            {
+                                @item.MinAmount.ToString("C")
+                            }
+                        </li>
+                    }
+                </ul>
+                Total (min): @Html.DisplayFor(model => model.TotalExistingBudget)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Dreamers)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.EditorFor(model => model.Dreamers, "DreamerBadgeList")
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Funds)
+            </dt>
+            <dd class="col-sm-10">
+                <ul>
+                    @foreach (var fundGroup in Model.Funds.GroupBy(f => f.UserID))
+                    {
+                        <li>
+                            @fundGroup.First().User.FullName: @fundGroup.Sum(f => f.Amount).ToString("C")
+                        </li>
+                    }
+                </ul>
+                Total funded: @Model.Funds.Sum(f => f.Amount).ToString("C")
+            </dd>
+        </dl>
+    </div>
+
+    <div class="col-3">
+        <vc:active-funding-round dream-id="@Model.ID" />
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+            document.getElementById('fundDreamButton')?.addEventListener('click', function () {
+                loadFundingModal(@Model.ID);
+            });
+            var url = '@Url.Action("GetFundingModal", "Dream", new { dreamId = Model.ID })';
+            function loadFundingModal(dreamId) {
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modalContainer').innerHTML = html;
+                    // Show the modal
+                    var modal = new bootstrap.Modal(document.getElementById('fundDreamModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading modal:', error);
+                    alert('Error loading funding modal. Please try again.');
+                });
+            }
+
+            // Reset form when modal is closed - using event delegation since modal is loaded dynamically
+            document.addEventListener('hidden.bs.modal', function (event) {
+                if (event.target.id === 'fundDreamModal') {
+                    var form = document.getElementById('fundDreamForm');
+                    if (form) {
+                        form.reset();
+                    }
+                }
+            });
+    </script>
+}

@@ -11,11 +11,12 @@ public static class FundingRoundMapper
         return new FundingRoundViewModel
         {
             ID = model.ID,
+            CloudID = model.CloudID,
             Title = model.Title,
             StartDate = model.StartDate,
             EndDate = model.EndDate,
-            AmountToSpendPerUser = model.AmountToSpendPerUser,
-            MaxAmountPerDreamPerUser = model.MaxAmountPerDreamPerUser
+            MaxPercentagePerDream = model.MaxPercentagePerDream,
+            AllocationPerUser = model.AllocationPerUser
         };
     }
 
@@ -25,11 +26,12 @@ public static class FundingRoundMapper
         return new FundingRound
         {
             ID = vm.ID,
+            CloudID = vm.CloudID,
             Title = vm.Title,
             StartDate = vm.StartDate,
             EndDate = vm.EndDate,
-            AmountToSpendPerUser = vm.AmountToSpendPerUser,
-            MaxAmountPerDreamPerUser = vm.MaxAmountPerDreamPerUser
+            MaxPercentagePerDream = vm.MaxPercentagePerDream,
+            AllocationPerUser = vm.AllocationPerUser
         };
     }
 }

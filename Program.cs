@@ -67,7 +67,7 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
-        var dbContext = services.GetService<ApplicationDbContext>();
+        var dbContext = services.GetService<ApplicationDbContext>() ?? throw new Exception("Failed to get ApplicationDbContext from service provider.");
         await dbContext.Database.EnsureCreatedAsync();
         await DataSeeder.SeedAsync(services);
     }
@@ -83,13 +83,24 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseWhen(context => new[] {"Dream", "Admin"}.Contains(context.Request.RouteValues["controller"]?.ToString()), appBuilder =>
+// When to use the CloudNameResolverMiddleware:
+app.UseWhen(context => 
+{
+    var controller = context.Request.RouteValues["controller"]?.ToString();
+    var area = context.Request.RouteValues["area"]?.ToString();
+    return new[] {"Dream", "Cloud"}.Contains(controller) || area == "Admin";
+}, appBuilder =>
 {
     // Custom middleware to resolve CloudName to CloudID. Must be placed after UseRouting to get route data.
-    appBuilder.UseCloudNameResolver(); 
+    appBuilder.UseMiddleware<CloudNameResolverMiddleware>();
 });
 
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{cloudName:required}/{area:exists}/{controller=Manage}/{action=Index}/{id?}"
+    );
 
 app.MapControllerRoute(
     name: "cloudName-dreams-group",

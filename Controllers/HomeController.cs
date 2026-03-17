@@ -11,8 +11,8 @@ namespace Borderland.Dreams.Controllers;
 public class HomeController(ILogger<HomeController> logger,
     ApplicationDbContext context,
     IAuthorizationService authorizationService,
-    UserManager<User> userManager,
-    SignInManager<User> signInManager)
+    UserManager<User> userManager
+)
     : BaseController(context, authorizationService, userManager)
 {
     private readonly ILogger<HomeController> _logger = logger;

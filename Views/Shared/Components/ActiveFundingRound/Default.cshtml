@@ -1,0 +1,49 @@
+@model Borderland.Dreams.ViewModels.ActiveFundingRoundViewModel
+
+<div class="mt-4">
+    <button type="button" class="btn btn-primary" id="fundDreamButton">
+        Fund This Dream
+    </button>
+</div>
+
+<!-- Modal container -->
+<div id="modalContainer"></div>
+
+@section Scripts {
+    <script>
+        document.getElementById('fundDreamButton')?.addEventListener('click', function () {
+            loadFundingModal(@Model.DreamId);
+        });
+
+        var url = '@Url.Action("GetFundingModal", "Dream", new { dreamId = Model.DreamId })';
+
+        function loadFundingModal(dreamId) {
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('modalContainer').innerHTML = html;
+                var modal = new bootstrap.Modal(document.getElementById('fundDreamModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error loading modal:', error);
+                alert('Error loading funding modal. Please try again.');
+            });
+        }
+
+        // Reset form when modal is closed - using event delegation since modal is loaded dynamically
+        document.addEventListener('hidden.bs.modal', function (event) {
+            if (event.target.id === 'fundDreamModal') {
+                var form = document.getElementById('fundDreamForm');
+                if (form) {
+                    form.reset();
+                }
+            }
+        });
+    </script>
+}

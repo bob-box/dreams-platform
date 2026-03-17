@@ -8,7 +8,7 @@ public class CloudNameResolverMiddleware(RequestDelegate _next)
 
     public async Task InvokeAsync(HttpContext httpContext, ICloudNameResolver resolver, ApplicationDbContext context)
     {
-        resolver.CloudName = httpContext.Request.RouteValues["cloudName"]?.ToString();
+        resolver.CloudName = httpContext.Request.RouteValues["cloudName"]?.ToString() ?? "";
         if (string.IsNullOrWhiteSpace(resolver.CloudName))
         {
             resolver.CloudID = -1;
@@ -29,6 +29,7 @@ public class CloudNameResolverMiddleware(RequestDelegate _next)
         if (id == null)
         {
             resolver.CloudID = -1;
+            httpContext.Response.Redirect("/"); // just redirect to home if invalid cloud name
             await _next(httpContext);
             return;
         }
@@ -36,14 +37,6 @@ public class CloudNameResolverMiddleware(RequestDelegate _next)
         _cloudCache[resolver.CloudName] = id.Value;
         resolver.CloudID = id.Value;
         await _next(httpContext);
-    }
-}
-
-public static class CloudNameResolverMiddlewareExtensions
-{
-    public static IApplicationBuilder UseCloudNameResolver(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<CloudNameResolverMiddleware>();
     }
 }
 
@@ -55,6 +48,6 @@ public class CloudNameResolver : ICloudNameResolver
 
 public interface ICloudNameResolver
 {
-    public string? CloudName { get; set; }
+    public string CloudName { get; set; }
     public int CloudID { get; set; }
 }

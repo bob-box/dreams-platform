@@ -10,6 +10,7 @@ using Borderland.Dreams.Services;
 using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.ViewModels;
+using Borderland.Dreams.Extensions;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -36,6 +37,7 @@ public class DreamController(ApplicationDbContext context,
         {
             return Problem("One or more dreams could not be mapped to a view model.");
         }
+
         return View(viewModels);
     }
 
@@ -52,9 +54,64 @@ public class DreamController(ApplicationDbContext context,
         dreamQuery = IsAuthorizedToViewDream(dreamQuery);
 
         var dream = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
-        var viewModel = dream.ToViewModel();
+        if (dream == null)
+        {
+            return Forbid();
+        }
 
-        return viewModel == null ? NotFound() : View(viewModel);
+        var viewModel = dream.ToViewModel();
+        return View(viewModel);
+    }
+
+    [HttpGet]
+    [AjaxOnly]
+    public async Task<IActionResult> GetFundingModal(int dreamId)
+    {
+        // Verify the dream exists and belongs to the current cloud
+        var dream = await _context.Dream
+            .FirstOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
+
+        if (dream == null)
+        {
+            return NotFound();
+        }
+
+        // Check for active funding round
+        var now = DateTime.Now;
+        var activeRound = await _context.FundingRound
+            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
+                                     fr.StartDate <= now && fr.EndDate >= now);
+
+        if (activeRound == null)
+        {
+            return BadRequest("No active funding round.");
+        }
+
+        // Get user's wallet (we still need balance to verify sufficiency)
+        var user = await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
+        var wallet = user.Wallets.FirstOrDefault(w => w.CloudID == cloudNameService.CloudID);
+
+        if (wallet == null)
+        {
+            return BadRequest("User wallet not found.");
+        }
+
+        var userFundsForThisDream = await _context.Fund
+            .Where(f => f.DreamID == dreamId && f.UserID == user.Id).ToListAsync();
+
+        decimal userFundedInCurrentRound = userFundsForThisDream.SingleOrDefault(f => f.FundingRoundID == activeRound.ID)?.Amount ?? 0m;
+        decimal userTotalFundedAllRounds = userFundsForThisDream.Sum(f => f.Amount);
+        decimal roundMaxAmount = activeRound.AllocationPerUser * (activeRound.MaxPercentagePerDream / 100m);
+
+        var viewModel = new FundingModalViewModel
+        {
+            DreamId = dreamId,
+            RoundMaxAmount = roundMaxAmount,
+            UserFundedInCurrentRound = userFundedInCurrentRound,
+            UserTotalFundedAllRounds = userTotalFundedAllRounds,
+            UserWalletBalance = wallet.Balance
+        };
+        return PartialView("_FundingModal", viewModel);
     }
 
     // GET: Dream/Create
@@ -66,7 +123,7 @@ public class DreamController(ApplicationDbContext context,
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
         }
         var viewModel = new DreamViewModel();
-        var user = await _userManager.GetUserAsync(User);
+        var user = await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
         var dreamer = new DreamerViewModel
         {
             UserID = user.Id,
@@ -145,40 +202,35 @@ public class DreamController(ApplicationDbContext context,
         }
 
         // We need to fetch the dreams dreamers to check authorization
-        var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
+        var dreamToUpdate = await dreamService.GetDreamsByCloudIdBaseQuery()
                 .SingleOrDefaultAsync(m => m.ID == id);
+        if (dreamToUpdate == null)
+        {
+            return NotFound();
+        }
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamFromDb.Dreamers, Operations.Update);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamToUpdate.Dreamers, Operations.Update);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
         }
         if (!ModelState.IsValid)
         {
-            await CheckIfUserCanEditDreamers(dreamFromDb.Dreamers);
+            await CheckIfUserCanEditDreamers(dreamToUpdate.Dreamers);
             return View(viewModel);
         }
 
         try
         {
             // Update the dream
-            dreamFromDb.Name = viewModel.Name;
-            dreamFromDb.Description = viewModel.Description;
-            dreamFromDb.Dreamers = viewModel.Dreamers.Where(x => x != null).Select(x => x.ToModel()).ToList();
-            dreamFromDb.BudgetItems = viewModel.BudgetItems.Where(b => b != null).Select(x => x.ToModel()).ToList();
+            dreamToUpdate.Name = viewModel.Name;
+            dreamToUpdate.Description = viewModel.Description;
+            dreamToUpdate.Dreamers = viewModel.Dreamers.Where(x => x != null).Select(x => x.ToModel()).ToList();
+            dreamToUpdate.BudgetItems = viewModel.BudgetItems.Where(b => b != null).Select(x => x.ToModel()).ToList();
 
-            if (!dreamFromDb.Dreamers.Any(x => x.IsMainDreamer))
+            if (!dreamToUpdate.Dreamers.Any(x => x.IsMainDreamer))
             {
                 return BadRequest("A dream must have at least one main dreamer.");
-            }
-
-            _context.Entry(dreamFromDb).State = EntityState.Modified;
-
-            // Ensure some properties are not modified
-            foreach (var item in dreamFromDb.BudgetItems)
-            {
-                _context.Entry(item).Property(x => x.CreatedDate).IsModified = false;
-                _context.Entry(item).Property(x => x.DreamID).IsModified = false;
             }
 
             await _context.SaveChangesAsync();
@@ -303,7 +355,7 @@ public class DreamController(ApplicationDbContext context,
         {
             UserID = userToAdd.Id,
             FullName = userToAdd.FullName,
-            UserName = userToAdd.UserName,
+            UserName = userToAdd.UserName ?? string.Empty,
             DreamID = dreamID,
             IsMainDreamer = false
         };
@@ -347,5 +399,82 @@ public class DreamController(ApplicationDbContext context,
     {
         var authorizationResult = await _authorizationService.AuthorizeAsync(User, dreamers, Operations.EditDreamers);
         ViewData["canEditDreamers"] = authorizationResult.Succeeded; // Needed for the delete button to be shown
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Fund(int dreamId, decimal amount)
+    {
+        if (amount <= 0)
+        {
+            return BadRequest("Amount must be positive.");
+        }
+
+        var dream = await _context.Dream
+            .FirstOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
+
+        if (dream == null)
+        {
+            return NotFound();
+        }
+
+        var user = await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
+        var wallet = user.Wallets.FirstOrDefault(w => w.CloudID == cloudNameService.CloudID);
+
+        if (wallet == null || wallet.Balance < amount)
+        {
+            return BadRequest("Insufficient funds.");
+        }
+
+        // Check if there's an active funding round
+        var now = DateTime.Now;
+        var activeRound = await _context.FundingRound
+            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
+                                     fr.StartDate <= now && fr.EndDate >= now);
+
+        decimal maxPerDream = decimal.MaxValue;
+        if (activeRound != null)
+        {
+            // Check percentage limit based on round allocation
+            maxPerDream = activeRound.AllocationPerUser * (activeRound.MaxPercentagePerDream / 100m);
+            // see if user already has a fund for this dream/round
+            var existingFund = await _context.Fund
+                .FirstOrDefaultAsync(f => f.DreamID == dreamId &&
+                                          f.UserID == user.Id &&
+                                          f.FundingRoundID == activeRound.ID);
+
+            if (existingFund != null)
+            {
+                if (existingFund.Amount + amount > maxPerDream)
+                {
+                    return BadRequest($"Amount exceeds the maximum allowed per dream for this round ({activeRound.MaxPercentagePerDream}% of per-user allocation). You have already funded {existingFund.Amount:C}.");
+                }
+                // update existing fund instead of creating new
+                existingFund.Amount += amount;
+                wallet.Balance -= amount;
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Details), new { id = dreamId });
+            }
+
+            if (amount > maxPerDream)
+            {
+                return BadRequest($"Amount exceeds the maximum allowed per dream for this round ({activeRound.MaxPercentagePerDream}% of per-user allocation).");
+            }
+        }
+
+        var fund = new Fund
+        {
+            DreamID = dreamId,
+            UserID = user.Id,
+            Amount = amount,
+            FundingRoundID = activeRound?.ID
+        };
+
+        _context.Fund.Add(fund);
+        wallet.Balance -= amount;
+
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Details), new { id = dreamId });
     }
 }

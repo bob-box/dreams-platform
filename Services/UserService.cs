@@ -37,11 +37,12 @@ public class UserService(
     public async Task UpdateWallet(string userId, string action, int amount)
     {
         int cloudId = cloudNameResolver.CloudID;
-        IList<User> users = new List<User>();
+        IList<User> users = [];
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            users.Add(await userManager.FindByIdAsync(userId));
+            var user = await userManager.FindByIdAsync(userId);
+            users.Add(user);
         }
         else
         {

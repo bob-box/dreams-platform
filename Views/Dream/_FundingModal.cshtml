@@ -1,0 +1,34 @@
+@model Borderland.Dreams.ViewModels.FundingModalViewModel
+
+<!-- Funding Modal -->
+<div class="modal fade" id="fundDreamModal" tabindex="-1" aria-labelledby="fundDreamModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fundDreamModalLabel">Fund This Dream</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>Maximum to fund (in this round): @Model.RoundMaxAmount.ToString("C")</p>
+                        <p>In this round you've given @Model.UserFundedInCurrentRound.ToString("C")
+                            <br />
+                            <span class="text-muted">(total in all rounds: @Model.UserTotalFundedAllRounds.ToString("C"))<span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Your Wallet Balance:</strong> @Model.UserWalletBalance.ToString("C")</p>
+                    </div>
+                </div>
+                <form id="fundDreamForm" asp-action="Fund" method="post">
+                    <input type="hidden" name="dreamId" value="@Model.DreamId" />
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount to fund</label>
+                        <input type="number" step="0.01" min="0" max="@Model.RoundMaxAmount" class="form-control" id="amount" name="amount" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Fund Dream</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -13,8 +13,10 @@ public static class FundMapper
             ID = model.ID,
             DreamID = model.DreamID,
             UserID = model.UserID,
+            FundingRoundID = model.FundingRoundID,
             Amount = model.Amount,
-            CreatedDate = model.CreatedDate
+            CreatedDate = model.CreatedDate,
+            User = model.User?.ToViewModel()
         };
     }
 
@@ -26,6 +28,7 @@ public static class FundMapper
             ID = vm.ID,
             DreamID = vm.DreamID,
             UserID = vm.UserID,
+            FundingRoundID = vm.FundingRoundID,
             Amount = vm.Amount,
             CreatedDate = vm.CreatedDate
         };

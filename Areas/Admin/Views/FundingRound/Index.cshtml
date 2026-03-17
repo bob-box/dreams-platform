@@ -1,0 +1,59 @@
+@model IEnumerable<Borderland.Dreams.ViewModels.FundingRoundViewModel>
+
+@{
+    ViewData["Title"] = "Manage Funding Rounds";
+}
+
+<h1>Manage Funding Rounds</h1>
+
+<p>
+    <a asp-action="Create">Create New Funding Round</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StartDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EndDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AllocationPerUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MaxPercentagePerDream)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StartDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EndDate)
+            </td>
+            <td>
+                @item.AllocationPerUser.ToString("C")
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MaxPercentagePerDream)%
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

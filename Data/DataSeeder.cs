@@ -12,6 +12,7 @@ public static class DataSeeder
         await AddAdminUserAsync(serviceProvider);
         await AddUserAsync(serviceProvider);
         await AddTestCloudAsync(serviceProvider);
+        await AddTestFundingRoundAsync(serviceProvider);
     }
 
     private static async Task AddRolesAsync(IServiceProvider serviceProvider)
@@ -94,6 +95,48 @@ public static class DataSeeder
         {
             context.Cloud.Add(new Cloud { Name = "test" });
             await context.SaveChangesAsync();
+        }
+    }
+
+    public static async Task AddTestFundingRoundAsync(IServiceProvider serviceProvider)
+    {
+        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        var cloud = await context.Cloud.SingleOrDefaultAsync(x => x.Name == "test");
+        if (cloud != null)
+        {
+            var existingRound = await context.FundingRound
+                .SingleOrDefaultAsync(fr => fr.CloudID == cloud.ID && fr.Title == "Test Round");
+            if (existingRound == null)
+            {
+                var fundingRound = new FundingRound
+                {
+                    CloudID = cloud.ID,
+                    Title = "Test Round",
+                    StartDate = DateTime.Now.AddDays(-1),
+                    EndDate = DateTime.Now.AddDays(30),
+                    MaxPercentagePerDream = 10m, // 10% of per-user allocation
+                    AllocationPerUser = 100m // each user receives 100 units
+                };
+                context.FundingRound.Add(fundingRound);
+                await context.SaveChangesAsync();
+
+                // allocate to current wallets (for seeded users)
+                var wallets = await context.Wallet
+                    .Where(w => w.CloudID == cloud.ID)
+                    .ToListAsync();
+                foreach (var wallet in wallets)
+                {
+                    wallet.Balance = fundingRound.AllocationPerUser;
+                }
+                // deduct from cloud funds
+                var cloudEntity = await context.Cloud.FindAsync(cloud.ID);
+                if (cloudEntity != null)
+                {
+                    cloudEntity.TotalFundsAvailable -= fundingRound.AllocationPerUser * wallets.Count;
+                    if (cloudEntity.TotalFundsAvailable < 0) cloudEntity.TotalFundsAvailable = 0;
+                }
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

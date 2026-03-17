@@ -8,21 +8,15 @@ public class FundingRound
     public int ID { get; set; }
     public string Title { get; set; } = string.Empty;
     public int CloudID { get; set; }
-    
-    [DataType(DataType.Date)]
     public DateTime StartDate { get; set; }
-    [DataType(DataType.Date)]
     public DateTime EndDate { get; set; }
+    public DateTime? ProcessedDate { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
-    [DataType(DataType.Currency)]
-    [Column(TypeName = "decimal(18, 2)")]
-    public decimal AmountToSpendPerUser { get; set; }
+    [Range(0, 100, ErrorMessage = "Percentage must be between 0 and 100")]
+    public decimal MaxPercentagePerDream { get; set; } = 100; // Percentage of the per-user allocation that can go to one dream
 
-    [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
-    [DataType(DataType.Currency)]
-    [Column(TypeName = "decimal(18, 2)")]
-    public decimal MaxAmountPerDreamPerUser { get; set; }
+    [Range(0, double.MaxValue, ErrorMessage = "Allocation must be non-negative")]
+    public decimal AllocationPerUser { get; set; } = 0; // Amount each user receives when the round is created
 
     public Cloud Cloud { get; set; }
 }
