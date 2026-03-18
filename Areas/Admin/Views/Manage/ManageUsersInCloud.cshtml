@@ -32,10 +32,10 @@
     </thead>
 
     @* initial table body rendered server-side using the same partial *@
-    @Html.Partial("~/Areas/Admin/Views/Manage/_ManageUsersTable.cshtml", Model)
+    <partial name="~/Areas/Admin/Views/Manage/_ManageUsersTable.cshtml" model="Model" />
 
 </table>
-@Html.Partial("~/Areas/Admin/Views/Manage/_UpdateWalletModal.cshtml")
+<partial name="~/Areas/Admin/Views/Manage/_UpdateWalletModal.cshtml" />
 
 
 @section Scripts {
