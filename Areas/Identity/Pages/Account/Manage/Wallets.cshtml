@@ -1,0 +1,35 @@
+@page
+@model WalletsModel
+@{
+    ViewData["Title"] = "Wallets";
+    ViewData["ActivePage"] = ManageNavPages.Wallets;
+}
+
+<h3>@ViewData["Title"]</h3>
+
+@if (!Model.Wallets.Any())
+{
+    <p>You do not have a wallet in any cloud yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Cloud</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var wallet in Model.Wallets)
+                {
+                    <tr>
+                        <td>@wallet.CloudName</td>
+                        <td>@wallet.Balance.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

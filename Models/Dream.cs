@@ -16,6 +16,7 @@ public class Dream
     public List<BudgetItem> BudgetItems { get; set; } = [];
     public int CloudID { get; set; }
 
+    public Cloud Cloud { get; set; }
     public List<Fund> Funds { get; set; } = [];
     public List<Comment> Comments { get; set; } = [];
     public List<Expense> Expenses { get; set; } = [];

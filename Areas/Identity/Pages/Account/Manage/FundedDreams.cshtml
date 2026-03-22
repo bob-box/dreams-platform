@@ -1,0 +1,43 @@
+@page
+@model FundedDreamsModel
+@{
+    ViewData["Title"] = "Funded dreams";
+    ViewData["ActivePage"] = ManageNavPages.FundedDreams;
+}
+
+<h3>@ViewData["Title"]</h3>
+
+@if (!Model.Clouds.Any())
+{
+    <p>You have not funded any dreams yet.</p>
+}
+else
+{
+    @foreach (var cloud in Model.Clouds)
+    {
+        <section class="mb-4">
+            <h4>Cloud: @cloud.CloudName</h4>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Dream</th>
+                            <th>Amount Funded By Me</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dream in cloud.Dreams)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-area="" asp-controller="Dream" asp-action="Details" asp-route-cloudName="@cloud.CloudName" asp-route-id="@dream.ID">@dream.Name</a>
+                                </td>
+                                <td>@dream.AmountFundedByMe.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}
