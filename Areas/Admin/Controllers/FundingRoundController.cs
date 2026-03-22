@@ -8,6 +8,7 @@ using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Borderland.Dreams.ViewModels;
+using Borderland.Dreams.Services;
 using Borderland.Dreams.Extensions;
 
 namespace Borderland.Dreams.Areas.Admin.Controllers;
@@ -18,12 +19,14 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    // UserService userService,
-    ICloudNameResolver cloudNameResolver
+    UserService userService,
+    ICloudNameResolver cloudNameResolver,
+    FundingRoundSchedulerService schedulerService
 )
     : Dreams.Controllers.BaseController(context, authorizationService, userManager)
 {
     private readonly ILogger<FundingRoundController> _logger = logger;
+    private readonly FundingRoundSchedulerService _schedulerService = schedulerService;
 
     // GET: Admin/FundingRound
     public async Task<IActionResult> Index()
@@ -38,13 +41,16 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     }
 
     // GET: Admin/FundingRound/Create
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        var userCount = await userService.CountUsersInCloud();
+
         var viewModel = new FundingRoundViewModel
         {
             CloudID = cloudNameResolver.CloudID,
-            StartDate = DateTime.Now.Date,
-            EndDate = DateTime.Now.Date.AddDays(3).EndOfDay()
+            StartDate = DateTime.UtcNow.Date,
+            EndDate = DateTime.UtcNow.Date.AddDays(3).EndOfDay(),
+            UsersInCloudCount = userCount
         };
         return View(viewModel);
     }
@@ -82,6 +88,10 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
 
         var fundingRound = viewModel.ToModel();
         _context.Add(fundingRound);
+        await _context.SaveChangesAsync();
+
+        // Schedule Hangfire jobs for this funding round and save job IDs
+        _schedulerService.ScheduleFundingRoundJobs(fundingRound);
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
@@ -152,6 +162,10 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             roundToUpdate.AllocationPerUser = viewModel.AllocationPerUser;
 
             await _context.SaveChangesAsync();
+
+            // Reschedule jobs with new dates
+            _schedulerService.ScheduleFundingRoundJobs(roundToUpdate);
+            await _context.SaveChangesAsync(); // Save job IDs
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -197,6 +211,9 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
 
         if (fundingRound != null)
         {
+            // Cancel scheduled jobs
+            _schedulerService.CancelFundingRoundJobs(fundingRound);
+
             _context.FundingRound.Remove(fundingRound);
             await _context.SaveChangesAsync();
         }
@@ -207,49 +224,5 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     private bool FundingRoundExists(int id)
     {
         return _context.FundingRound.Any(e => e.ID == id);
-    }
-
-    // to be used later for processing ended rounds in batch (e.g. via a scheduled job or admin action)
-    // Code not tested!!
-    public async Task ProcessEndedRound(int id)
-    {
-        var endedRound = await _context.FundingRound.FindAsync(id);
-        if (endedRound == null)
-        {
-            throw new Exception("Funding round not found");
-        }
-        if (endedRound.ProcessedDate != null)
-        {
-            throw new InvalidOperationException("This funding round has already been processed.");
-        }
-
-        // Calculate total spent in this round
-        var totalSpent = await _context.Fund
-            .Where(f => f.FundingRoundID == endedRound.ID)
-            .SumAsync(f => f.Amount);
-
-        // Get all wallets in the cloud
-        var wallets = await _context.Wallet
-            .Where(w => w.CloudID == cloudNameResolver.CloudID)
-            .ToListAsync();
-
-        // Reset all wallet balances to 0
-        foreach (var wallet in wallets)
-        {
-            wallet.Balance = 0;
-        }
-
-        // Lower the cloud's total funds available by the amount spent
-        var cloud = await _context.Cloud.FindAsync(endedRound.CloudID);
-        if (cloud != null)
-        {
-            cloud.TotalFundsAvailable -= totalSpent;
-            if (cloud.TotalFundsAvailable < 0) cloud.TotalFundsAvailable = 0;
-        }
-
-        // Mark the round as processed to prevent double-processing
-        endedRound.ProcessedDate = DateTime.Now;
-
-        await _context.SaveChangesAsync();
     }
 }

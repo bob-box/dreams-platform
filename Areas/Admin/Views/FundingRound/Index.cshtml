@@ -28,6 +28,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.MaxPercentagePerDream)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TotalFundsAllocated)
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -48,6 +51,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.MaxPercentagePerDream)%
+            </td>
+            <td>
+                @item.TotalFundsAllocated.ToString("C")
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |

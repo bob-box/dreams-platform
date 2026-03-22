@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using Borderland.Dreams.Enums;
-using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Borderland.Dreams.ViewModels;
@@ -11,7 +10,8 @@ public class DreamViewModel
     public string Name { get; set; }
     public string Description { get; set; }
     [DataType(DataType.Date)]
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
     [Display(Name = "Budget")]
     public List<BudgetItemViewModel> BudgetItems { get; set; } = new List<BudgetItemViewModel>();

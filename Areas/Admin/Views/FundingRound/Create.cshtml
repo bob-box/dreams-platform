@@ -11,7 +11,7 @@
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="CloudID" />
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
@@ -32,25 +32,85 @@
                 <label asp-for="MaxPercentagePerDream" class="control-label"></label>
                 <input asp-for="MaxPercentagePerDream" class="form-control" data-val="false" />
                 <span asp-validation-for="MaxPercentagePerDream" class="text-danger"></span>
-                <small class="form-text text-muted">Maximum percentage of a user's per‑round allocation that can be given to a single dream.</small>
+                <small class="form-text text-muted">Maximum percentage of a user's per-round allocation that can be given to a single dream.</small>
             </div>
             <div class="form-group">
                 <label asp-for="AllocationPerUser" class="control-label"></label>
                 <input asp-for="AllocationPerUser" class="form-control" data-val="false" />
                 <span asp-validation-for="AllocationPerUser" class="text-danger"></span>
-                <small class="form-text text-muted">Amount each user will receive in their wallet when this round is created.</small>
+                <small class="form-text text-muted">Amount each user will receive in their wallet when this round starts.</small>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
     </div>
+    <div class="col-md-8">
+        <cache expires-after="@TimeSpan.FromSeconds(60)">
+            <vc:cloud-funds />
+        </cache>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Users in Cloud</h5>
+                        <p class="card-text h4">@Model.UsersInCloudCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Potential Allocation</h5>
+                        <p class="card-text h4 allocation-highlight" id="totalAllocation">@((Model.UsersInCloudCount * Model.AllocationPerUser).ToString("C"))
+                        </p>
+                        <small class="form-text text-muted">
+                            Total amount to be allocated in this funding round (based on the number of users in the cloud).
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
-
+@section Styles {
+    <style>
+                .allocation-highlight {
+                    transition: background-color 50ms ease-in, background-color 1s ease-out;
+                }
+                .allocation-changed {
+                    background-color: #ffdf78 !important;
+                }
+    </style>
+}
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function updateTotalAllocation(event) {
+            const usersCount = @Model.UsersInCloudCount;
+            const allocation = parseFloat(event.target.value) || 0;
+            const total = (usersCount * allocation).toLocaleString('sv-SE', { style: 'currency', currency: 'SEK' });
+            const totalElement = document.getElementById('totalAllocation');
+
+            // Check if value actually changed
+            if (totalElement.textContent !== total) {
+                totalElement.textContent = total;
+                totalElement.classList.add('allocation-changed');
+
+                // Remove highlight
+                setTimeout(() => {
+                    totalElement.classList.remove('allocation-changed');
+                }, 1000);
+            }
+        }
+
+        document.querySelector('input[name="AllocationPerUser"]').addEventListener('input', updateTotalAllocation);
+    </script>
 }

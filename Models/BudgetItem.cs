@@ -12,7 +12,7 @@ public class BudgetItem
     public int DreamID { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]

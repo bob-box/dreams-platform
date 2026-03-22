@@ -9,7 +9,7 @@ public class Dream
     public required string Name { get; set; }
     public string Description { get; set; } = string.Empty;
     [DataType(DataType.Date)]
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
 
     [Display(Name = "Budget")]

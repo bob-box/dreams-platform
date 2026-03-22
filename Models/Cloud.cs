@@ -14,14 +14,21 @@ public class Cloud
     public required string Name { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-    [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]
     [Column(TypeName = "decimal(18, 2)")]
     public decimal TotalFundsAvailable { get; set; } = 0;
 
+    [DataType(DataType.Currency)]
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal TotalFundsRemaining { get; set; } = 0;
+
+    [DataType(DataType.Currency)]
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal TotalFundsSpent { get; set; } = 0;
+
     // Navigation properties
     public List<Dream>? Dreams { get; set; } = [];
-    public List<FundingRound> FundingRounds { get; set; } = [];
+    public List<FundingRound>? FundingRounds { get; set; } = [];
 }

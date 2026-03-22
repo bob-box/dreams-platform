@@ -77,7 +77,7 @@ public class DreamController(ApplicationDbContext context,
         }
 
         // Check for active funding round
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var activeRound = await _context.FundingRound
             .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
                                      fr.StartDate <= now && fr.EndDate >= now);
@@ -427,7 +427,7 @@ public class DreamController(ApplicationDbContext context,
         }
 
         // Check if there's an active funding round
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var activeRound = await _context.FundingRound
             .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
                                      fr.StartDate <= now && fr.EndDate >= now);

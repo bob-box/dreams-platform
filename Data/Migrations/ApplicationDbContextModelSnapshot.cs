@@ -65,6 +65,12 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<decimal>("TotalFundsAvailable")
                         .HasColumnType("decimal(18, 2)");
 
+                    b.Property<decimal>("TotalFundsRemaining")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<decimal>("TotalFundsSpent")
+                        .HasColumnType("decimal(18, 2)");
+
                     b.HasKey("ID");
 
                     b.HasIndex("Name")
@@ -231,6 +237,9 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("EndJobId")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("MaxPercentagePerDream")
                         .HasColumnType("TEXT");
 
@@ -240,9 +249,15 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("StartJobId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalFundsAllocated")
+                        .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("ID");
 
@@ -319,6 +334,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("UserName")
+                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 

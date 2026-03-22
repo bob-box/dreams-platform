@@ -34,6 +34,15 @@ public class UserService(
         return list;
     }
 
+    public async Task<int> CountUsersInCloud()
+    {
+        int cloudId = cloudNameResolver.CloudID;
+
+        var joinedCloudClaim = new Claim(Constants.JOINED_CLOUD_CLAIM, cloudId.ToString());
+        var usersInCloud = await userManager.GetUsersForClaimAsync(joinedCloudClaim);
+        return usersInCloud.Count;
+    }
+
     public async Task UpdateWallet(string userId, string action, int amount)
     {
         int cloudId = cloudNameResolver.CloudID;

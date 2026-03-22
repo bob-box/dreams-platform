@@ -8,6 +8,8 @@ using Borderland.Dreams.Authorization;
 using Borderland.Dreams.FilterAttributes;
 using System.Security.Claims;
 using Borderland.Dreams.Middleware;
+using Borderland.Dreams.ViewModels;
+using Borderland.Dreams.Mappers;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -21,7 +23,13 @@ public class CloudController(ApplicationDbContext context,
 
     public async Task<IActionResult> Index()
     {
-        return View(await _context.Cloud.ToListAsync());
+        var clouds = await _context.Cloud
+            .Include(c => c.Dreams)
+            .ToListAsync();
+
+        var viewModels = clouds.Select(c => c.ToViewModel()).ToList();
+
+        return View(viewModels);
     }
 
     [AccessForRole(Constants.AdminRole)]
@@ -33,15 +41,16 @@ public class CloudController(ApplicationDbContext context,
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AccessForRole(Constants.AdminRole)]
-    public async Task<IActionResult> Create([Bind("ID,Name")] Cloud cloud)
+    public async Task<IActionResult> Create([Bind("ID,Name,TotalFundsAvailable")] CloudViewModel viewModel)
     {
         if (ModelState.IsValid)
         {
+            var cloud = viewModel.ToModel();
             _context.Add(cloud);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-        return View(cloud);
+        return View(viewModel);
     }
 
     [AccessForRole(Constants.AdminRole)]
@@ -53,40 +62,45 @@ public class CloudController(ApplicationDbContext context,
         }
 
         var cloud = await _context.Cloud.FindAsync(id);
+        if (cloud == null)
+        {
+            return NotFound();
+        }
 
-        return cloud == null ? NotFound() : View(cloud);
+        var viewModel = cloud.ToViewModel();
+        return View(viewModel);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AccessForRole(Constants.AdminRole)]
-    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,TotalFundsAvailable")] Cloud cloud)
+    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,TotalFundsAvailable")] CloudViewModel viewModel)
     {
-        if (id != cloud.ID)
+        if (id != viewModel.ID)
         {
             return NotFound();
         }
 
         if (!ModelState.IsValid)
         {
-            return View(cloud);
+            return View(viewModel);
         }
 
-            var existingCloud = await _context.Cloud.FindAsync(id);
-            if (existingCloud == null)
-            {
-                return NotFound();
-            }
+        var existingCloud = await _context.Cloud.FindAsync(id);
+        if (existingCloud == null)
+        {
+            return NotFound();
+        }
 
-            existingCloud.TotalFundsAvailable = cloud.TotalFundsAvailable;
+        existingCloud.TotalFundsAvailable = viewModel.TotalFundsAvailable;
+        existingCloud.Name = viewModel.Name;
         try
         {
-            _context.Entry(existingCloud).Property(x => x.CreatedDate).IsModified = false; // Prevent modification of CreatedDate
             await _context.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!await _context.Cloud.AnyAsync(e => e.ID == cloud.ID))
+            if (!await _context.Cloud.AnyAsync(e => e.ID == viewModel.ID))
             {
                 return NotFound();
             }
@@ -108,8 +122,13 @@ public class CloudController(ApplicationDbContext context,
         }
 
         var cloud = await _context.Cloud.SingleOrDefaultAsync(m => m.ID == id);
+        if (cloud == null)
+        {
+            return NotFound();
+        }
 
-        return cloud == null ? NotFound() : View(cloud);
+        var viewModel = cloud.ToViewModel();
+        return View(viewModel);
     }
 
     [HttpPost, ActionName("Delete")]

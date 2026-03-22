@@ -11,5 +11,6 @@ public class ExpenseViewModel
     [DataType(DataType.Currency)]
     public decimal Amount { get; set; }
     public string Description { get; set; }
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     public DateTime CreatedDate { get; set; }
 }

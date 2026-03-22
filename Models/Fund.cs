@@ -16,7 +16,7 @@ public class Fund
     public decimal Amount { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     public User User { get; set; }
     public Dream Dream { get; set; }

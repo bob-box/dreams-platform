@@ -30,12 +30,11 @@ public class CloudFundsViewComponent : ViewComponent
             .Where(f => f.Dream.CloudID == _cloudNameResolver.CloudID)
             .SumAsync(f => f.Amount);
 
-        var totalFundsLeft = cloud.TotalFundsAvailable - totalFundsAllocated;
-
         var model = new CloudFundsViewModel
         {
-            TotalFundsAllocated = totalFundsAllocated,
-            TotalFundsLeft = totalFundsLeft
+            TotalFundsAvailable = cloud.TotalFundsAvailable,
+            TotalFundsSpent = cloud.TotalFundsSpent,
+            TotalFundsRemaining = cloud.TotalFundsRemaining
         };
 
         return View(model);

@@ -16,7 +16,8 @@ public static class FundingRoundMapper
             StartDate = model.StartDate,
             EndDate = model.EndDate,
             MaxPercentagePerDream = model.MaxPercentagePerDream,
-            AllocationPerUser = model.AllocationPerUser
+            AllocationPerUser = model.AllocationPerUser,
+            TotalFundsAllocated = model.TotalFundsAllocated
         };
     }
 

@@ -3,7 +3,7 @@ namespace Borderland.Dreams.Models;
 public class Comment
 {
     public int ID { get; set; }
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public int DreamID { get; set; }
     public string Text { get; set; } = string.Empty;
     public string UserID { get; set; } = null!;

@@ -13,7 +13,10 @@ public static class CloudMapper
             ID = model.ID,
             Name = model.Name,
             CreatedDate = model.CreatedDate,
-            Dreams = model.Dreams?.Select(d => d.ToViewModel()).ToList()
+            TotalFundsAvailable = model.TotalFundsAvailable,
+            TotalFundsSpent = model.TotalFundsSpent,
+            Dreams = model.Dreams?.Select(d => d.ToViewModel()).ToList(),
+            FundingRounds = model.FundingRounds?.Select(fr => fr.ToViewModel()).ToList()
         };
     }
 
@@ -25,7 +28,10 @@ public static class CloudMapper
             ID = vm.ID,
             Name = vm.Name,
             CreatedDate = vm.CreatedDate,
-            Dreams = vm.Dreams?.Select(d => d.ToModel()).ToList()
+            TotalFundsAvailable = vm.TotalFundsAvailable,
+            TotalFundsSpent = vm.TotalFundsSpent,
+            Dreams = vm.Dreams?.Select(d => d.ToModel()).ToList(),
+            FundingRounds  = vm.FundingRounds?.Select(fr => fr.ToModel()).ToList()
         };
     }
 }

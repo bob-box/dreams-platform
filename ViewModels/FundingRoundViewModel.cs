@@ -7,7 +7,7 @@ public class FundingRoundViewModel
     public int ID { get; set; }
     public int CloudID { get; set; }
     public string Title { get; set; }
-    
+
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     public DateTime StartDate { get; set; }
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
@@ -18,4 +18,8 @@ public class FundingRoundViewModel
 
     [Range(0, double.MaxValue, ErrorMessage = "Allocation must be non-negative")]
     public decimal AllocationPerUser { get; set; } = 0;
+    [DataType(DataType.Currency)]
+    public decimal TotalFundsAllocated { get; set; }
+
+    public int UsersInCloudCount { get; set; }
 }

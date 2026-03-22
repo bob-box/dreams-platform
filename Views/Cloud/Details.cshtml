@@ -1,4 +1,4 @@
-@model Borderland.Dreams.Models.Cloud
+@model Borderland.Dreams.ViewModels.CloudViewModel
 
 @{
     ViewData["Title"] = "Details";
@@ -21,6 +21,18 @@
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.TotalFundsAvailable)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.TotalFundsAvailable)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.TotalFundsSpent)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.TotalFundsSpent)
         </dd>
     </dl>
 </div>

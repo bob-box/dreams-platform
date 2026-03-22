@@ -17,6 +17,11 @@ public class FundingRound
 
     [Range(0, double.MaxValue, ErrorMessage = "Allocation must be non-negative")]
     public decimal AllocationPerUser { get; set; } = 0; // Amount each user receives when the round is created
+    [DataType(DataType.Currency)]
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal TotalFundsAllocated { get; set; } = 0;
+    public string? StartJobId { get; set; } // Hangfire job ID for allocation
+    public string? EndJobId { get; set; } // Hangfire job ID for end processing
 
     public Cloud Cloud { get; set; }
 }

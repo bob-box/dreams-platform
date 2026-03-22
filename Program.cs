@@ -7,6 +7,9 @@ using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Authorization.Dream;
 using Borderland.Dreams.Services;
 using Borderland.Dreams.Middleware;
+using Hangfire;
+using Hangfire.SQLite;
+using Borderland.Dreams.FilterAttributes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +42,22 @@ builder.Services.AddDefaultIdentity<User>(options =>
 builder.Services.AddScoped<DreamService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
+builder.Services.AddScoped<FundingRoundSchedulerService>();
+
+// Add Hangfire services.
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSQLiteStorage(connectionString));
+
+builder.Services.AddHangfireServer(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.WorkerCount = 1;
+    }
+});
 
 // Authorization handlers.
 // Services using Entity Framework must be registered for dependency injection using AddScoped.
@@ -84,11 +103,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 // When to use the CloudNameResolverMiddleware:
-app.UseWhen(context => 
+app.UseWhen(context =>
 {
     var controller = context.Request.RouteValues["controller"]?.ToString();
     var area = context.Request.RouteValues["area"]?.ToString();
-    return new[] {"Dream", "Cloud"}.Contains(controller) || area == "Admin";
+    return new[] { "Dream", "Cloud" }.Contains(controller) || area == "Admin";
 }, appBuilder =>
 {
     // Custom middleware to resolve CloudName to CloudID. Must be placed after UseRouting to get route data.
@@ -96,6 +115,11 @@ app.UseWhen(context =>
 });
 
 app.UseAuthorization();
+
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = [new HangfireDashboardAuthorizationFilter()]
+});
 
 app.MapControllerRoute(
     name: "areas",

@@ -24,7 +24,7 @@ public class ActiveFundingRoundViewComponent : ViewComponent
             return Content(string.Empty);
         }
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var activeRound = await _context.FundingRound
             .FirstOrDefaultAsync(fr => fr.CloudID == _cloudNameResolver.CloudID &&
                                         fr.StartDate <= now && fr.EndDate >= now);
