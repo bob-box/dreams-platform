@@ -44,14 +44,12 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     public async Task<IActionResult> Create()
     {
         var userCount = await userService.CountUsersInCloud();
-        var now = DateTime.UtcNow;
-        var currentUtcMinute = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, DateTimeKind.Utc);
 
         var viewModel = new FundingRoundViewModel
         {
             CloudID = cloudNameResolver.CloudID,
-            StartDate = currentUtcMinute,
-            EndDate = currentUtcMinute.AddDays(3).EndOfDay(),
+            StartDate = DateTime.UtcNow.Date,
+            EndDate = DateTime.UtcNow.Date.AddDays(3).EndOfDay(),
             UsersInCloudCount = userCount
         };
         return View(viewModel);
