@@ -44,12 +44,14 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     public async Task<IActionResult> Create()
     {
         var userCount = await userService.CountUsersInCloud();
+        var now = DateTime.UtcNow;
+        var currentUtcMinute = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, DateTimeKind.Utc);
 
         var viewModel = new FundingRoundViewModel
         {
             CloudID = cloudNameResolver.CloudID,
-            StartDate = DateTime.UtcNow.Date,
-            EndDate = DateTime.UtcNow.Date.AddDays(3).EndOfDay(),
+            StartDate = currentUtcMinute,
+            EndDate = currentUtcMinute.AddDays(3).EndOfDay(),
             UsersInCloudCount = userCount
         };
         return View(viewModel);
@@ -70,16 +72,7 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             .Where(fr => fr.CloudID == cloudNameResolver.CloudID)
             .ToListAsync();
 
-        if (existingRounds.Any(fr =>
-            (viewModel.StartDate <= fr.EndDate && viewModel.EndDate >= fr.StartDate)))
-        {
-            ModelState.AddModelError("", "Funding round dates cannot overlap with existing rounds.");
-        }
-
-        if (viewModel.EndDate <= viewModel.StartDate)
-        {
-            ModelState.AddModelError("EndDate", "End date must be after start date.");
-        }
+        ValidateDates(viewModel, existingRounds);
 
         if (!ModelState.IsValid)
         {
@@ -137,16 +130,7 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             .Where(fr => fr.CloudID == cloudNameResolver.CloudID && fr.ID != id)
             .ToListAsync();
 
-        if (existingRounds.Any(fr =>
-            (viewModel.StartDate <= fr.EndDate && viewModel.EndDate >= fr.StartDate)))
-        {
-            ModelState.AddModelError("", "Funding round dates cannot overlap with existing rounds.");
-        }
-
-        if (viewModel.EndDate <= viewModel.StartDate)
-        {
-            ModelState.AddModelError("EndDate", "End date must be after start date.");
-        }
+        ValidateDates(viewModel, existingRounds);
 
         if (!ModelState.IsValid)
         {
@@ -224,5 +208,27 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     private bool FundingRoundExists(int id)
     {
         return _context.FundingRound.Any(e => e.ID == id);
+    }
+
+    private void ValidateDates(FundingRoundViewModel viewModel, List<FundingRound> existingRounds)
+    {
+        if (existingRounds.Any(fr =>
+            (viewModel.StartDate <= fr.EndDate && viewModel.EndDate >= fr.StartDate)))
+        {
+            ModelState.AddModelError("", "Funding round dates cannot overlap with existing rounds.");
+        }
+
+        if (viewModel.EndDate <= viewModel.StartDate)
+        {
+            ModelState.AddModelError("EndDate", "End date must be after start date.");
+        }
+
+        var now = DateTime.UtcNow;
+        var currentUtcMinute = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, DateTimeKind.Utc);
+
+        if (viewModel.StartDate < currentUtcMinute)
+        {
+            ModelState.AddModelError("StartDate", "Start date cannot be in the past.");
+        }
     }
 }
