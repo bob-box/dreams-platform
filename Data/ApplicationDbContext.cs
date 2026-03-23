@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<Wallet> Wallet { get; set; } = default!;
     public DbSet<FundingRound> FundingRound { get; set; } = default!;
     public DbSet<Fund> Fund { get; set; } = default!;
+    public DbSet<Tag> Tag { get; set; } = default!;
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +29,12 @@ public class ApplicationDbContext : IdentityDbContext<User>
         modelBuilder.Entity<Dream>()
             .HasMany(e => e.Tags)
             .WithMany();
+
+        modelBuilder.Entity<Tag>()
+            .HasOne(t => t.Cloud)
+            .WithMany(c => c.Tags)
+            .HasForeignKey(t => t.CloudID)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Cloud>()
             .HasIndex(e => e.Name)

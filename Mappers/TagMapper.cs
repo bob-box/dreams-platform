@@ -11,7 +11,8 @@ public static class TagMapper
         return new TagViewModel
         {
             ID = model.ID,
-            Title = model.Title
+            Title = model.Title,
+            CloudID = model.CloudID
         };
     }
 
@@ -21,7 +22,8 @@ public static class TagMapper
         return new Tag
         {
             ID = vm.ID,
-            Title = vm.Title
+            Title = vm.Title,
+            CloudID = vm.CloudID
         };
     }
 }

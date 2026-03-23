@@ -31,4 +31,5 @@ public class Cloud
     // Navigation properties
     public List<Dream>? Dreams { get; set; } = [];
     public List<FundingRound>? FundingRounds { get; set; } = [];
+    public List<Tag> Tags { get; set; } = [];
 }

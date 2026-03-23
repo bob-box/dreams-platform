@@ -272,11 +272,17 @@ namespace Borderland.Dreams.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("CloudID")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Title")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("CloudID");
 
                     b.ToTable("Tag");
                 });
@@ -367,6 +373,8 @@ namespace Borderland.Dreams.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("CloudID");
 
                     b.HasIndex("UserID", "CloudID")
                         .IsUnique();
@@ -551,11 +559,13 @@ namespace Borderland.Dreams.Data.Migrations
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dream", b =>
                 {
-                    b.HasOne("Borderland.Dreams.Models.Cloud", null)
+                    b.HasOne("Borderland.Dreams.Models.Cloud", "Cloud")
                         .WithMany("Dreams")
                         .HasForeignKey("CloudID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Cloud");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dreamer", b =>
@@ -620,13 +630,32 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Navigation("Cloud");
                 });
 
+            modelBuilder.Entity("Borderland.Dreams.Models.Tag", b =>
+                {
+                    b.HasOne("Borderland.Dreams.Models.Cloud", "Cloud")
+                        .WithMany("Tags")
+                        .HasForeignKey("CloudID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cloud");
+                });
+
             modelBuilder.Entity("Borderland.Dreams.Models.Wallet", b =>
                 {
+                    b.HasOne("Borderland.Dreams.Models.Cloud", "Cloud")
+                        .WithMany()
+                        .HasForeignKey("CloudID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Borderland.Dreams.Models.User", "User")
                         .WithMany("Wallets")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Cloud");
 
                     b.Navigation("User");
                 });
@@ -702,6 +731,8 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Navigation("Dreams");
 
                     b.Navigation("FundingRounds");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dream", b =>

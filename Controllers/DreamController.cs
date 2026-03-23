@@ -132,6 +132,8 @@ public class DreamController(ApplicationDbContext context,
             UserName = user.UserName
         };
         viewModel.Dreamers.Add(dreamer); // Add the main dreamer (current user)
+        ViewBag.AvailableTags = await GetAvailableTagsAsync();
+
         return View(viewModel);
     }
 
@@ -140,7 +142,7 @@ public class DreamController(ApplicationDbContext context,
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems,Dreamers")] DreamViewModel viewModel)
+    public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems,Dreamers,SelectedTagIds")] DreamViewModel viewModel)
     {
         bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
         if (!userHasAlreadyJoinedTheCloud)
@@ -150,12 +152,20 @@ public class DreamController(ApplicationDbContext context,
 
         if (!ModelState.IsValid)
         {
+            ViewBag.AvailableTags = await GetAvailableTagsAsync();
             return View(viewModel);
         }
         var dream = viewModel.ToModel();
 
         dream.CloudID = cloudNameService.CloudID; // Set the CloudID from the current context
         dream.Status = DreamStatus.Draft;
+
+        if (viewModel.SelectedTagIds.Count > 0)
+        {
+            dream.Tags = await _context.Tag
+            .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)
+                .ToListAsync();
+        }
 
         _context.Add(dream);
         await _context.SaveChangesAsync();
@@ -186,6 +196,9 @@ public class DreamController(ApplicationDbContext context,
 
         await CheckIfUserCanEditDreamers(dreamFromDb.Dreamers);
         var viewModel = dreamFromDb.ToViewModel();
+        viewModel.SelectedTagIds = dreamFromDb.Tags.Select(t => t.ID).ToList();
+        ViewBag.AvailableTags = await GetAvailableTagsAsync();
+
         return View(viewModel);
     }
 
@@ -194,7 +207,7 @@ public class DreamController(ApplicationDbContext context,
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,BudgetItems,Dreamers")] DreamViewModel viewModel)
+    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,BudgetItems,Dreamers,SelectedTagIds")] DreamViewModel viewModel)
     {
         if (id != viewModel.ID)
         {
@@ -217,6 +230,7 @@ public class DreamController(ApplicationDbContext context,
         if (!ModelState.IsValid)
         {
             await CheckIfUserCanEditDreamers(dreamToUpdate.Dreamers);
+            ViewBag.AvailableTags = await GetAvailableTagsAsync();
             return View(viewModel);
         }
 
@@ -227,6 +241,9 @@ public class DreamController(ApplicationDbContext context,
             dreamToUpdate.Description = viewModel.Description;
             dreamToUpdate.Dreamers = viewModel.Dreamers.Where(x => x != null).Select(x => x.ToModel()).ToList();
             dreamToUpdate.BudgetItems = viewModel.BudgetItems.Where(b => b != null).Select(x => x.ToModel()).ToList();
+            dreamToUpdate.Tags = await _context.Tag
+                .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)
+                .ToListAsync();
 
             if (!dreamToUpdate.Dreamers.Any(x => x.IsMainDreamer))
             {
@@ -476,5 +493,13 @@ public class DreamController(ApplicationDbContext context,
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Details), new { id = dreamId });
+    }
+
+    private async Task<List<Tag>> GetAvailableTagsAsync()
+    {
+        return await _context.Tag
+            .Where(t => t.CloudID == cloudNameService.CloudID)
+            .OrderBy(t => t.Title)
+            .ToListAsync();
     }
 }

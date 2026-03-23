@@ -19,9 +19,7 @@ public class ManageController(ILogger<ManageController> logger,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
     UserService userService,
-    ICloudCache cloudCache
-// ICloudNameResolver cloudNameResolver
-)
+    ICloudCache cloudCache)
     : Dreams.Controllers.BaseController(context, authorizationService, userManager)
 {
     private readonly ILogger<ManageController> _logger = logger;

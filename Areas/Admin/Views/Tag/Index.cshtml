@@ -1,0 +1,42 @@
+@model IEnumerable<Borderland.Dreams.ViewModels.TagViewModel>
+
+@{
+    ViewData["Title"] = "Manage Tags";
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h1>Tags</h1>
+    </div>
+    <div class="col-auto mt-2">
+        <a class="btn btn-primary" asp-action="Create">&#65291; New tag</a>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No tags have been created for this cloud yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tag in Model)
+            {
+                <tr>
+                    <td>@tag.Title</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@tag.ID">Edit</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@tag.ID">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

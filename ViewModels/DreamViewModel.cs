@@ -20,6 +20,7 @@ public class DreamViewModel
     public List<CommentViewModel> Comments { get; set; } = new List<CommentViewModel>();
     public List<ExpenseViewModel> Expenses { get; set; } = new List<ExpenseViewModel>();
     public List<TagViewModel> Tags { get; set; } = new List<TagViewModel>();
+    public List<int> SelectedTagIds { get; set; } = [];
     public List<DreamerViewModel> Dreamers { get; set; } = new List<DreamerViewModel>();
 
 

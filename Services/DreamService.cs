@@ -20,6 +20,7 @@ public class DreamService(ApplicationDbContext _context, ICloudNameResolver clou
             .Include(d => d.BudgetItems)
             .Include(d => d.Dreamers).ThenInclude(d => d.User)
             .Include(d => d.Funds).ThenInclude(d => d.User)
+            .Include(d => d.Tags)
             .Where(d => d.CloudID == cloudId);
     }
 }
