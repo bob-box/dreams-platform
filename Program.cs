@@ -43,6 +43,7 @@ builder.Services.AddScoped<DreamService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
+builder.Services.AddSingleton<ICloudCache, CloudCache>();
 
 // Add Hangfire services.
 builder.Services.AddHangfire(configuration => configuration

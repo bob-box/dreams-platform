@@ -4,9 +4,12 @@ namespace Borderland.Dreams.Middleware;
 
 public class CloudNameResolverMiddleware(RequestDelegate _next)
 {
-    private readonly Dictionary<string, int> _cloudCache = new(StringComparer.OrdinalIgnoreCase);
-
-    public async Task InvokeAsync(HttpContext httpContext, ICloudNameResolver resolver, ApplicationDbContext context)
+    public async Task InvokeAsync(
+        HttpContext httpContext,
+        ICloudNameResolver resolver,
+        ApplicationDbContext context,
+        ICloudCache cloudCache
+        )
     {
         resolver.CloudName = httpContext.Request.RouteValues["cloudName"]?.ToString() ?? "";
         if (string.IsNullOrWhiteSpace(resolver.CloudName))
@@ -16,25 +19,23 @@ public class CloudNameResolverMiddleware(RequestDelegate _next)
             return;
         }
 
-        // See if the CloudID is already cached
-        if (_cloudCache.TryGetValue(resolver.CloudName, out int cloudID))
+        if (cloudCache.TryGet(resolver.CloudName, out int cloudID))
         {
             resolver.CloudID = cloudID;
             await _next(httpContext);
             return;
         }
 
-        // Lookup in db so we can cache it
         var id = context.Cloud.SingleOrDefault(x => x.Name == resolver.CloudName)?.ID;
         if (id == null)
         {
             resolver.CloudID = -1;
-            httpContext.Response.Redirect("/"); // just redirect to home if invalid cloud name
+            httpContext.Response.Redirect("/");
             await _next(httpContext);
             return;
         }
-        
-        _cloudCache[resolver.CloudName] = id.Value;
+
+        cloudCache.Set(resolver.CloudName, id.Value);
         resolver.CloudID = id.Value;
         await _next(httpContext);
     }

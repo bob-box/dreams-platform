@@ -7,7 +7,7 @@
 
 <div class="row">
     <div class="col-9">
-        <form id="users-search-form" method="get" class="mb-3" action="@Url.Action("ManageUsersInCloud", "Manage", new { area = "Admin" })">
+        <form id="users-search-form" method="get" class="mb-3" action="@Url.Action("UsersInCloud", "Manage", new { area = "Admin" })">
             <div class="input-group">
                 <input id="users-search-input" type="search" name="q" class="form-control" placeholder="Search by name, username or email" />
                 <button id="users-search-submit" class="btn btn-outline-secondary" type="submit">Search</button>
@@ -48,7 +48,7 @@
         const updateModal = document.getElementById('update-wallet-modal');
 
         async function fetchResults(filter) {
-            const url = '@Url.Action("ManageUsersInCloudSearch", "Manage", new { area = "Admin" })' + (filter ? '?filter=' + encodeURIComponent(filter) : '');
+            const url = '@Url.Action("UsersInCloudSearch", "Manage", new { area = "Admin" })' + (filter ? '?filter=' + encodeURIComponent(filter) : '');
             const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (!res.ok) return;
             const html = await res.text();

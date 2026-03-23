@@ -5,26 +5,31 @@ using Borderland.Dreams.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using Borderland.Dreams.Mappers;
 
 namespace Borderland.Dreams.Controllers;
 
 public class HomeController(ILogger<HomeController> logger,
     ApplicationDbContext context,
     IAuthorizationService authorizationService,
-    UserManager<User> userManager
-)
+    UserManager<User> userManager,
+    SignInManager<User> signInManager)
     : BaseController(context, authorizationService, userManager)
 {
+    private readonly SignInManager<User> _signInManager = signInManager;
+    
     private readonly ILogger<HomeController> _logger = logger;
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        if (TryGetCloudID(out int cloudID))
-        {
-            // Go to the dreams list of the current cloud
-            //return RedirectToAction("Index", "Dream");
-        }
-        return View();
+        var clouds = await _context.Cloud
+            .Include(c => c.Dreams)
+            .ToListAsync();
+
+        var viewModels = clouds.Select(c => c.ToViewModel()).ToList();
+
+        return View(viewModels);
     }
 
     public IActionResult Privacy()
