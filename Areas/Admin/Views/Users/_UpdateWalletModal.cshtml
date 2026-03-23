@@ -1,7 +1,9 @@
+@using Borderland.Dreams.Enums
+
 <div class="modal fade" id="update-wallet-modal" tabindex="-1" aria-labelledby="update-wallet-modal-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="update-wallet-form" asp-area="Admin" asp-controller="Manage" asp-action="UpdateWallets">
+            <form id="update-wallet-form" asp-area="Admin" asp-controller="Users" asp-action="UpdateWallets">
                 @Html.AntiForgeryToken()
                 <input type="hidden" id="modal-user-id" name="userId">
 
@@ -29,13 +31,13 @@
                     <div class="form-group">
                         <h6>Choose how to update</h6>
                         <label>
-                            <input type="radio" name="action" value="add" />
+                            <input type="radio" name="action" value="@nameof(WalletAction.Add)" />
                             Add to
                             <span class="fw-lighter">(will be added ontop of existing funds)</span>
                         </label>
                         <br />
                         <label>
-                            <input type="radio" name="action" value="replace">
+                            <input type="radio" name="action" value="@nameof(WalletAction.Set)">
                             Replace with
                             <span class="fw-lighter">(will be set to the given amount)</span>
                         </label>

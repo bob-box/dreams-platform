@@ -1,0 +1,49 @@
+@model Borderland.Dreams.ViewModels.CloudViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>@Model.Name</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="ID" />
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TotalFundsAvailable" class="control-label"></label>
+                <input asp-for="TotalFundsAvailable" class="form-control" />
+                <span asp-validation-for="TotalFundsAvailable" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TotalFundsSpent" class="control-label"></label>
+                <input asp-for="TotalFundsSpent" class="form-control" disabled />
+                <span asp-validation-for="TotalFundsSpent" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TotalFundsRemaining" class="control-label"></label>
+                <input asp-for="TotalFundsRemaining" class="form-control" disabled />
+                <span asp-validation-for="TotalFundsRemaining" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-2">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a class="btn btn-danger" asp-action="Delete" asp-route-id="@Model.ID">Delete</a>
+                <a class="btn btn-secondary" asp-controller="Home" asp-action="Index" asp-route-cloudName="">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

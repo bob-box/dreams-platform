@@ -1,0 +1,107 @@
+@model IEnumerable<Borderland.Dreams.ViewModels.ManageUsersViewModel>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<h1>@ViewBag.Title</h1>
+
+<div class="row">
+    <div class="col-9">
+        <form id="users-search-form" method="get" class="mb-3" action="@Url.Action("UsersInCloud", "Users", new { area = "Admin" })">
+            <div class="input-group">
+                <input id="users-search-input" type="search" name="q" class="form-control" placeholder="Search by name, username or email" />
+                <button id="users-search-submit" class="btn btn-outline-secondary" type="submit">Search</button>
+                <button id="users-search-clear" style="display:none;" class="btn btn-danger" type="reset">Clear</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-3 text-end">
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#update-wallet-modal">Update all wallets</button>
+    </div>
+</div>
+
+<table id="usersTable" class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>UserName</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th colspan="2">Wallet Balance</th>
+        </tr>
+    </thead>
+
+    <partial name="~/Areas/Admin/Views/Users/_ManageUsersTable.cshtml" model="Model" />
+
+</table>
+<partial name="~/Areas/Admin/Views/Users/_UpdateWalletModal.cshtml" />
+
+
+@section Scripts {
+    <script>
+        const searchForm = document.getElementById('users-search-form');
+        const inputField = document.getElementById('users-search-input');
+        const oldTbody = document.querySelector('#usersTable tbody');
+        const clearButton = document.getElementById('users-search-clear');
+        const updateWalletForm = document.getElementById('update-wallet-form');
+        const updateModal = document.getElementById('update-wallet-modal');
+
+        async function fetchResults(filter) {
+            const url = '@Url.Action("UsersInCloudSearch", "Users", new { area = "Admin" })' + (filter ? '?filter=' + encodeURIComponent(filter) : '');
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!res.ok) return;
+            const html = await res.text();
+            oldTbody.innerHTML = html;
+        }
+
+        function toggleClearButton() {
+            clearButton.style.display = inputField.value.trim() ? '' : 'none';
+        }
+
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fetchResults(inputField.value);
+            toggleClearButton();
+        });
+
+        clearButton.addEventListener('click', function (e) {
+            fetchResults('');
+            toggleClearButton();
+        });
+
+        $("#update-wallet-modal").on("hidden.bs.modal", function () {
+            $("#update-wallet-modal form")[0].reset();
+        });
+
+        updateWalletForm.addEventListener('submit', function (e) {
+            let action = [...document.getElementsByName("action")].filter(x => x.checked)[0]?.value;
+            if (!action) {
+                e.preventDefault();
+                document.getElementById("modal-action-validation").innerText = "You must choose an update action.";
+            }
+        });
+
+        updateModal.addEventListener('shown.bs.modal', function (event) {
+            document.getElementById("modal-amount").focus();
+        });
+
+        updateModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            if (!button.classList.contains('update-single-wallet')) {
+                // opened from "update all" button, no need to do the user specific stuff
+                document.getElementById('update-single-wallet-description').style.display = 'none';
+                document.getElementById('update-multiple-wallets-description').style.display = '';
+                return;
+            }
+
+            if (button.dataset.userId) {
+                document.getElementById('modal-user-id').value = button.dataset.userId;
+                document.getElementById('modal-user-balance').textContent = button.dataset.userBalance;
+                document.getElementById('modal-user-fullname').textContent = button.dataset.userFullname;
+                document.getElementById('modal-user-username').textContent = button.dataset.userUsername;
+                document.getElementById('update-single-wallet-description').style.display = '';
+                document.getElementById('update-multiple-wallets-description').style.display = 'none';
+            }
+        });
+    </script>
+}

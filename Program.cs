@@ -124,7 +124,7 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{cloudName:required}/{area:exists}/{controller=Manage}/{action=Index}/{id?}"
+    pattern: "{cloudName:required}/{area:exists}/{controller:required}/{action=Index}/{id?}"
     );
 
 app.MapControllerRoute(

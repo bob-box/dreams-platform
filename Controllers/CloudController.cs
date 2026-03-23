@@ -37,7 +37,7 @@ public class CloudController(ApplicationDbContext context,
             var cloud = viewModel.ToModel();
             _context.Add(cloud);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index), nameof(HomeController)[..^10]);
+            return RedirectToAction(nameof(Index), "Home");
         }
         return View(viewModel);
     }

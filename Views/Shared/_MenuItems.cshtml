@@ -35,10 +35,10 @@
                             @if (isWithinACloud)
                             {
                                 <li>
-                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Manage" asp-action="EditCloud" asp-route-id="@cloudNameResolver.CloudID">Edit Cloud</a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Cloud" asp-action="Edit" asp-route-id="@cloudNameResolver.CloudID">Edit Cloud</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Manage" asp-action="UsersInCloud">Manage Users</a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="UsersInCloud">Manage Users</a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" asp-area="Admin" asp-controller="Tag" asp-action="Index">Manage Tags</a>

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Data;
+using Borderland.Dreams.Enums;
 using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
@@ -43,7 +44,7 @@ public class UserService(
         return usersInCloud.Count;
     }
 
-    public async Task UpdateWallet(string userId, string action, int amount)
+    public async Task UpdateWallet(string userId, WalletAction action, int amount)
     {
         int cloudId = cloudNameResolver.CloudID;
         IList<User> users = [];
@@ -66,10 +67,10 @@ public class UserService(
 
             switch (action)
             {
-                case "replace":
+                case WalletAction.Set:
                     wallet.Balance = amount;
                     break;
-                case "add":
+                case WalletAction.Add:
                     wallet.Balance += amount;
                     break;
                 default:
