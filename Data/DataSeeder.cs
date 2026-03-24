@@ -49,8 +49,8 @@ public static class DataSeeder
         {
             var adminUser = new User
             {
-                UserName = "admin",
-                FullName = "Admin User",
+                UserName = adminEmail,
+                Name = "Admin User",
                 Email = adminEmail,
                 EmailConfirmed = true
             };
@@ -81,8 +81,8 @@ public static class DataSeeder
         {
             var user = new User
             {
-                UserName = "user",
-                FullName = "Test User",
+                UserName = userEmail,
+                Name = "Test User",
                 Email = userEmail,
                 EmailConfirmed = true
             };

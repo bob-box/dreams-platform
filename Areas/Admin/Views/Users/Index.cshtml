@@ -16,7 +16,7 @@
     <div class="col-9">
         <form id="users-search-form" method="get" class="mb-3">
             <div class="input-group">
-                <input id="users-search-input" type="search" name="q" class="form-control" placeholder="Search by name, username or email" />
+                <input id="users-search-input" type="search" name="q" class="form-control" placeholder="Search by name or email" />
                 <button id="users-search-submit" class="btn btn-outline-secondary" type="submit">Search</button>
                 <button id="users-search-clear" style="display:none;" class="btn btn-danger" type="reset">Clear</button>
             </div>
@@ -31,7 +31,6 @@
     <thead>
         <tr>
             <th>Name</th>
-            <th>UserName</th>
             <th>Email</th>
             <th>Role</th>
             <th colspan="2">Wallet Balance</th>
@@ -140,8 +139,7 @@
             if (button.dataset.userId) {
                 document.getElementById('modal-user-id').value = button.dataset.userId;
                 document.getElementById('modal-user-balance').textContent = button.dataset.userBalance;
-                document.getElementById('modal-user-fullname').textContent = button.dataset.userFullname;
-                document.getElementById('modal-user-username').textContent = button.dataset.userUsername;
+                document.getElementById('modal-user-name').textContent = button.dataset.userName;
                 document.getElementById('update-single-wallet-description').style.display = '';
                 document.getElementById('update-multiple-wallets-description').style.display = 'none';
             }

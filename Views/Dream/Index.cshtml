@@ -70,7 +70,7 @@
             <td>
                 @Html.DisplayFor(modelItem => item.TotalReceivedFunds)
             <td>
-                @Html.DisplayFor(modelItem => item.Dreamers.Single(d => d.IsMainDreamer).FullName)
+                @Html.DisplayFor(modelItem => item.Dreamers.Single(d => d.IsMainDreamer).Name)
             </td>
             <td>
                 @if (_authorizationService.AuthorizeAsync(User, item.Dreamers, Operations.Update).Result.Succeeded)

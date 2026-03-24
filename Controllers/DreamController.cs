@@ -127,8 +127,7 @@ public class DreamController(ApplicationDbContext context,
         {
             UserID = user.Id,
             IsMainDreamer = true,
-            FullName = user.FullName,
-            UserName = user.UserName
+            Name = user.Name,
         };
         viewModel.Dreamers.Add(dreamer); // Add the main dreamer (current user)
         ViewBag.AvailableTags = await GetAvailableTagsAsync();
@@ -318,10 +317,10 @@ public class DreamController(ApplicationDbContext context,
     public async Task<IActionResult> FindDreamer([FromBody] FindDreamerViewModel request)
     {
         var dreamID = request.DreamID;
-        var username = request.Username;
+        var email = request.Email;
 
         // Check data
-        if (string.IsNullOrWhiteSpace(username) || dreamID < 0)
+        if (string.IsNullOrWhiteSpace(email) || dreamID < 0)
         {
             return BadRequest("Invalid data provided.");
         }
@@ -341,7 +340,7 @@ public class DreamController(ApplicationDbContext context,
         }
 
         // Check user stuff
-        var userToAdd = await _userManager.FindByNameAsync(username);
+        var userToAdd = await _userManager.FindByEmailAsync(email);
         if (userToAdd == null)
         {
             return NotFound("User not found.");
@@ -370,8 +369,7 @@ public class DreamController(ApplicationDbContext context,
         var newDreamer = new DreamerViewModel
         {
             UserID = userToAdd.Id,
-            FullName = userToAdd.FullName,
-            UserName = userToAdd.UserName ?? string.Empty,
+            Name = userToAdd.Name,
             DreamID = dreamID,
             IsMainDreamer = false
         };

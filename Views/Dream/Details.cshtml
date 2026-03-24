@@ -112,7 +112,7 @@
                     @foreach (var fundGroup in Model.Funds.GroupBy(f => f.UserID))
                     {
                         <li>
-                            @fundGroup.First().User.FullName: @fundGroup.Sum(f => f.Amount).ToString("C")
+                            @fundGroup.First().User.Name: @fundGroup.Sum(f => f.Amount).ToString("C")
                         </li>
                     }
                 </ul>

@@ -27,8 +27,7 @@ public class UserService(
         {
             usersInCloud = usersInCloud
             .Where(x =>
-                x.UserName?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) == true ||
-                x.FullName?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) == true ||
+                x.Name?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) == true ||
                 x.Email?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) == true)
             .ToList();
         }

@@ -11,8 +11,7 @@ public static class UserMapper
         return new UserViewModel
         {
             Id = model.Id,
-            UserName = model.UserName,
-            FullName = model.FullName,
+            Name = model.Name,
             Email = model.Email
         };
     }
@@ -23,23 +22,10 @@ public static class UserMapper
         return new ManageUsersViewModel
         {
             UserId = model.Id,
-            UserName = model.UserName,
             Email = model.Email,
-            FullName = model.FullName,
+            Name = model.Name,
             Wallet = model.Wallets.FirstOrDefault(w => w.CloudID == cloudId),
             Role = role
-        };
-    }
-
-    public static User ToModel(this UserViewModel vm)
-    {
-        if (vm == null) return null!;
-        return new User
-        {
-            Id = vm.Id,
-            UserName = vm.UserName,
-            FullName = vm.FullName,
-            Email = vm.Email
         };
     }
 }

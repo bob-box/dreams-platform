@@ -14,8 +14,7 @@ public static class DreamerMapper
             DreamID = model.DreamID,
             UserID = model.UserID,
             IsMainDreamer = model.IsMainDreamer,
-            FullName = model.User.FullName,
-            UserName = model.User.UserName,
+            Name = model.User.Name,
         };
     }
 

@@ -95,15 +95,15 @@
         }
 
         async function addDreamer() {
-            const username = document.getElementById("dreamer-username").value;
-            if (!username) {
+            const email = document.getElementById("dreamer-email").value;
+            if (!email) {
                 return;
             }
             try {
 
                 let response = await fetch('@Url.Action("FindDreamer", "Dream")', {
                     method: 'POST',
-                    body: JSON.stringify({ dreamID: @Model.ID, username: username }),
+                    body: JSON.stringify({ dreamID: @Model.ID, email: email }),
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
@@ -123,17 +123,17 @@
                 const addDreamerModal = bootstrap.Modal.getInstance(addDreamerModalEl);
                 addDreamerModal.hide();
                 // Clear the input field
-                document.getElementById("dreamer-username").value = '';
+                document.getElementById("dreamer-email").value = '';
             } catch (error) {
-                document.getElementById("dreamer-username-validation").innerText = error.message;
+                document.getElementById("dreamer-email-validation").innerText = error.message;
             }
         }
 
         $("#add-dreamer-modal").on("shown.bs.modal", function () {
-            document.getElementById("dreamer-username").focus();
+            document.getElementById("dreamer-email").focus();
         });
         $("#add-dreamer-modal").on("hidden.bs.modal", function () {
-            document.getElementById("dreamer-username-validation").innerText = '';
+            document.getElementById("dreamer-email-validation").innerText = '';
         });
 
         // Called from the DreamerSingle Editor Template

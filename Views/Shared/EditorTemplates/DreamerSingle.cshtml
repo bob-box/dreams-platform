@@ -15,9 +15,8 @@
         <input type="hidden" asp-for="IsMainDreamer" />
         <input type="hidden" asp-for="DreamID" />
         <input type="hidden" asp-for="UserID" />
-        <input type="hidden" asp-for="FullName" />
-        <input type="hidden" asp-for="UserName" />
-        <td>@Model.FullName</td>
+        <input type="hidden" asp-for="Name" />
+        <td>@Model.Name</td>
         <td>
             @(Model.IsMainDreamer ? "Main Dreamer" : "Co-Dreamer")
         </td>

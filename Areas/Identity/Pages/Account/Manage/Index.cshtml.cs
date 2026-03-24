@@ -30,12 +30,6 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
-        public string Username { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [TempData]
         public string StatusMessage { get; set; }
 
@@ -54,8 +48,8 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
         {
             [Required]
             [DataType(DataType.Text)]
-            [Display(Name = "Full name")]
-            public string FullName { get; set; }
+            [Display(Name = "Name")]
+            public string Name { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -68,14 +62,11 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
 
         private async Task LoadAsync(User user)
         {
-            var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-
-            Username = userName;
 
             Input = new InputModel
             {
-                FullName = user.FullName,
+                Name = user.Name,
                 PhoneNumber = phoneNumber
             };
         }
@@ -117,9 +108,9 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
                 }
             }
 
-            if (Input.FullName != user.FullName)
+            if (Input.Name != user.Name)
             {
-                user.FullName = Input.FullName;
+                user.Name = Input.Name;
             }
 
             await _userManager.UpdateAsync(user);

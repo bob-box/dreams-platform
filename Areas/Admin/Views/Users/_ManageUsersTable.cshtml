@@ -10,8 +10,7 @@
 @foreach (var user in Model)
 {
     <tr>
-        <td>@user.FullName</td>
-        <td>@user.UserName</td>
+        <td>@user.Name</td>
         <td>@user.Email</td>
         <td>
             @if (user.UserId == currentUserId)
@@ -35,8 +34,7 @@
         <td class="text-end">
             <button class="btn btn-outline-primary update-single-wallet" data-bs-toggle="modal" data-bs-target="#update-wallet-modal"
                 data-user-id="@user.UserId"
-                data-user-fullname="@user.FullName"
-                data-user-username="@user.UserName"
+                data-user-name="@user.Name"
                 data-user-balance="@user.Wallet?.Balance"
             >Update wallet</button>
         </td>
