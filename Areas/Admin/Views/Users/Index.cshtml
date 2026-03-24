@@ -5,9 +5,16 @@
 
 <h1>@ViewBag.Title</h1>
 
+<div class="position-fixed top-0 start-50 translate-middle-x pt-3" style="z-index: 1080;">
+    <div id="users-status-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+        <div id="users-status-toast-body" class="toast-body bg-opacity-25">
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-9">
-        <form id="users-search-form" method="get" class="mb-3" action="@Url.Action("UsersInCloud", "Users", new { area = "Admin" })">
+        <form id="users-search-form" method="get" class="mb-3">
             <div class="input-group">
                 <input id="users-search-input" type="search" name="q" class="form-control" placeholder="Search by name, username or email" />
                 <button id="users-search-submit" class="btn btn-outline-secondary" type="submit">Search</button>
@@ -45,10 +52,20 @@
         const clearButton = document.getElementById('users-search-clear');
         const updateWalletForm = document.getElementById('update-wallet-form');
         const updateModal = document.getElementById('update-wallet-modal');
+        const updateRoleForm = document.getElementById('update-role-form');
+        const usersStatusToastElement = document.getElementById('users-status-toast');
+        const usersStatusToastBody = document.getElementById('users-status-toast-body');
+        const usersStatusToast = bootstrap.Toast.getOrCreateInstance(usersStatusToastElement);
+
+        function showStatusMessage(message, statusClass) {
+            usersStatusToastBody.classList.add(`bg-${statusClass}`, `border`, `border-${statusClass}`);
+            usersStatusToastBody.textContent = message;
+            usersStatusToast.show();
+        }
 
         async function fetchResults(filter) {
-            const url = '@Url.Action("UsersInCloudSearch", "Users", new { area = "Admin" })' + (filter ? '?filter=' + encodeURIComponent(filter) : '');
-            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const url = '@Url.Action("Filter", "Users", new { area = "Admin" })' + (filter ? '?filter=' + encodeURIComponent(filter) : '');
+            const res = await fetch(url);
             if (!res.ok) return;
             const html = await res.text();
             oldTbody.innerHTML = html;
@@ -57,6 +74,11 @@
         function toggleClearButton() {
             clearButton.style.display = inputField.value.trim() ? '' : 'none';
         }
+
+        inputField.addEventListener('input', function(e){
+            // if field is empty, hide clear button
+            toggleClearButton();
+        });
 
         searchForm.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -67,6 +89,27 @@
         clearButton.addEventListener('click', function (e) {
             fetchResults('');
             toggleClearButton();
+        });
+
+        updateRoleForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                });
+
+                const data = await response.json();
+                showStatusMessage(data.message ?? 'Role update failed.', data.statusClass ?? 'danger');
+            } catch {
+                showStatusMessage('Role update failed.', 'danger');
+            } finally {
+                submitButton.disabled = false;
+            }
         });
 
         $("#update-wallet-modal").on("hidden.bs.modal", function () {

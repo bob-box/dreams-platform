@@ -1,4 +1,10 @@
+@using Borderland.Dreams.Authorization
+@using Borderland.Dreams.Extensions
 @model IEnumerable<Borderland.Dreams.ViewModels.ManageUsersViewModel>
+
+@{
+    var currentUserId = ViewData["CurrentUserId"] as string;
+}
 
 <tbody>
 @foreach (var user in Model)
@@ -7,7 +13,22 @@
         <td>@user.FullName</td>
         <td>@user.UserName</td>
         <td>@user.Email</td>
-        <td>@user.Role</td>
+        <td>
+            @if (user.UserId == currentUserId)
+            {
+                <span>@user.Role</span>
+                <div class="small text-muted">Current user</div>
+            }
+            else
+            {
+                <form id="update-role-form" asp-area="Admin" asp-controller="Users" asp-action="UpdateRole" method="post" class="d-flex align-items-center gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@user.UserId" />
+                    <select name="role" class="form-select form-select-sm" asp-items="SelectListHelper.GetUserRoleOptions(user.Role)"></select>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
+                </form>
+            }
+        </td>
         <td>
             @(user.Wallet != null ? user.Wallet.Balance.ToString("F2") : "no wallet for this cloud")
         </td>

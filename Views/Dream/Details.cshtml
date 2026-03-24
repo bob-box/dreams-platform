@@ -135,9 +135,6 @@
             function loadFundingModal(dreamId) {
                 fetch(url, {
                     method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
                 })
                 .then(response => response.text())
                 .then(html => {

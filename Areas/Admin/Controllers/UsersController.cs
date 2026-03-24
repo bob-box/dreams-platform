@@ -18,20 +18,53 @@ public class UsersController(
     UserService userService)
     : Dreams.Controllers.BaseController(context, authorizationService, userManager)
 {
-    // GET: Admin/Users/UsersInCloud
-    public async Task<IActionResult> UsersInCloud()
+    // GET: Admin/Users/Index
+    public async Task<IActionResult> Index()
     {
+        ViewData["CurrentUserId"] = _userManager.GetUserId(User);
         var viewModels = await userService.GetUsersInCloud();
         return View(viewModels);
     }
 
-    // GET: Admin/Users/UsersInCloudSearch
+    // GET: Admin/Users/Filter
     [HttpGet]
-    [AjaxOnly]
-    public async Task<IActionResult> UsersInCloudSearch(string filter = "")
+    public async Task<IActionResult> Filter(string filter = "")
     {
+        ViewData["CurrentUserId"] = _userManager.GetUserId(User);
         var viewModels = await userService.GetUsersInCloud(filter);
         return PartialView("_ManageUsersTable", viewModels);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateRole(string userId, string role)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(role))
+        {
+            return BadRequest(new { message = "User and role are required.", statusClass = "danger" });
+        }
+
+        var currentUserId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(currentUserId))
+            return Challenge();
+
+        try
+        {
+            await userService.UpdateRole(userId, currentUserId, role);
+            return Ok(new { message = "User role updated.", statusClass = "success" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = "User not found.", statusClass = "danger" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message, statusClass = "warning" });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message, statusClass = "danger" });
+        }
     }
 
     // POST: Admin/Users/UpdateWallets
@@ -44,6 +77,6 @@ public class UsersController(
 
         await userService.UpdateWallet(userId ?? "", action, amount);
 
-        return RedirectToAction(nameof(UsersInCloud));
+        return RedirectToAction(nameof(Index));
     }
 }

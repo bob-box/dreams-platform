@@ -1,0 +1,21 @@
+@model IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+
+@if (Model.Any())
+{
+    <div class="form-group mt-2">
+        <label class="control-label">Tags</label>
+        <div>
+            @foreach (var tag in Model)
+            {
+                var tagId = $"tag-{tag.Value}";
+
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox"
+                           name="SelectedTagIds" value="@tag.Value" id="@tagId"
+                           @(tag.Selected ? "checked" : null) />
+                    <label class="form-check-label" for="@tagId">@tag.Text</label>
+                </div>
+            }
+        </div>
+    </div>
+}

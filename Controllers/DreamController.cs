@@ -64,7 +64,6 @@ public class DreamController(ApplicationDbContext context,
     }
 
     [HttpGet]
-    [AjaxOnly]
     public async Task<IActionResult> GetFundingModal(int dreamId)
     {
         // Verify the dream exists and belongs to the current cloud

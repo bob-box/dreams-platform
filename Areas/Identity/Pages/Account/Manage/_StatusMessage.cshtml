@@ -3,8 +3,32 @@
 @if (!String.IsNullOrEmpty(Model))
 {
     var statusMessageClass = Model.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass alert-dismissible" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        @Model
+    <div class="position-fixed top-0 start-50 translate-middle-x pt-3" style="z-index: 1080;">
+        <div id="identity-status-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+            <div id="identity-status-toast-body" class="toast-body bg-@statusMessageClass bg-opacity-25 border border-@statusMessageClass">
+                @Model
+            </div>
+        </div>
     </div>
+
+    <script type="text/javascript">
+        (function () {
+            function showStatusToast() {
+                const toastElement = document.getElementById('identity-status-toast');
+                if (!toastElement || !window.bootstrap) {
+                    return;
+                }
+
+                const toast = bootstrap.Toast.getOrCreateInstance(toastElement);
+                toast.show();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showStatusToast, { once: true });
+            }
+            else {
+                showStatusToast();
+            }
+        })();
+    </script>
 }

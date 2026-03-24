@@ -15,6 +15,8 @@ public class UserService(
     ICloudNameResolver cloudNameResolver,
     UserManager<User> userManager)
 {
+    private static readonly string[] ManageableRoles = [Constants.MemberRole, Constants.AdminRole];
+
     public async Task<IEnumerable<ManageUsersViewModel>> GetUsersInCloud(string filter = "")
     {
         int cloudId = cloudNameResolver.CloudID;
@@ -25,12 +27,18 @@ public class UserService(
         {
             usersInCloud = usersInCloud
             .Where(x =>
-                x.UserName.Contains(filter, StringComparison.CurrentCultureIgnoreCase) ||
-                x.FullName.Contains(filter, StringComparison.CurrentCultureIgnoreCase) ||
-                x.Email.Contains(filter, StringComparison.CurrentCultureIgnoreCase))
+                x.UserName?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) == true ||
+                x.FullName?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) == true ||
+                x.Email?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) == true)
             .ToList();
         }
-        var list = usersInCloud.Select(user => user.ToManageUsersViewModel(userManager.GetRolesAsync(user).Result.FirstOrDefault(), cloudId));
+
+        var list = new List<ManageUsersViewModel>(usersInCloud.Count);
+        foreach (var user in usersInCloud)
+        {
+            var roles = await userManager.GetRolesAsync(user);
+            list.Add(user.ToManageUsersViewModel(roles.FirstOrDefault() ?? Constants.MemberRole, cloudId));
+        }
 
         return list;
     }
@@ -51,7 +59,7 @@ public class UserService(
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            var user = await userManager.FindByIdAsync(userId);
+            var user = await userManager.FindByIdAsync(userId) ?? throw new InvalidOperationException("User not found.");
             users.Add(user);
         }
         else
@@ -80,5 +88,45 @@ public class UserService(
 
         await _context.SaveChangesAsync();
         return;
+    }
+
+    public async Task UpdateRole(string userId, string currentUserId, string role)
+    {
+        if (!ManageableRoles.Contains(role, StringComparer.Ordinal))
+            throw new ArgumentException("Invalid role.");
+
+        if (string.Equals(userId, currentUserId, StringComparison.Ordinal))
+            throw new InvalidOperationException("You cannot change your own role from this page.");
+
+        int cloudId = cloudNameResolver.CloudID;
+        var joinedCloudClaim = new Claim(Constants.JOINED_CLOUD_CLAIM, cloudId.ToString());
+        var user = await userManager.FindByIdAsync(userId) ?? throw new InvalidOperationException("User not found.");
+
+        var userClaims = await userManager.GetClaimsAsync(user);
+        var hasJoinedCurrentCloud = userClaims.Any(claim =>
+            claim.Type == joinedCloudClaim.Type &&
+            claim.Value == joinedCloudClaim.Value);
+
+        if (!hasJoinedCurrentCloud)
+            throw new InvalidOperationException("This user is not part of the current cloud.");
+
+        var currentRoles = await userManager.GetRolesAsync(user);
+        if (currentRoles.Contains(role, StringComparer.Ordinal))
+            return;
+
+        var rolesToRemove = currentRoles
+            .Where(currentRole => ManageableRoles.Contains(currentRole, StringComparer.Ordinal))
+            .ToList();
+
+        if (rolesToRemove.Count > 0)
+        {
+            var removeResult = await userManager.RemoveFromRolesAsync(user, rolesToRemove);
+            if (!removeResult.Succeeded)
+                throw new InvalidOperationException(string.Join(", ", removeResult.Errors.Select(error => error.Description)));
+        }
+
+        var addResult = await userManager.AddToRoleAsync(user, role);
+        if (!addResult.Succeeded)
+            throw new InvalidOperationException(string.Join(", ", addResult.Errors.Select(error => error.Description)));
     }
 }
