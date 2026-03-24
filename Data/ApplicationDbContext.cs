@@ -22,6 +22,11 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
+        
+        modelBuilder.Entity<User>()
+            .Ignore(u => u.PhoneNumber)
+            .Ignore(u => u.PhoneNumberConfirmed);
+
         modelBuilder.Entity<User>()
             .Navigation(e => e.Wallets)
             .AutoInclude();
