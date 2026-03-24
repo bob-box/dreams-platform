@@ -12,7 +12,7 @@ public class Expense
     [DataType(DataType.Currency)]
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Amount { get; set; }
-    [DataType(DataType.Date)]
+    [DataType(DataType.DateTime)]
     public DateTime CreatedDate { get; set; }
     public int DreamID { get; set; }
 }

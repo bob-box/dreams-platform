@@ -9,7 +9,7 @@ public class DreamViewModel
     public int ID { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
-    [DataType(DataType.Date)]
+    [DataType(DataType.DateTime)]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;

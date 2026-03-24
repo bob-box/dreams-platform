@@ -104,6 +104,13 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             return NotFound();
         }
 
+        if (IsPassed(fundingRound))
+        {
+            TempData["Error"] = "Cannot edit a funding round that has already passed.";
+            return RedirectToAction(nameof(Index));
+        }
+        ViewData["IsActive"] = IsActive(fundingRound);
+
         return View(fundingRound.ToViewModel());
     }
 
@@ -123,42 +130,87 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             return NotFound();
         }
 
-        // Validate date ranges don't overlap (excluding current round)
+        if (IsPassed(roundToUpdate))
+        {
+            ModelState.AddModelError("", "Cannot edit a funding round that has already passed.");
+            ViewData["IsActive"] = IsActive(roundToUpdate);
+            return View(viewModel);
+        }
         var existingRounds = await _context.FundingRound
             .Where(fr => fr.CloudID == cloudNameResolver.CloudID && fr.ID != id)
             .ToListAsync();
 
-        ValidateDates(viewModel, existingRounds);
+        if (IsActive(roundToUpdate))
+            return await EditActiveRoundAsync(viewModel, roundToUpdate, existingRounds);
+
+        return await EditUpcomingRoundAsync(viewModel, roundToUpdate, existingRounds);
+    }
+
+    private async Task<IActionResult> EditActiveRoundAsync(
+        FundingRoundViewModel viewModel,
+        FundingRound roundToUpdate,
+        List<FundingRound> existingRounds)
+    {
+        // Validate only the editable fields for an active round
+        var now = DateTime.UtcNow;
+        if (viewModel.EndDate <= now)
+            ModelState.AddModelError("EndDate", "End date must be in the future.");
+        else if (existingRounds.Any(fr => fr.StartDate <= viewModel.EndDate && fr.EndDate >= roundToUpdate.StartDate))
+            ModelState.AddModelError("", "Funding round dates cannot overlap with existing rounds.");
 
         if (!ModelState.IsValid)
         {
+            // Restore locked fields so the view renders correctly
+            viewModel.Title = roundToUpdate.Title;
+            viewModel.StartDate = roundToUpdate.StartDate;
+            viewModel.AllocationPerUser = roundToUpdate.AllocationPerUser;
             return View(viewModel);
         }
 
         try
         {
-            roundToUpdate.Title = viewModel.Title;
-            roundToUpdate.StartDate = viewModel.StartDate;
             roundToUpdate.EndDate = viewModel.EndDate;
             roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
-            roundToUpdate.AllocationPerUser = viewModel.AllocationPerUser;
 
-            await _context.SaveChangesAsync();
-
-            // Reschedule jobs with new dates
-            _schedulerService.ScheduleFundingRoundJobs(roundToUpdate);
-            await _context.SaveChangesAsync(); // Save job IDs
+            _schedulerService.ScheduleFundingRoundJobs(roundToUpdate); // updates job IDs on entity
+            await _context.SaveChangesAsync(); // saves both entity changes and job IDs in one call
         }
         catch (DbUpdateConcurrencyException)
         {
             if (!FundingRoundExists(viewModel.ID))
-            {
                 return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            throw;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<IActionResult> EditUpcomingRoundAsync(
+        FundingRoundViewModel viewModel,
+        FundingRound roundToUpdate,
+        List<FundingRound> existingRounds)
+    {
+        ValidateDates(viewModel, existingRounds);
+        if (!ModelState.IsValid)
+            return View(viewModel);
+
+        roundToUpdate.Title = viewModel.Title;
+        roundToUpdate.StartDate = viewModel.StartDate;
+        roundToUpdate.EndDate = viewModel.EndDate;
+        roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
+        roundToUpdate.AllocationPerUser = viewModel.AllocationPerUser;
+
+        _schedulerService.ScheduleFundingRoundJobs(roundToUpdate); // updates job IDs on entity
+
+        try
+        {
+            await _context.SaveChangesAsync(); // saves both entity changes and job IDs in one call
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!FundingRoundExists(viewModel.ID))
+                return NotFound();
+            throw;
         }
 
         return RedirectToAction(nameof(Index));
@@ -180,6 +232,12 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             return NotFound();
         }
 
+        if (IsActiveOrPassed(fundingRound))
+        {
+            TempData["Error"] = "Cannot delete a funding round that is active or has already passed.";
+            return RedirectToAction(nameof(Index));
+        }
+
         return View(fundingRound.ToViewModel());
     }
 
@@ -193,6 +251,12 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
 
         if (fundingRound != null)
         {
+            if (IsActiveOrPassed(fundingRound))
+            {
+                TempData["Error"] = "Cannot delete a funding round that is active or has already passed.";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Cancel scheduled jobs
             _schedulerService.CancelFundingRoundJobs(fundingRound);
 
@@ -207,6 +271,15 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     {
         return _context.FundingRound.Any(e => e.ID == id);
     }
+
+    private static bool IsActiveOrPassed(FundingRound fundingRound) =>
+        fundingRound.StartDate <= DateTime.UtcNow;
+
+    private static bool IsActive(FundingRound fundingRound) =>
+        fundingRound.StartDate <= DateTime.UtcNow && fundingRound.EndDate >= DateTime.UtcNow;
+
+    private static bool IsPassed(FundingRound fundingRound) =>
+        fundingRound.EndDate < DateTime.UtcNow;
 
     private void ValidateDates(FundingRoundViewModel viewModel, List<FundingRound> existingRounds)
     {

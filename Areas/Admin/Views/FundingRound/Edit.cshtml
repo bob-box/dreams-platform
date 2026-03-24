@@ -2,9 +2,15 @@
 
 @{
     ViewData["Title"] = "Edit Funding Round";
+    bool isActive = ViewData["IsActive"] as bool? ?? false;
 }
 
 <h1>Edit Funding Round</h1>
+
+@if (isActive)
+{
+    <div class="alert alert-info">This funding round is currently active. Only the end date and max percentage per dream can be changed.</div>
+}
 
 <h4>Funding Round</h4>
 <hr />
@@ -16,13 +22,29 @@
             <input type="hidden" asp-for="CloudID" />
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
+                @if (isActive)
+                {
+                    <input type="hidden" asp-for="Title" />
+                    <input asp-for="Title" class="form-control" disabled />
+                }
+                else
+                {
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                }
             </div>
             <div class="form-group">
                 <label asp-for="StartDate" class="control-label"></label>
-                <input asp-for="StartDate" class="form-control" type="datetime-local" />
-                <span asp-validation-for="StartDate" class="text-danger"></span>
+                @if (isActive)
+                {
+                    <input type="hidden" asp-for="StartDate" />
+                    <input asp-for="StartDate" class="form-control" type="datetime-local" disabled />
+                }
+                else
+                {
+                    <input asp-for="StartDate" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                }
             </div>
             <div class="form-group">
                 <label asp-for="EndDate" class="control-label"></label>
@@ -37,8 +59,15 @@
             </div>
             <div class="form-group">
                 <label asp-for="AllocationPerUser" class="control-label"></label>
-                <input asp-for="AllocationPerUser" class="form-control" data-val="false" />
-                <span asp-validation-for="AllocationPerUser" class="text-danger"></span>
+                @if (isActive)
+                {
+                    <input type="hidden" asp-for="AllocationPerUser" />
+                    <input asp-for="AllocationPerUser" class="form-control" data-val="false" disabled />
+                }
+                else
+                {
+                    <input asp-for="AllocationPerUser" class="form-control" data-val="false" />
+                }
                 <small class="form-text text-muted">Amount each user will receive in their wallet when this round starts.</small>
             </div>
             <div class="form-group">

@@ -13,7 +13,7 @@ public class Cloud
     [Required]
     public required string Name { get; set; }
 
-    [DataType(DataType.Date)]
+    [DataType(DataType.DateTime)]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [DataType(DataType.Currency)]

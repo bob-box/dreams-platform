@@ -9,8 +9,10 @@ public class FundingRoundViewModel
     public string Title { get; set; }
 
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DataType(DataType.DateTime)]
     public DateTime StartDate { get; set; }
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DataType(DataType.DateTime)]
     public DateTime EndDate { get; set; }
 
     [Range(0, 100, ErrorMessage = "Percentage must be between 0 and 100")]

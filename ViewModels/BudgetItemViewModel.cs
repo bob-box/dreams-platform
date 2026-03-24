@@ -11,7 +11,7 @@ public class BudgetItemViewModel : IValidatableObject
     public int DreamID { get; set; }
 
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
-    [DataType(DataType.Date)]
+    [DataType(DataType.DateTime)]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]

@@ -6,7 +6,7 @@ public class CommentViewModel
 {
     public int ID { get; set; }
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
-    [DataType(DataType.Date)]
+    [DataType(DataType.DateTime)]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public int DreamID { get; set; }
     public string Text { get; set; }

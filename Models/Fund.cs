@@ -15,7 +15,7 @@ public class Fund
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Amount { get; set; }
 
-    [DataType(DataType.Date)]
+    [DataType(DataType.DateTime)]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     public User User { get; set; }

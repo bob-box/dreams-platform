@@ -8,7 +8,7 @@ public class Dream
     public int ID { get; set; }
     public required string Name { get; set; }
     public string Description { get; set; } = string.Empty;
-    [DataType(DataType.Date)]
+    [DataType(DataType.DateTime)]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
 

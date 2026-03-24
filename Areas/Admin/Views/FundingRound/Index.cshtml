@@ -6,6 +6,11 @@
 
 <h1>Manage Funding Rounds</h1>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <p>
     <a asp-action="Create">Create New Funding Round</a>
 </p>
@@ -56,8 +61,21 @@
                 @item.TotalFundsAllocated.ToString("C")
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                @if (item.StartDate > DateTime.UtcNow)
+                {
+                    @* Future funding round *@
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a><text> | </text><a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                }
+                else if (item.EndDate >= DateTime.UtcNow)
+                {
+                    @* Active funding round *@
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a><text> | </text><span class="text-muted">Active</span>
+                }
+                else
+                {
+                    @* Past funding round *@
+                    <span class="text-muted">Passed</span>
+                }
             </td>
         </tr>
 }
