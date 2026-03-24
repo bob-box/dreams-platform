@@ -1,13 +1,15 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
-
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+}
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
         <li class="nav-item ms-sm-auto dropdown">
             <a class="nav-link text-dark dropdown-toggle" data-bs-toggle="dropdown" href="#">
-                Hello @User.Identity?.Name!
+                Hello @currentUser.Name!
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li>

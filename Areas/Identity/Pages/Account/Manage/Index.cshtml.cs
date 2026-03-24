@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 
 namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
 {
@@ -21,16 +22,19 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IEmailSender _emailSender;
+        private readonly ILogger<IndexModel> _logger;
 
         public IndexModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ILogger<IndexModel> logger)
 
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _logger = logger;
         }
 
         /// <summary>
@@ -49,6 +53,9 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
         [BindProperty]
         public InputModel Input { get; set; }
 
+        [BindProperty]
+        public PasswordInputModel PasswordInput { get; set; }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
@@ -64,6 +71,38 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
+        }
+
+        public class PasswordInputModel
+        {
+            [Required]
+            [DataType(DataType.Password)]
+            [Display(Name = "Current password")]
+            public string OldPassword { get; set; }
+
+            [Required]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [DataType(DataType.Password)]
+            [Display(Name = "New password")]
+            public string NewPassword { get; set; }
+
+            [DataType(DataType.Password)]
+            [Display(Name = "Confirm new password")]
+            [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+            public string ConfirmPassword { get; set; }
+        }
+
+        private void KeepModelStateForPrefix(string prefix)
+        {
+            // NOTICE: When this is called from "change password" method. Only those password related keys will have the prefix (same but reversed when called from "profile update" method)
+            var keys = ModelState.Keys
+                .Where(key => !key.StartsWith(prefix + ".", StringComparison.Ordinal) || string.Equals(key, prefix, StringComparison.Ordinal))
+                .ToList();
+
+            foreach (var key in keys)
+            {
+                ModelState.Remove(key);
+            }
         }
 
         private async Task LoadAsync(User user)
@@ -97,6 +136,8 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            KeepModelStateForPrefix(nameof(Input));
+
             if (!ModelState.IsValid)
             {
                 await LoadAsync(user);
@@ -129,6 +170,8 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            KeepModelStateForPrefix(nameof(Input));
+
             if (!ModelState.IsValid)
             {
                 await LoadAsync(user);
@@ -137,6 +180,41 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
 
             await SendEmailConfirmationAsync(user, user.Email, isChange: false);
             StatusMessage = "Verification email sent. Please check your email.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostChangePasswordAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            KeepModelStateForPrefix(nameof(PasswordInput));
+
+            if (!ModelState.IsValid)
+            {
+                await LoadAsync(user);
+                return Page();
+            }
+
+            var changePasswordResult = await _userManager.ChangePasswordAsync(user, PasswordInput.OldPassword, PasswordInput.NewPassword);
+            if (!changePasswordResult.Succeeded)
+            {
+                foreach (var error in changePasswordResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                await LoadAsync(user);
+                return Page();
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            _logger.LogInformation("User changed their password successfully.");
+            StatusMessage = "Your password has been changed.";
+
             return RedirectToPage();
         }
 

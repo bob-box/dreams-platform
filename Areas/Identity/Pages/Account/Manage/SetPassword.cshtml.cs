@@ -77,7 +77,7 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage
 
             if (hasPassword)
             {
-                return RedirectToPage("./ChangePassword");
+                return RedirectToPage("./Index");
             }
 
             return Page();

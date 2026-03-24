@@ -6,7 +6,6 @@
     <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Profile</a></li>
     <li class="nav-item"><a class="nav-link @ManageNavPages.FundedDreamsNavClass(ViewContext)" id="funded-dreams" asp-page="./FundedDreams">Funded dreams</a></li>
     <li class="nav-item"><a class="nav-link @ManageNavPages.WalletsNavClass(ViewContext)" id="wallets" asp-page="./Wallets">Wallet</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Password</a></li>
     @if (hasExternalLogins)
     {
         <li id="external-logins" class="nav-item"><a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">External logins</a></li>
