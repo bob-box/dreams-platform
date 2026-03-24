@@ -61,7 +61,7 @@ public class CloudController(ApplicationDbContext context,
         var userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloud.ID.ToString());
         if (!userHasAlreadyJoinedTheCloud)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
             var claim = new Claim(Constants.JOINED_CLOUD_CLAIM, cloud.ID.ToString());
             await _userManager.AddClaimAsync(user, claim);
             await _signInManager.RefreshSignInAsync(user); // Refresh the user's claims

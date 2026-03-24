@@ -10,17 +10,15 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account.Manage;
 
 public class FundedDreamsModel(ApplicationDbContext context, UserManager<User> userManager) : PageModel
 {
-    private readonly ApplicationDbContext _context = context;
-    private readonly UserManager<User> _userManager = userManager;
 
     public List<CloudFundingGroup> Clouds { get; private set; } = [];
 
     public async Task<IActionResult> OnGetAsync()
     {
-        var user = await _userManager.GetUserAsync(User);
+        var user = await userManager.GetUserAsync(User);
         if (user == null)
         {
-            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            return NotFound($"Unable to load user with ID '{userManager.GetUserId(User)}'.");
         }
 
         var rawGroups = await context.Fund
