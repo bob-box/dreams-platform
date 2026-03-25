@@ -16,13 +16,13 @@ jobs:
         run: dotnet restore
         
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build dreams-platform.sln --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish --configuration Release --output ./publish --runtime win-x86 
+        run: dotnet publish dreams-platform.sln --configuration Release --output ./publish --runtime win-x86 
         
       - name: Test with .NET
-        run: dotnet test
+        run: dotnet test dreams-platform.sln
 
       - name: Deploy to MonsterASP.NET via WebDeploy
         uses: rasmusbuchholdt/simply-web-deploy@2.1.0
