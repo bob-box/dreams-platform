@@ -8,7 +8,7 @@ using Borderland.Dreams.Authorization.Dream;
 using Borderland.Dreams.Services;
 using Borderland.Dreams.Middleware;
 using Hangfire;
-using Hangfire.SQLite;
+using Hangfire.Storage.SQLite;
 using Borderland.Dreams.FilterAttributes;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,7 +50,7 @@ builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UseSQLiteStorage(connectionString));
+    .UseSQLiteStorage());
 
 builder.Services.AddHangfireServer(options =>
 {

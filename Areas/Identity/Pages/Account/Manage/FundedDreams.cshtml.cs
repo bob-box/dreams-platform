@@ -68,7 +68,7 @@ public class FundedDreamsModel(ApplicationDbContext context, UserManager<User> u
     public class FundedDreamEntry
     {
         public int ID { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public decimal AmountFundedByMe { get; set; }
     }
 }
