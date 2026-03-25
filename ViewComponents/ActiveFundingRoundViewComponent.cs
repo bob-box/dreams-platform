@@ -6,17 +6,8 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.ViewComponents;
 
-public class ActiveFundingRoundViewComponent : ViewComponent
+public class ActiveFundingRoundViewComponent(ApplicationDbContext context, ICloudNameResolver cloudNameResolver) : ViewComponent
 {
-    private readonly ApplicationDbContext _context;
-    private readonly ICloudNameResolver _cloudNameResolver;
-
-    public ActiveFundingRoundViewComponent(ApplicationDbContext context, ICloudNameResolver cloudNameResolver)
-    {
-        _context = context;
-        _cloudNameResolver = cloudNameResolver;
-    }
-
     public async Task<IViewComponentResult> InvokeAsync(int dreamId)
     {
         if (!User.Identity?.IsAuthenticated ?? true)
@@ -25,8 +16,8 @@ public class ActiveFundingRoundViewComponent : ViewComponent
         }
 
         var now = DateTime.UtcNow;
-        var activeRound = await _context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.CloudID == _cloudNameResolver.CloudID &&
+        var activeRound = await context.FundingRound
+            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameResolver.CloudID &&
                                         fr.StartDate <= now && fr.EndDate >= now);
 
         if (activeRound == null)

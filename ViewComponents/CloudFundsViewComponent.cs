@@ -3,38 +3,46 @@ using Microsoft.EntityFrameworkCore;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.ViewModels;
+using Microsoft.AspNetCore.Identity;
+using Borderland.Dreams.Models;
 
 namespace Borderland.Dreams.ViewComponents;
 
-public class CloudFundsViewComponent : ViewComponent
+public class CloudFundsViewComponent(
+    ApplicationDbContext context,
+    ICloudNameResolver cloudNameResolver,
+    UserManager<User> userManager) : ViewComponent
 {
-    private readonly ApplicationDbContext _context;
-    private readonly ICloudNameResolver _cloudNameResolver;
-
-    public CloudFundsViewComponent(ApplicationDbContext context, ICloudNameResolver cloudNameResolver)
-    {
-        _context = context;
-        _cloudNameResolver = cloudNameResolver;
-    }
 
     public async Task<IViewComponentResult> InvokeAsync()
     {
         // Calculate totals for the current cloud
-        var cloud = await _context.Cloud.FindAsync(_cloudNameResolver.CloudID);
+        var cloud = await context.Cloud.FindAsync(cloudNameResolver.CloudID);
         if (cloud == null)
         {
             return View(new CloudFundsViewModel());
         }
 
-        var totalFundsAllocated = await _context.Fund
-            .Where(f => f.Dream.CloudID == _cloudNameResolver.CloudID)
+        var totalFundsAllocated = await context.Fund
+            .Where(f => f.Dream.CloudID == cloudNameResolver.CloudID)
             .SumAsync(f => f.Amount);
+
+        var userWalletBalance = 0m;
+        var user = await userManager.GetUserAsync(HttpContext.User);
+        if (user != null)
+        {
+            userWalletBalance = await context.Wallet
+                .Where(w => w.UserID == user.Id && w.CloudID == cloudNameResolver.CloudID)
+                .Select(w => w.Balance)
+                .FirstOrDefaultAsync();
+        }
 
         var model = new CloudFundsViewModel
         {
             TotalFundsAvailable = cloud.TotalFundsAvailable,
             TotalFundsSpent = cloud.TotalFundsSpent,
-            TotalFundsRemaining = cloud.TotalFundsRemaining
+            TotalFundsRemaining = cloud.TotalFundsRemaining,
+            UserWalletBalance = userWalletBalance
         };
 
         return View(model);
