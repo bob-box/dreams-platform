@@ -24,21 +24,56 @@ public class DreamController(ApplicationDbContext context,
 {
     // GET: Dream
     [AllowAnonymous]
-    public async Task<IActionResult> Index()//[FromRoute] string? cloudName)
+    public async Task<IActionResult> Index(string? searchText, DreamStatus? statusFilter, int? tagFilter, DreamSortOrder sortOrder = DreamSortOrder.NameAsc)
     {
         var listQuery = dreamService.GetDreamsByCloudIdBaseQuery();
         listQuery = IsAuthorizedToViewDream(listQuery);
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            listQuery = listQuery.Where(d =>
+                d.Name.Contains(searchText) ||
+                d.Description.Contains(searchText));
+        }
+
+        if (statusFilter.HasValue)
+            listQuery = listQuery.Where(d => d.Status == statusFilter.Value);
+
+        if (tagFilter.HasValue)
+            listQuery = listQuery.Where(d => d.Tags.Any(t => t.ID == tagFilter.Value));
 
         bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
         ViewData["showJoinCloudButton"] = !userHasAlreadyJoinedTheCloud && User.Identity?.IsAuthenticated == true;
 
         var viewModels = listQuery.Select(d => d.ToViewModel()).ToList();
-        if (viewModels.Any(vm => vm == null))
-        {
-            return Problem("One or more dreams could not be mapped to a view model.");
-        }
 
-        return View(viewModels);
+        viewModels = sortOrder switch
+        {
+            DreamSortOrder.NameDesc => [.. viewModels.OrderByDescending(d => d.Name)],
+            DreamSortOrder.MostFunded => [.. viewModels.OrderByDescending(d => d.TotalReceivedFunds)],
+            DreamSortOrder.LeastFunded => [.. viewModels.OrderBy(d => d.TotalReceivedFunds)],
+            DreamSortOrder.MostFundedPercentage => [.. viewModels.OrderByDescending(d =>
+                d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
+            DreamSortOrder.LeastFundedPercentage => [.. viewModels.OrderBy(d =>
+                d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
+            DreamSortOrder.MostBudget => [.. viewModels.OrderByDescending(d => d.TotalRequestedBudget)],
+            DreamSortOrder.LeastBudget => [.. viewModels.OrderBy(d => d.TotalRequestedBudget)],
+            _ => [.. viewModels.OrderBy(d => d.Name)],
+        };
+
+        var availableTags = (await GetAvailableTagsAsync()).Select(t => t.ToViewModel()).ToList();
+
+        var filterViewModel = new DreamFilterViewModel
+        {
+            SearchText = searchText,
+            StatusFilter = statusFilter,
+            TagFilter = tagFilter,
+            SortOrder = sortOrder,
+            Dreams = viewModels,
+            AvailableTags = availableTags
+        };
+
+        return View(filterViewModel);
     }
 
     // GET: Dream/Details/5

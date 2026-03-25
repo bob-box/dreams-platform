@@ -10,7 +10,7 @@ public class DreamViewModel
     public string Name { get; set; }
     public string Description { get; set; }
     [DataType(DataType.DateTime)]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
     [Display(Name = "Budget")]
