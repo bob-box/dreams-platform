@@ -1,13 +1,11 @@
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Data;
-using Borderland.Dreams.Mappers;
-using Borderland.Dreams.Middleware;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Borderland.Dreams.Areas.Admin.Controllers;
 
@@ -16,17 +14,13 @@ namespace Borderland.Dreams.Areas.Admin.Controllers;
 public class TagController(ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    ICloudNameResolver cloudNameResolver)
+    ITagService tagService)
     : Dreams.Controllers.BaseController(context, authorizationService, userManager)
 {
     // GET: Admin/Tag
     public async Task<IActionResult> Index()
     {
-        var tags = await _context.Tag
-            .Where(t => t.CloudID == cloudNameResolver.CloudID)
-            .OrderBy(t => t.Title)
-            .Select(t => t.ToViewModel())
-            .ToListAsync();
+        var tags = await tagService.GetAll();
         return View(tags);
     }
 
@@ -41,14 +35,7 @@ public class TagController(ApplicationDbContext context,
         if (!ModelState.IsValid)
             return View(viewModel);
 
-        var tag = new Tag
-        {
-            Title = viewModel.Title,
-            CloudID = cloudNameResolver.CloudID
-        };
-
-        _context.Tag.Add(tag);
-        await _context.SaveChangesAsync();
+        await tagService.Create(viewModel);
         return RedirectToAction(nameof(Index));
     }
 
@@ -58,11 +45,11 @@ public class TagController(ApplicationDbContext context,
         if (id == null)
             return NotFound();
 
-        var tag = await GetTagInCloudAsync(id.Value);
-        if (tag == null)
+        var viewModel = await tagService.GetById(id.Value);
+        if (viewModel == null)
             return NotFound();
 
-        return View(tag.ToViewModel());
+        return View(viewModel);
     }
 
     // POST: Admin/Tag/Edit/5
@@ -76,12 +63,10 @@ public class TagController(ApplicationDbContext context,
         if (!ModelState.IsValid)
             return View(viewModel);
 
-        var tag = await GetTagInCloudAsync(id);
-        if (tag == null)
+        var updated = await tagService.Update(viewModel);
+        if (!updated)
             return NotFound();
 
-        tag.Title = viewModel.Title;
-        await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
 
@@ -91,11 +76,11 @@ public class TagController(ApplicationDbContext context,
         if (id == null)
             return NotFound();
 
-        var tag = await GetTagInCloudAsync(id.Value);
-        if (tag == null)
+        var viewModel = await tagService.GetById(id.Value);
+        if (viewModel == null)
             return NotFound();
 
-        return View(tag.ToViewModel());
+        return View(viewModel);
     }
 
     // POST: Admin/Tag/Delete/5
@@ -103,17 +88,10 @@ public class TagController(ApplicationDbContext context,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var tag = await GetTagInCloudAsync(id);
-        if (tag == null)
+        var deleted = await tagService.Delete(id);
+        if (!deleted)
             return NotFound();
-
-        _context.Tag.Remove(tag);
-        await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }
-
-    private async Task<Tag?> GetTagInCloudAsync(int id) =>
-    await _context.Tag
-        .FirstOrDefaultAsync(t => t.ID == id && t.CloudID == cloudNameResolver.CloudID);
 }

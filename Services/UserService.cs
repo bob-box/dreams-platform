@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Enums;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
@@ -13,11 +14,11 @@ namespace Borderland.Dreams.Services;
 public class UserService(
     ApplicationDbContext _context,
     ICloudNameResolver cloudNameResolver,
-    UserManager<User> userManager)
+    UserManager<User> userManager) : IUserService
 {
     private static readonly string[] ManageableRoles = [Constants.MemberRole, Constants.AdminRole];
 
-    public async Task<IEnumerable<ManageUsersViewModel>> GetUsersInCloud(string filter = "")
+    public async Task<IEnumerable<ManageUsersViewModel>> GetAll(string filter = "")
     {
         int cloudId = cloudNameResolver.CloudID;
 
@@ -42,7 +43,7 @@ public class UserService(
         return list;
     }
 
-    public async Task<int> CountUsersInCloud()
+    public async Task<int> Count()
     {
         int cloudId = cloudNameResolver.CloudID;
 

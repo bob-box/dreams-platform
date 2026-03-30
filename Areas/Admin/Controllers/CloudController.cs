@@ -4,10 +4,8 @@ using Borderland.Dreams.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Mappers;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.ViewModels;
-using Microsoft.EntityFrameworkCore;
-using Borderland.Dreams.Middleware;
 
 namespace Borderland.Dreams.Areas.Admin.Controllers;
 
@@ -17,9 +15,27 @@ public class CloudController(
     ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    ICloudCache cloudCache)
+    IAdminCloudService adminCloudService,
+    ICloudService cloudService)
     : Dreams.Controllers.BaseController(context, authorizationService, userManager)
 {
+    public async Task<IActionResult> Create()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create([Bind("ID,Name,TotalFundsAvailable")] CloudViewModel viewModel)
+    {
+        if (ModelState.IsValid)
+        {
+            await adminCloudService.Create(viewModel);
+            return RedirectToAction(nameof(Index), "Home");
+        }
+        return View(viewModel);
+    }
+
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -27,13 +43,12 @@ public class CloudController(
             return NotFound();
         }
 
-        var cloud = await _context.Cloud.FindAsync(id);
-        if (cloud == null)
+        var viewModel = await cloudService.GetById(id.Value);
+        if (viewModel == null)
         {
             return NotFound();
         }
 
-        var viewModel = cloud.ToViewModel();
         return View(viewModel);
     }
 
@@ -47,30 +62,9 @@ public class CloudController(
         if (!ModelState.IsValid)
             return View(viewModel);
 
-        var cloud = await _context.Cloud.FindAsync(id);
-        if (cloud == null)
+        var result = await adminCloudService.Update(viewModel);
+        if (result == AdminCloudServiceStatus.NotFound)
             return NotFound();
-
-        // Cache the old name before updating, in case it changed
-        var oldName = cloud.Name;
-
-        cloud.Name = viewModel.Name;
-        cloud.TotalFundsAvailable = viewModel.TotalFundsAvailable;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-
-            // Invalidate old cache entry if name changed
-            if (!oldName.Equals(viewModel.Name, StringComparison.OrdinalIgnoreCase))
-                cloudCache.Remove(oldName);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await _context.Cloud.AnyAsync(e => e.ID == id))
-                return NotFound();
-            throw;
-        }
 
         return RedirectToAction(nameof(Index), "Home");
     }
@@ -82,13 +76,12 @@ public class CloudController(
             return NotFound();
         }
 
-        var cloud = await _context.Cloud.FindAsync(id);
-        if (cloud == null)
+        var viewModel = await cloudService.GetById(id.Value);
+        if (viewModel == null)
         {
             return NotFound();
         }
 
-        var viewModel = cloud.ToViewModel();
         return View(viewModel);
     }
 
@@ -96,13 +89,9 @@ public class CloudController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var cloud = await _context.Cloud.FindAsync(id);
-        if (cloud == null)
+        var result = await adminCloudService.Delete(id);
+        if (result == AdminCloudServiceStatus.NotFound)
             return NotFound();
-
-        _context.Cloud.Remove(cloud);
-        cloudCache.Remove(cloud.Name);
-        await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index), "Home", routeValues: new { cloudName = "" });
     }

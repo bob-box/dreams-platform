@@ -24,4 +24,9 @@ public class FundingRoundViewModel
     public decimal TotalFundsAllocated { get; set; }
 
     public int UsersInCloudCount { get; set; }
+
+    // These 3 methods below exist both on the model and the viewmodel.
+    public bool IsActiveOrPassed() => IsActive() || HasPassed();
+    public bool IsActive() => StartDate <= DateTime.UtcNow && EndDate >= DateTime.UtcNow;
+    public bool HasPassed() => EndDate < DateTime.UtcNow;
 }

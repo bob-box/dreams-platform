@@ -24,4 +24,9 @@ public class FundingRound
     public string? EndJobId { get; set; } // Hangfire job ID for end processing
 
     public Cloud Cloud { get; set; }
+
+    // These 3 methods below exist both on the model and the viewmodel.
+    public bool IsActiveOrPassed() => IsActive() || HasPassed();
+    public bool IsActive() => StartDate <= DateTime.UtcNow && EndDate >= DateTime.UtcNow;
+    public bool HasPassed() => EndDate < DateTime.UtcNow;
 }

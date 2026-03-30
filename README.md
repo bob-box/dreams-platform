@@ -1,11 +1,15 @@
 # Borderland Dreams platform
 
-Create **Clouds** that users can create their **Dreams** in.  
-Each dream has a **Main Dreamer** and can also have multiple **Co-dreamers**.  
-Dreamers can add **Budget Items** to their dreams.
-Only a main dreamer can delete the dream.
+***Clouds*** is a place where ***Dreams*** that belong together are happening.  
+Each dream has a ***Main Dreamer***, but it can also have multiple ***Co-dreamers*** (only the main dreamer can delete their own dream).  
+Dreamers can describe their dream and realize it by adding ***Budget Items***.
 
-A **Funding Round** is a period where users (that has an active BL membership) gets **Funds** in their **Wallets**, to give to dreams. 
+A user can ***join the cloud*** and must be marked as an active member (BL membership status, still a TODO) before they can participate in funding rounds.
+
+A ***Funding Round*** is a period between two dates where users automatically gets ***Funds*** in their ***Wallets***, to give to dreams.
+
+When a funding round is over, all unspent funds get removed from the wallets and the cloud fund stats gets updated.
+
 
 ## Getting The Project Started
 
@@ -34,4 +38,5 @@ A **Funding Round** is a period where users (that has an active BL membership) g
 ### General info
 * SQLite database
 * Using [Entity Framework (EF) Core Migrations](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli) for database stuff
-* An admin user is created in development mode, see [DataSeeder.cs](Data/DataSeeder.cs)
+* An admin and normal user is created in development mode, see [DataSeeder.cs](Data/DataSeeder.cs)
+* Test data is also seeded to the database in [DataSeeder.cs](Data/DataSeeder.cs)

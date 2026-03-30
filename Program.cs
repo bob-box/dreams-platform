@@ -5,6 +5,7 @@ using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Authorization.Dream;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Services;
 using Borderland.Dreams.Middleware;
 using Hangfire;
@@ -20,6 +21,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
@@ -39,8 +41,12 @@ builder.Services.AddDefaultIdentity<User>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Application services.
-builder.Services.AddScoped<DreamService>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IDreamService, DreamService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICloudService, CloudService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IAdminCloudService, AdminCloudService>();
+builder.Services.AddScoped<IFundingRoundService, FundingRoundService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
 builder.Services.AddSingleton<ICloudCache, CloudCache>();

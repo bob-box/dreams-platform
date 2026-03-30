@@ -13,13 +13,13 @@ public class Dream
     public DreamStatus Status { get; set; } = DreamStatus.Draft;
 
     [Display(Name = "Budget")]
-    public List<BudgetItem> BudgetItems { get; set; } = [];
+    public ICollection<BudgetItem> BudgetItems { get; set; } = [];
     public int CloudID { get; set; }
 
     public Cloud Cloud { get; set; }
-    public List<Fund> Funds { get; set; } = [];
-    public List<Comment> Comments { get; set; } = [];
-    public List<Expense> Expenses { get; set; } = [];
-    public List<Tag> Tags { get; set; } = [];
-    public List<Dreamer> Dreamers { get; set; } = [];
+    public ICollection<Fund> Funds { get; set; } = [];
+    public ICollection<Comment> Comments { get; set; } = [];
+    public ICollection<Expense> Expenses { get; set; } = [];
+    public ICollection<Tag> Tags { get; set; } = [];
+    public ICollection<Dreamer> Dreamers { get; set; } = [];
 }

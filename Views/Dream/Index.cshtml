@@ -47,7 +47,10 @@ else
                 <option value="">All statuses</option>
                 @foreach (var status in Enum.GetValues<Borderland.Dreams.Enums.DreamStatus>())
                 {
+                    if (status != Borderland.Dreams.Enums.DreamStatus.Hidden && status != Borderland.Dreams.Enums.DreamStatus.Draft)
+                    {
                     <option value="@status">@status</option>
+                    }
                 }
             </select>
         </div>

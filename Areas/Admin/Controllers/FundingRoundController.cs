@@ -4,54 +4,33 @@ using Borderland.Dreams.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Mappers;
-using Borderland.Dreams.Middleware;
-using Microsoft.EntityFrameworkCore;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.ViewModels;
-using Borderland.Dreams.Services;
-using Borderland.Dreams.Extensions;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Borderland.Dreams.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
-public class FundingRoundController(ILogger<FundingRoundController> logger,
+public class FundingRoundController(
     ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    UserService userService,
-    ICloudNameResolver cloudNameResolver,
-    FundingRoundSchedulerService schedulerService
+    IFundingRoundService fundingRoundService
 )
     : Dreams.Controllers.BaseController(context, authorizationService, userManager)
 {
-    private readonly ILogger<FundingRoundController> _logger = logger;
-    private readonly FundingRoundSchedulerService _schedulerService = schedulerService;
-
     // GET: Admin/FundingRound
     public async Task<IActionResult> Index()
     {
-        var fundingRounds = await _context.FundingRound
-            .Where(fr => fr.CloudID == cloudNameResolver.CloudID)
-            .OrderBy(fr => fr.StartDate)
-            .ToListAsync();
-
-        var viewModels = fundingRounds.Select(fr => fr.ToViewModel()).ToList();
+        var viewModels = await fundingRoundService.GetAll();
         return View(viewModels);
     }
 
     // GET: Admin/FundingRound/Create
     public async Task<IActionResult> Create()
     {
-        var userCount = await userService.CountUsersInCloud();
-
-        var viewModel = new FundingRoundViewModel
-        {
-            CloudID = cloudNameResolver.CloudID,
-            StartDate = DateTime.UtcNow.Date,
-            EndDate = DateTime.UtcNow.Date.AddDays(3).EndOfDay(),
-            UsersInCloudCount = userCount
-        };
+        var viewModel = await fundingRoundService.BuildCreateViewModel();
         return View(viewModel);
     }
 
@@ -60,30 +39,17 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(FundingRoundViewModel viewModel)
     {
-        if (viewModel.CloudID != cloudNameResolver.CloudID)
-        {
-            return Forbid();
-        }
-
-        // Validate date ranges don't overlap
-        var existingRounds = await _context.FundingRound
-            .Where(fr => fr.CloudID == cloudNameResolver.CloudID)
-            .ToListAsync();
-
-        ValidateDates(viewModel, existingRounds);
-
         if (!ModelState.IsValid)
         {
             return View(viewModel);
         }
 
-        var fundingRound = viewModel.ToModel();
-        _context.Add(fundingRound);
-        await _context.SaveChangesAsync();
-
-        // Schedule Hangfire jobs for this funding round and save job IDs
-        _schedulerService.ScheduleFundingRoundJobs(fundingRound);
-        await _context.SaveChangesAsync();
+        var result = await fundingRoundService.Create(viewModel);
+        if (result.Status == FundingRoundServiceStatus.Error)
+        {
+            AddErrorsToModelState(ModelState, result.Errors);
+            return View(viewModel);
+        }
 
         return RedirectToAction(nameof(Index));
     }
@@ -96,22 +62,17 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             return NotFound();
         }
 
-        var fundingRound = await _context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.ID == id && fr.CloudID == cloudNameResolver.CloudID);
-
-        if (fundingRound == null)
-        {
+        var loadResult = await fundingRoundService.GetForEdit(id.Value);
+        if (loadResult.Status == FundingRoundServiceStatus.NotFound)
             return NotFound();
-        }
 
-        if (IsPassed(fundingRound))
+        if (loadResult.Status == FundingRoundServiceStatus.Error)
         {
-            TempData["Error"] = "Cannot edit a funding round that has already passed.";
+            TempData["Error"] = loadResult.Message;
             return RedirectToAction(nameof(Index));
         }
-        ViewData["IsActive"] = IsActive(fundingRound);
 
-        return View(fundingRound.ToViewModel());
+        return View(loadResult.ViewModel);
     }
 
     // POST: Admin/FundingRound/Edit/5
@@ -119,98 +80,24 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, FundingRoundViewModel viewModel)
     {
-        if (id != viewModel.ID || viewModel.CloudID != cloudNameResolver.CloudID)
+        if (id != viewModel.ID)
         {
             return NotFound();
         }
 
-        var roundToUpdate = await _context.FundingRound.FindAsync(id);
-        if (roundToUpdate == null)
+        if (!ModelState.IsValid)
+            return View(viewModel);
+
+        var result = await fundingRoundService.Update(viewModel);
+        if (result.Status == FundingRoundServiceStatus.NotFound)
         {
             return NotFound();
         }
 
-        if (IsPassed(roundToUpdate))
+        if (result.Status == FundingRoundServiceStatus.Error)
         {
-            ModelState.AddModelError("", "Cannot edit a funding round that has already passed.");
-            ViewData["IsActive"] = IsActive(roundToUpdate);
+            AddErrorsToModelState(ModelState, result.Errors);
             return View(viewModel);
-        }
-        var existingRounds = await _context.FundingRound
-            .Where(fr => fr.CloudID == cloudNameResolver.CloudID && fr.ID != id)
-            .ToListAsync();
-
-        if (IsActive(roundToUpdate))
-            return await EditActiveRoundAsync(viewModel, roundToUpdate, existingRounds);
-
-        return await EditUpcomingRoundAsync(viewModel, roundToUpdate, existingRounds);
-    }
-
-    private async Task<IActionResult> EditActiveRoundAsync(
-        FundingRoundViewModel viewModel,
-        FundingRound roundToUpdate,
-        List<FundingRound> existingRounds)
-    {
-        // Validate only the editable fields for an active round
-        var now = DateTime.UtcNow;
-        if (viewModel.EndDate <= now)
-            ModelState.AddModelError("EndDate", "End date must be in the future.");
-        else if (existingRounds.Any(fr => fr.StartDate <= viewModel.EndDate && fr.EndDate >= roundToUpdate.StartDate))
-            ModelState.AddModelError("", "Funding round dates cannot overlap with existing rounds.");
-
-        if (!ModelState.IsValid)
-        {
-            // Restore locked fields so the view renders correctly
-            viewModel.Title = roundToUpdate.Title;
-            viewModel.StartDate = roundToUpdate.StartDate;
-            viewModel.AllocationPerUser = roundToUpdate.AllocationPerUser;
-            return View(viewModel);
-        }
-
-        try
-        {
-            roundToUpdate.EndDate = viewModel.EndDate;
-            roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
-
-            _schedulerService.ScheduleFundingRoundJobs(roundToUpdate); // updates job IDs on entity
-            await _context.SaveChangesAsync(); // saves both entity changes and job IDs in one call
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!FundingRoundExists(viewModel.ID))
-                return NotFound();
-            throw;
-        }
-
-        return RedirectToAction(nameof(Index));
-    }
-
-    private async Task<IActionResult> EditUpcomingRoundAsync(
-        FundingRoundViewModel viewModel,
-        FundingRound roundToUpdate,
-        List<FundingRound> existingRounds)
-    {
-        ValidateDates(viewModel, existingRounds);
-        if (!ModelState.IsValid)
-            return View(viewModel);
-
-        roundToUpdate.Title = viewModel.Title;
-        roundToUpdate.StartDate = viewModel.StartDate;
-        roundToUpdate.EndDate = viewModel.EndDate;
-        roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
-        roundToUpdate.AllocationPerUser = viewModel.AllocationPerUser;
-
-        _schedulerService.ScheduleFundingRoundJobs(roundToUpdate); // updates job IDs on entity
-
-        try
-        {
-            await _context.SaveChangesAsync(); // saves both entity changes and job IDs in one call
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!FundingRoundExists(viewModel.ID))
-                return NotFound();
-            throw;
         }
 
         return RedirectToAction(nameof(Index));
@@ -224,21 +111,17 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
             return NotFound();
         }
 
-        var fundingRound = await _context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.ID == id && fr.CloudID == cloudNameResolver.CloudID);
-
-        if (fundingRound == null)
-        {
+        var loadResult = await fundingRoundService.GetForDelete(id.Value);
+        if (loadResult.Status == FundingRoundServiceStatus.NotFound)
             return NotFound();
-        }
 
-        if (IsActiveOrPassed(fundingRound))
+        if (loadResult.Status == FundingRoundServiceStatus.Error)
         {
-            TempData["Error"] = "Cannot delete a funding round that is active or has already passed.";
+            TempData["Error"] = loadResult.Message;
             return RedirectToAction(nameof(Index));
         }
 
-        return View(fundingRound.ToViewModel());
+        return View(loadResult.ViewModel);
     }
 
     // POST: Admin/FundingRound/Delete/5
@@ -246,60 +129,32 @@ public class FundingRoundController(ILogger<FundingRoundController> logger,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var fundingRound = await _context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.ID == id && fr.CloudID == cloudNameResolver.CloudID);
+        var result = await fundingRoundService.Delete(id);
+        if (result.Status == FundingRoundServiceStatus.NotFound)
+            return NotFound();
 
-        if (fundingRound != null)
+        if (result.Status == FundingRoundServiceStatus.Error)
         {
-            if (IsActiveOrPassed(fundingRound))
-            {
-                TempData["Error"] = "Cannot delete a funding round that is active or has already passed.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // Cancel scheduled jobs
-            _schedulerService.CancelFundingRoundJobs(fundingRound);
-
-            _context.FundingRound.Remove(fundingRound);
-            await _context.SaveChangesAsync();
+            TempData["Error"] = result.Message;
+            return RedirectToAction(nameof(Index));
         }
 
         return RedirectToAction(nameof(Index));
     }
 
-    private bool FundingRoundExists(int id)
+    private static void AddErrorsToModelState(
+        ModelStateDictionary modelState,
+        Dictionary<string, List<string>>? errors)
     {
-        return _context.FundingRound.Any(e => e.ID == id);
-    }
+        if (errors == null)
+            return;
 
-    private static bool IsActiveOrPassed(FundingRound fundingRound) =>
-        fundingRound.StartDate <= DateTime.UtcNow;
-
-    private static bool IsActive(FundingRound fundingRound) =>
-        fundingRound.StartDate <= DateTime.UtcNow && fundingRound.EndDate >= DateTime.UtcNow;
-
-    private static bool IsPassed(FundingRound fundingRound) =>
-        fundingRound.EndDate < DateTime.UtcNow;
-
-    private void ValidateDates(FundingRoundViewModel viewModel, List<FundingRound> existingRounds)
-    {
-        if (existingRounds.Any(fr =>
-            (viewModel.StartDate <= fr.EndDate && viewModel.EndDate >= fr.StartDate)))
+        foreach (var (key, messages) in errors)
         {
-            ModelState.AddModelError("", "Funding round dates cannot overlap with existing rounds.");
-        }
-
-        if (viewModel.EndDate <= viewModel.StartDate)
-        {
-            ModelState.AddModelError("EndDate", "End date must be after start date.");
-        }
-
-        var now = DateTime.UtcNow;
-        var currentUtcMinute = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, DateTimeKind.Utc);
-
-        if (viewModel.StartDate < currentUtcMinute)
-        {
-            ModelState.AddModelError("StartDate", "Start date cannot be in the past.");
+            foreach (var message in messages)
+            {
+                modelState.AddModelError(key, message);
+            }
         }
     }
 }

@@ -29,7 +29,7 @@ public class Cloud
     public decimal TotalFundsSpent { get; set; } = 0;
 
     // Navigation properties
-    public List<Dream>? Dreams { get; set; } = [];
-    public List<FundingRound>? FundingRounds { get; set; } = [];
-    public List<Tag> Tags { get; set; } = [];
+    public ICollection<Dream>? Dreams { get; set; } = [];
+    public ICollection<FundingRound>? FundingRounds { get; set; } = [];
+    public ICollection<Tag> Tags { get; set; } = [];
 }

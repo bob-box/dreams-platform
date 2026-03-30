@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Services;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.ViewModels;
@@ -18,7 +18,9 @@ namespace Borderland.Dreams.Controllers;
 public class DreamController(ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    DreamService dreamService,
+    IDreamService dreamService,
+    ICloudService cloudService,
+    ITagService tagService,
     ICloudNameResolver cloudNameService)
     : BaseController(context, authorizationService, userManager)
 {
@@ -26,52 +28,20 @@ public class DreamController(ApplicationDbContext context,
     [AllowAnonymous]
     public async Task<IActionResult> Index(string? searchText, DreamStatus? statusFilter, int? tagFilter, DreamSortOrder sortOrder = DreamSortOrder.NameAsc)
     {
-        var listQuery = dreamService.GetDreamsByCloudIdBaseQuery();
-        listQuery = IsAuthorizedToViewDream(listQuery);
+        var currentUserId = _userManager.GetUserId(User);
+        var isAuthenticated = User.Identity?.IsAuthenticated == true;
+        var userHasAlreadyJoinedTheCloud = isAuthenticated && !string.IsNullOrWhiteSpace(currentUserId)
+            && await cloudService.UserHasJoinedCloud(currentUserId);
+        ViewData["showJoinCloudButton"] = !userHasAlreadyJoinedTheCloud && isAuthenticated;
 
-        if (!string.IsNullOrWhiteSpace(searchText))
-        {
-            listQuery = listQuery.Where(d =>
-                d.Name.Contains(searchText) ||
-                d.Description.Contains(searchText));
-        }
-
-        if (statusFilter.HasValue)
-            listQuery = listQuery.Where(d => d.Status == statusFilter.Value);
-
-        if (tagFilter.HasValue)
-            listQuery = listQuery.Where(d => d.Tags.Any(t => t.ID == tagFilter.Value));
-
-        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
-        ViewData["showJoinCloudButton"] = !userHasAlreadyJoinedTheCloud && User.Identity?.IsAuthenticated == true;
-
-        var viewModels = listQuery.Select(d => d.ToViewModel()).ToList();
-
-        viewModels = sortOrder switch
-        {
-            DreamSortOrder.NameDesc => [.. viewModels.OrderByDescending(d => d.Name)],
-            DreamSortOrder.MostFunded => [.. viewModels.OrderByDescending(d => d.TotalReceivedFunds)],
-            DreamSortOrder.LeastFunded => [.. viewModels.OrderBy(d => d.TotalReceivedFunds)],
-            DreamSortOrder.MostFundedPercentage => [.. viewModels.OrderByDescending(d =>
-                d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
-            DreamSortOrder.LeastFundedPercentage => [.. viewModels.OrderBy(d =>
-                d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
-            DreamSortOrder.MostBudget => [.. viewModels.OrderByDescending(d => d.TotalRequestedBudget)],
-            DreamSortOrder.LeastBudget => [.. viewModels.OrderBy(d => d.TotalRequestedBudget)],
-            _ => [.. viewModels.OrderBy(d => d.Name)],
-        };
-
-        var availableTags = (await GetAvailableTagsAsync()).Select(t => t.ToViewModel()).ToList();
-
-        var filterViewModel = new DreamFilterViewModel
-        {
-            SearchText = searchText,
-            StatusFilter = statusFilter,
-            TagFilter = tagFilter,
-            SortOrder = sortOrder,
-            Dreams = viewModels,
-            AvailableTags = availableTags
-        };
+        var filterViewModel = await dreamService.BuildDreamFilterViewModel(
+            searchText,
+            statusFilter,
+            tagFilter,
+            sortOrder,
+            currentUserId,
+            User.IsInRole(Constants.AdminRole),
+            isAuthenticated);
 
         return View(filterViewModel);
     }
@@ -101,57 +71,30 @@ public class DreamController(ApplicationDbContext context,
     [HttpGet]
     public async Task<IActionResult> GetFundingModal(int dreamId)
     {
-        // Verify the dream exists and belongs to the current cloud
-        var dream = await _context.Dream
-            .FirstOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
 
-        if (dream == null)
+        var result = await dreamService.GetFundingModal(dreamId, userId);
+        return result.Status switch
         {
-            return NotFound();
-        }
-
-        // Check for active funding round
-        var now = DateTime.UtcNow;
-        var activeRound = await _context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
-                                     fr.StartDate <= now && fr.EndDate >= now);
-
-        if (activeRound == null)
-        {
-            return BadRequest("No active funding round.");
-        }
-
-        // Get user's wallet (we still need balance to verify sufficiency)
-        var user = await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
-        var wallet = user.Wallets.FirstOrDefault(w => w.CloudID == cloudNameService.CloudID);
-
-        if (wallet == null)
-        {
-            return BadRequest("User wallet not found.");
-        }
-
-        var userFundsForThisDream = await _context.Fund
-            .Where(f => f.DreamID == dreamId && f.UserID == user.Id).ToListAsync();
-
-        decimal userFundedInCurrentRound = userFundsForThisDream.SingleOrDefault(f => f.FundingRoundID == activeRound.ID)?.Amount ?? 0m;
-        decimal userTotalFundedAllRounds = userFundsForThisDream.Sum(f => f.Amount);
-        decimal roundMaxAmount = activeRound.AllocationPerUser * (activeRound.MaxPercentagePerDream / 100m);
-
-        var viewModel = new FundingModalViewModel
-        {
-            DreamId = dreamId,
-            RoundMaxAmount = roundMaxAmount,
-            UserFundedInCurrentRound = userFundedInCurrentRound,
-            UserTotalFundedAllRounds = userTotalFundedAllRounds,
-            UserWalletBalance = wallet.Balance
+            FundDreamServiceStatus.Success => PartialView("_FundingModal", result.ViewModel),
+            FundDreamServiceStatus.DreamNotFound => NotFound(),
+            FundDreamServiceStatus.UserNotFound => Challenge(),
+            FundDreamServiceStatus.NoActiveFundingRound => BadRequest(result.Message),
+            FundDreamServiceStatus.WalletNotFound => BadRequest(result.Message),
+            _ => BadRequest("Unable to load funding data.")
         };
-        return PartialView("_FundingModal", viewModel);
     }
 
     // GET: Dream/Create
     public async Task<IActionResult> Create()
     {
-        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var userHasAlreadyJoinedTheCloud = await cloudService.UserHasJoinedCloud(userId);
         if (!userHasAlreadyJoinedTheCloud)
         {
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
@@ -165,7 +108,7 @@ public class DreamController(ApplicationDbContext context,
             Name = user.Name,
         };
         viewModel.Dreamers.Add(dreamer); // Add the main dreamer (current user)
-        ViewBag.AvailableTags = await GetAvailableTagsAsync();
+        ViewBag.AvailableTags = await tagService.GetAll();
 
         return View(viewModel);
     }
@@ -177,7 +120,11 @@ public class DreamController(ApplicationDbContext context,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems,Dreamers,SelectedTagIds")] DreamViewModel viewModel)
     {
-        bool userHasAlreadyJoinedTheCloud = User.Claims.Any(c => c.Type == Constants.JOINED_CLOUD_CLAIM && c.Value == cloudNameService.CloudID.ToString());
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var userHasAlreadyJoinedTheCloud = await cloudService.UserHasJoinedCloud(userId);
         if (!userHasAlreadyJoinedTheCloud)
         {
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
@@ -185,24 +132,11 @@ public class DreamController(ApplicationDbContext context,
 
         if (!ModelState.IsValid)
         {
-            ViewBag.AvailableTags = await GetAvailableTagsAsync();
+            ViewBag.AvailableTags = await tagService.GetAll();
             return View(viewModel);
         }
-        var dream = viewModel.ToModel();
-
-        dream.CloudID = cloudNameService.CloudID; // Set the CloudID from the current context
-        dream.Status = DreamStatus.Draft;
-
-        if (viewModel.SelectedTagIds.Count > 0)
-        {
-            dream.Tags = await _context.Tag
-            .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)
-                .ToListAsync();
-        }
-
-        _context.Add(dream);
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Details), new { id = dream.ID });
+        var dreamId = await dreamService.Create(viewModel);
+        return RedirectToAction(nameof(Details), new { id = dreamId });
     }
 
     // GET: Dream/Edit/5
@@ -230,7 +164,7 @@ public class DreamController(ApplicationDbContext context,
         await CheckIfUserCanEditDreamers(dreamFromDb.Dreamers);
         var viewModel = dreamFromDb.ToViewModel();
         viewModel.SelectedTagIds = dreamFromDb.Tags.Select(t => t.ID).ToList();
-        ViewBag.AvailableTags = await GetAvailableTagsAsync();
+        ViewBag.AvailableTags = await tagService.GetAll();
 
         return View(viewModel);
     }
@@ -263,27 +197,17 @@ public class DreamController(ApplicationDbContext context,
         if (!ModelState.IsValid)
         {
             await CheckIfUserCanEditDreamers(dreamToUpdate.Dreamers);
-            ViewBag.AvailableTags = await GetAvailableTagsAsync();
+            ViewBag.AvailableTags = await tagService.GetAll();
             return View(viewModel);
         }
 
         try
         {
-            // Update the dream
-            dreamToUpdate.Name = viewModel.Name;
-            dreamToUpdate.Description = viewModel.Description;
-            dreamToUpdate.Dreamers = viewModel.Dreamers.Where(x => x != null).Select(x => x.ToModel()).ToList();
-            dreamToUpdate.BudgetItems = viewModel.BudgetItems.Where(b => b != null).Select(x => x.ToModel()).ToList();
-            dreamToUpdate.Tags = await _context.Tag
-                .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)
-                .ToListAsync();
-
-            if (!dreamToUpdate.Dreamers.Any(x => x.IsMainDreamer))
-            {
-                return BadRequest("A dream must have at least one main dreamer.");
-            }
-
-            await _context.SaveChangesAsync();
+            await dreamService.Update(dreamToUpdate, viewModel);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -384,11 +308,6 @@ public class DreamController(ApplicationDbContext context,
         {
             return BadRequest("This user has not confirmed their email address and cannot be added as a dreamer.");
         }
-        var currentUserId = _userManager.GetUserId(User);
-        if (userToAdd.Id == currentUserId)
-        {
-            return BadRequest("This is your own dream, silly!");
-        }
         if (dreamFromDb.Dreamers.Any(d => d.UserID == userToAdd.Id))
         {
             return BadRequest("This user is already a dreamer for this dream.");
@@ -454,84 +373,22 @@ public class DreamController(ApplicationDbContext context,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Fund(int dreamId, decimal amount)
     {
-        if (amount <= 0)
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var result = await dreamService.FundDream(dreamId, amount, userId);
+        return result.Status switch
         {
-            return BadRequest("Amount must be positive.");
-        }
-
-        var dream = await _context.Dream
-            .FirstOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
-
-        if (dream == null)
-        {
-            return NotFound();
-        }
-
-        var user = await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
-        var wallet = user.Wallets.FirstOrDefault(w => w.CloudID == cloudNameService.CloudID);
-
-        if (wallet == null || wallet.Balance < amount)
-        {
-            return BadRequest("Insufficient funds.");
-        }
-
-        // Check if there's an active funding round
-        var now = DateTime.UtcNow;
-        var activeRound = await _context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
-                                     fr.StartDate <= now && fr.EndDate >= now);
-
-        decimal maxPerDream = decimal.MaxValue;
-        if (activeRound != null)
-        {
-            // Check percentage limit based on round allocation
-            maxPerDream = activeRound.AllocationPerUser * (activeRound.MaxPercentagePerDream / 100m);
-            // see if user already has a fund for this dream/round
-            var existingFund = await _context.Fund
-                .FirstOrDefaultAsync(f => f.DreamID == dreamId &&
-                                          f.UserID == user.Id &&
-                                          f.FundingRoundID == activeRound.ID);
-
-            if (existingFund != null)
-            {
-                if (existingFund.Amount + amount > maxPerDream)
-                {
-                    return BadRequest($"Amount exceeds the maximum allowed per dream for this round ({activeRound.MaxPercentagePerDream}% of per-user allocation). You have already funded {existingFund.Amount:C}.");
-                }
-                // update existing fund instead of creating new
-                existingFund.Amount += amount;
-                wallet.Balance -= amount;
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Details), new { id = dreamId });
-            }
-
-            if (amount > maxPerDream)
-            {
-                return BadRequest($"Amount exceeds the maximum allowed per dream for this round ({activeRound.MaxPercentagePerDream}% of per-user allocation).");
-            }
-        }
-
-        var fund = new Fund
-        {
-            DreamID = dreamId,
-            UserID = user.Id,
-            Amount = amount,
-            FundingRoundID = activeRound?.ID
+            FundDreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id = dreamId }),
+            FundDreamServiceStatus.DreamNotFound => NotFound(),
+            FundDreamServiceStatus.UserNotFound => Challenge(),
+            FundDreamServiceStatus.InvalidAmount => BadRequest(result.Message),
+            FundDreamServiceStatus.WalletNotFound => BadRequest(result.Message),
+            FundDreamServiceStatus.InsufficientFunds => BadRequest(result.Message),
+            FundDreamServiceStatus.ExceedsRoundLimit => BadRequest(result.Message),
+            FundDreamServiceStatus.NoActiveFundingRound => BadRequest(result.Message),
+            _ => BadRequest("Unable to fund dream.")
         };
-
-        _context.Fund.Add(fund);
-        wallet.Balance -= amount;
-
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Details), new { id = dreamId });
-    }
-
-    private async Task<List<Tag>> GetAvailableTagsAsync()
-    {
-        return await _context.Tag
-            .Where(t => t.CloudID == cloudNameService.CloudID)
-            .OrderBy(t => t.Title)
-            .ToListAsync();
     }
 }

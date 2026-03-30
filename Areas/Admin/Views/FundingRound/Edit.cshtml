@@ -2,12 +2,11 @@
 
 @{
     ViewData["Title"] = "Edit Funding Round";
-    bool isActive = ViewData["IsActive"] as bool? ?? false;
 }
 
 <h1>Edit Funding Round</h1>
 
-@if (isActive)
+@if (Model.IsActive())
 {
     <div class="alert alert-info">This funding round is currently active. Only the end date and max percentage per dream can be changed.</div>
 }
@@ -22,7 +21,7 @@
             <input type="hidden" asp-for="CloudID" />
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
-                @if (isActive)
+                @if (Model.IsActive())
                 {
                     <input type="hidden" asp-for="Title" />
                     <input asp-for="Title" class="form-control" disabled />
@@ -35,7 +34,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="StartDate" class="control-label"></label>
-                @if (isActive)
+                @if (Model.IsActive())
                 {
                     <input type="hidden" asp-for="StartDate" />
                     <input asp-for="StartDate" class="form-control" type="datetime-local" disabled />
@@ -59,7 +58,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="AllocationPerUser" class="control-label"></label>
-                @if (isActive)
+                @if (Model.IsActive())
                 {
                     <input type="hidden" asp-for="AllocationPerUser" />
                     <input asp-for="AllocationPerUser" class="form-control" data-val="false" disabled />

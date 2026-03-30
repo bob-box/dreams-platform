@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.Data;
+using Borderland.Dreams.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Services;
 using Borderland.Dreams.Enums;
 
 namespace Borderland.Dreams.Areas.Admin.Controllers;
@@ -15,14 +15,14 @@ public class UsersController(
     ApplicationDbContext context,
     IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    UserService userService)
+    IUserService userService)
     : Dreams.Controllers.BaseController(context, authorizationService, userManager)
 {
     // GET: Admin/Users/Index
     public async Task<IActionResult> Index()
     {
         ViewData["CurrentUserId"] = _userManager.GetUserId(User);
-        var viewModels = await userService.GetUsersInCloud();
+        var viewModels = await userService.GetAll();
         return View(viewModels);
     }
 
@@ -31,7 +31,7 @@ public class UsersController(
     public async Task<IActionResult> Filter(string filter = "")
     {
         ViewData["CurrentUserId"] = _userManager.GetUserId(User);
-        var viewModels = await userService.GetUsersInCloud(filter);
+        var viewModels = await userService.GetAll(filter);
         return PartialView("_ManageUsersTable", viewModels);
     }
 

@@ -7,5 +7,5 @@ public class User : IdentityUser
 {
     [PersonalData]
     public string Name { get; set; } = string.Empty;
-    public List<Wallet> Wallets { get; set; } = new List<Wallet>();
+    public ICollection<Wallet> Wallets { get; set; } = [];
 }
