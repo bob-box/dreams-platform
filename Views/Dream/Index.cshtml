@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Dreams List";
-    bool showJoinCloudButton = (ViewData["showJoinCloudButton"] as bool?) ?? false;
     bool hasActiveFilters = !string.IsNullOrEmpty(Model.SearchText) || Model.StatusFilter.HasValue || Model.TagFilter.HasValue;
 }
 
@@ -10,20 +9,9 @@
 <cache expires-after="@TimeSpan.FromSeconds(60)">
     <vc:cloud-funds />
 </cache>
-@if (showJoinCloudButton)
+@if (User.Identity?.IsAuthenticated == true)
 {
-    <p>
-        <form asp-action="Join" asp-controller="Cloud" method="post">
-            <input type="hidden" name="id" value="@cloudNameResolver.CloudID" />
-            <button type="submit">Join Cloud</button>
-        </form>
-    </p>
-}
-else
-{
-    <p>
-        <a asp-action="Create">Create New Dream</a>
-    </p>
+    <vc:join-cloud-or-create-dream />
 }
 
 <form method="get" asp-action="Index">

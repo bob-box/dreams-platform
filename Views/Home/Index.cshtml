@@ -28,24 +28,64 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TotalFundsAvailable)
-            </td>
-            <td>
-                @(item.Dreams?.Count() ?? 0)
-            </td>
-            <td>
-                <a asp-controller="Dream" asp-action="Index" asp-route-cloudName="@item.Name">Go to Cloud</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TotalFundsAvailable)
+                </td>
+                <td>
+                    @(item.Dreams?.Count() ?? 0)
+                </td>
+                <td>
+                    <a asp-controller="Dream" asp-action="Index" asp-route-cloudName="@item.Name">Go to Cloud</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+@foreach (var item in Model)
+{
+    @* Cloud shaped pictures of the clouds? *@
+    @* <style>
+            .cloud {
+                height: 100px;
+                /* control the size */
+                aspect-ratio: 1.8;
+                --g: radial-gradient(50% 50%, #000 98%, #0000) no-repeat;
+                mask: var(--g) 100% 100%/30% 60%, var(--g) 70% 0/50% 100%, var(--g) 0 100%/36% 68%, var(--g) 27% 18%/26% 40%, linear-gradient(#000 0 0) bottom/67% 58% no-repeat;
+                background: linear-gradient(to bottom, #dcedf9, #abe1fb, #dcedf9);
+                background: linear-gradient(45deg, #ff6b6b 0%, #ffd166 100%);    /* linear-gradient(to top, rgba(236, 233, 230, 1), rgba(255, 255, 255, 0.5)),
+                    overlay
+                    url('https://placecats.com/180/100') center / cover no-repeat; 
+                    */
+
+                cursor: pointer;
+            }
+
+    </style>
+    <a asp-controller="Dream" asp-action="Index" asp-route-cloudName="@item.Name" style="position: relative; display: inline-block;">
+        <div class="cloud"></div>
+        <div style="
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 2em;
+            text-align: center;
+            pointer-events: none;
+            width: 90%;
+            ">
+            @item.Name
+        </div>
+    </a> *@
+}

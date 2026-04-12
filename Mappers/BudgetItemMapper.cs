@@ -30,7 +30,7 @@ public static class BudgetItemMapper
             Type = vm.Type,
             DreamID = vm.DreamID,
             CreatedDate = vm.CreatedDate,
-            MinAmount = vm.MinAmount,
+            MinAmount = vm.MinAmount ?? 0,
             MaxAmount = vm.MaxAmount,
         };
     }

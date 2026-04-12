@@ -1,0 +1,17 @@
+@model Borderland.Dreams.ViewModels.JoinCloudOrCreateDreamViewModel
+
+@if (Model.ShowJoinCloudButton)
+{
+    <p>
+        <form asp-action="Join" asp-controller="Cloud" method="post">
+            <input type="hidden" name="id" value="@Model.CloudId" />
+            <button type="submit">Join Cloud</button>
+        </form>
+    </p>
+}
+else
+{
+    <p>
+        <a asp-action="Create">Create New Dream</a>
+    </p>
+}

@@ -15,6 +15,18 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+<div id="clouds">
+  <div class="cloud x1"></div>
+	<div class="cloud x2"></div>
+	<div class="cloud x3"></div>
+	<div class="cloud x4"></div>
+	<div class="cloud x5"></div>
+    <div class="cloud x1"></div>
+	<div class="cloud x2"></div>
+	<div class="cloud x3"></div>
+	<div class="cloud x4"></div>
+	<div class="cloud x5"></div>
+</div>
             @RenderBody()
         </main>
     </div>
@@ -27,6 +39,18 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.cloud').forEach(cloud => {
+                const maxLeft = window.innerWidth - cloud.offsetWidth;
+                const maxTop = (window.innerHeight * 0.75) - cloud.offsetHeight;
+                
+                cloud.style.left = Math.random() * maxLeft + 'px';
+                cloud.style.top = Math.random() * maxTop + 'px';
+                cloud.style.animationDelay = Math.random() * 1000 + 'ms';
+            });
+        }, 1000);
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
