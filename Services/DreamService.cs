@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Enums;
 using Borderland.Dreams.Interfaces;
@@ -5,6 +7,7 @@ using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +17,9 @@ public class DreamService(
     ApplicationDbContext context,
     ICloudNameResolver cloudNameService,
     ITagService tagService,
-    UserManager<User> userManager) : IDreamService
+    UserManager<User> userManager,
+    IAuthorizationService authorizationService
+) : IDreamService
 {
     /// <summary>
     /// Includes related entities (so you can run AuthorizationService checks).
@@ -39,8 +44,7 @@ public class DreamService(
         int? tagFilter,
         DreamSortOrder sortOrder,
         string? currentUserId,
-        bool isAdmin,
-        bool isAuthenticated)
+        bool isAdmin)
     {
         var listQuery = GetDreamsByCloudIdBaseQuery();
 
@@ -125,6 +129,30 @@ public class DreamService(
             .ToListAsync();
 
         await context.SaveChangesAsync();
+    }
+
+    public async Task<DreamDeleteResult> GetForDelete(int id)
+    {
+        var dream = await GetDreamsByCloudIdBaseQuery()
+            .SingleOrDefaultAsync(m => m.ID == id);
+
+        if (dream == null)
+            return new DreamDeleteResult(DreamDeleteStatus.NotFound);
+
+        return new DreamDeleteResult(DreamDeleteStatus.Success, dream);
+    }
+
+    public async Task<DreamDeleteResult> Delete(int id)
+    {
+        var dream = await GetDreamsByCloudIdBaseQuery()
+            .SingleOrDefaultAsync(m => m.ID == id);
+
+        if (dream == null)
+            return new DreamDeleteResult(DreamDeleteStatus.NotFound);
+
+        context.Dream.Remove(dream);
+        await context.SaveChangesAsync();
+        return new DreamDeleteResult(DreamDeleteStatus.Success);
     }
 
     public async Task<FundDreamServiceResult> GetFundingModal(int dreamId, string userId)
@@ -244,5 +272,16 @@ public class DreamService(
             await context.SaveChangesAsync();
             return new FundDreamServiceResult(FundDreamServiceStatus.Success);
         }
+    }
+    
+    public bool DreamExists(int id, int cloudID)
+    {
+        return context.Dream.Any(e => e.ID == id && e.CloudID == cloudID);
+    }
+
+    public async Task<bool> CheckIfUserCanEditDreamers(IEnumerable<IDreamersForAuthorization> dreamers, ClaimsPrincipal user)
+    {
+        var authorizationResult = await authorizationService.AuthorizeAsync(user, dreamers, Operations.EditDreamers);
+        return authorizationResult.Succeeded;
     }
 }

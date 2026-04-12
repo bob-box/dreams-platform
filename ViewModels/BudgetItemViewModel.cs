@@ -17,7 +17,7 @@ public class BudgetItemViewModel : IValidatableObject
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]
     [Display(Name = "Amount")]
-    public decimal MinAmount { get; set; } = 0;
+    public decimal? MinAmount { get; set; }
 
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]

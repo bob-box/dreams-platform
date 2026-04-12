@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Borderland.Dreams.Models;
-using Borderland.Dreams.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.ViewModels;
@@ -12,12 +9,9 @@ namespace Borderland.Dreams.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
 public class CloudController(
-    ApplicationDbContext context,
-    IAuthorizationService authorizationService,
-    UserManager<User> userManager,
     IAdminCloudService adminCloudService,
     ICloudService cloudService)
-    : Dreams.Controllers.BaseController(context, authorizationService, userManager)
+    : Controller
 {
     public async Task<IActionResult> Create()
     {

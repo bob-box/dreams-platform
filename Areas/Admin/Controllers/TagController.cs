@@ -1,21 +1,16 @@
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Data;
 using Borderland.Dreams.Interfaces;
-using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Borderland.Dreams.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
-public class TagController(ApplicationDbContext context,
-    IAuthorizationService authorizationService,
-    UserManager<User> userManager,
-    ITagService tagService)
-    : Dreams.Controllers.BaseController(context, authorizationService, userManager)
+public class TagController(
+    ITagService tagService
+) : Controller
 {
     // GET: Admin/Tag
     public async Task<IActionResult> Index()

@@ -33,10 +33,10 @@ public class DreamViewModel
 
     [Display(Name = "Total Requested Budget")]
     [DataType(DataType.Currency)]
-    public decimal TotalRequestedBudget => RequestedBudgetItems.Sum(b => b.MinAmount);
+    public decimal TotalRequestedBudget => RequestedBudgetItems.Sum(b => b.MinAmount ?? 0);
     [Display(Name = "Total Existing Budget")]
     [DataType(DataType.Currency)]
-    public decimal TotalExistingBudget => ExistingBudgetItems.Sum(b => b.MinAmount);
+    public decimal TotalExistingBudget => ExistingBudgetItems.Sum(b => b.MinAmount ?? 0);
 
     [Display(Name = "Total Received Funds")]
     [DataType(DataType.Currency)]

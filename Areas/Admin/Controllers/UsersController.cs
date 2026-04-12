@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Borderland.Dreams.Models;
-using Borderland.Dreams.Data;
 using Borderland.Dreams.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,16 +11,14 @@ namespace Borderland.Dreams.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
 public class UsersController(
-    ApplicationDbContext context,
-    IAuthorizationService authorizationService,
     UserManager<User> userManager,
-    IUserService userService)
-    : Dreams.Controllers.BaseController(context, authorizationService, userManager)
+    IUserService userService
+) : Controller
 {
     // GET: Admin/Users/Index
     public async Task<IActionResult> Index()
     {
-        ViewData["CurrentUserId"] = _userManager.GetUserId(User);
+        ViewData["CurrentUserId"] = userManager.GetUserId(User);
         var viewModels = await userService.GetAll();
         return View(viewModels);
     }
@@ -30,7 +27,7 @@ public class UsersController(
     [HttpGet]
     public async Task<IActionResult> Filter(string filter = "")
     {
-        ViewData["CurrentUserId"] = _userManager.GetUserId(User);
+        ViewData["CurrentUserId"] = userManager.GetUserId(User);
         var viewModels = await userService.GetAll(filter);
         return PartialView("_ManageUsersTable", viewModels);
     }
@@ -44,7 +41,7 @@ public class UsersController(
             return BadRequest(new { message = "User and role are required.", statusClass = "danger" });
         }
 
-        var currentUserId = _userManager.GetUserId(User);
+        var currentUserId = userManager.GetUserId(User);
         if (string.IsNullOrWhiteSpace(currentUserId))
             return Challenge();
 

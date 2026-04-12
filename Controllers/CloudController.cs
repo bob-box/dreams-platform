@@ -7,11 +7,10 @@ using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Controllers;
 
-public class CloudController(ApplicationDbContext context,
-    IAuthorizationService authorizationService,
+public class CloudController(
     UserManager<User> userManager,
-    ICloudService cloudService)
-    : BaseController(context, authorizationService, userManager)
+    ICloudService cloudService
+) : Controller
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -23,7 +22,7 @@ public class CloudController(ApplicationDbContext context,
     /// <param name="id">The cloud ID.</param>
     public async Task<IActionResult> Join(int id)
     {
-        var userId = _userManager.GetUserId(User);
+        var userId = userManager.GetUserId(User);
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 

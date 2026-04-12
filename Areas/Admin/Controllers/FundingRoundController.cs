@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Borderland.Dreams.Models;
-using Borderland.Dreams.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.ViewModels;
@@ -13,12 +10,8 @@ namespace Borderland.Dreams.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
 public class FundingRoundController(
-    ApplicationDbContext context,
-    IAuthorizationService authorizationService,
-    UserManager<User> userManager,
     IFundingRoundService fundingRoundService
-)
-    : Dreams.Controllers.BaseController(context, authorizationService, userManager)
+) : Controller
 {
     // GET: Admin/FundingRound
     public async Task<IActionResult> Index()
