@@ -52,7 +52,7 @@ public class CloudService(
         await userManager.AddClaimAsync(user, claim);
         await signInManager.RefreshSignInAsync(user);
 
-        user.Wallets.Add(new Wallet(cloudId));
+        user.Wallets.Add(new Wallet(){ CloudID = cloudId });
         await context.SaveChangesAsync();
 
         return new JoinCloudResult(JoinCloudStatus.Success);

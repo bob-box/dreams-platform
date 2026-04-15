@@ -133,7 +133,7 @@ public static class DataSeeder
             if (!alreadyJoined)
             {
                 var result = await userManager.AddClaimAsync(user, joinedCloudClaim);
-                user.Wallets.Add(new Wallet(cloudId));
+                user.Wallets.Add(new Wallet() { CloudID = cloudId });
                 await context.SaveChangesAsync();
                 if (!result.Succeeded)
                 {
