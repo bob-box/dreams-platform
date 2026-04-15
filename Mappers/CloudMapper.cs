@@ -1,3 +1,4 @@
+using Borderland.Dreams.Extensions;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
@@ -15,8 +16,8 @@ public static class CloudMapper
             CreatedDate = model.CreatedDate,
             TotalFundsAvailable = model.TotalFundsAvailable,
             TotalFundsSpent = model.TotalFundsSpent,
-            Dreams = model.Dreams?.Select(d => d.ToViewModel()).ToList(),
-            FundingRounds = model.FundingRounds?.Select(fr => fr.ToViewModel()).ToList()
+            Dreams = model.Dreams.MapList(x => x.ToViewModel()),
+            FundingRounds = model.FundingRounds.MapList(x => x.ToViewModel())
         };
     }
 
@@ -30,8 +31,8 @@ public static class CloudMapper
             CreatedDate = vm.CreatedDate,
             TotalFundsAvailable = vm.TotalFundsAvailable,
             TotalFundsSpent = vm.TotalFundsSpent,
-            Dreams = vm.Dreams?.Select(d => d.ToModel()).ToList(),
-            FundingRounds  = vm.FundingRounds?.Select(fr => fr.ToModel()).ToList()
+            Dreams = vm.Dreams.MapList(x => x.ToModel()),
+            FundingRounds  = vm.FundingRounds.MapList(x => x.ToModel())
         };
     }
 }

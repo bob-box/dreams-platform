@@ -1,3 +1,4 @@
+using Borderland.Dreams.Extensions;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
@@ -15,13 +16,13 @@ public static class DreamMapper
             Description = model.Description,
             CreatedDate = model.CreatedDate,
             Status = model.Status,
-            BudgetItems = model.BudgetItems?.Select(x => x.ToViewModel()).ToList() ?? [],
+            BudgetItems = model.BudgetItems.MapList(x => x.ToViewModel()),
             CloudID = model.CloudID,
-            Funds = model.Funds?.Select(x => x.ToViewModel()).ToList() ?? [],
-            Comments = model.Comments?.Select(x => x.ToViewModel()).ToList() ?? [],
-            Expenses = model.Expenses?.Select(x => x.ToViewModel()).ToList() ?? [],
-            Tags = model.Tags?.Select(x => x.ToViewModel()).ToList() ?? [],
-            Dreamers = model.Dreamers?.Select(x => x.ToViewModel()).ToList() ?? []
+            Funds = model.Funds.MapList(x => x.ToViewModel()),
+            Comments = model.Comments.MapList(x => x.ToViewModel()),
+            Expenses = model.Expenses.MapList(x => x.ToViewModel()),
+            Tags = model.Tags.MapList(x => x.ToViewModel()),
+            Dreamers = model.Dreamers.MapList(x => x.ToViewModel())
         };
     }
 
@@ -35,13 +36,13 @@ public static class DreamMapper
             Description = vm.Description,
             CreatedDate = vm.CreatedDate,
             Status = vm.Status,
-            BudgetItems = vm.BudgetItems?.Select(x => x.ToModel()).ToList() ?? [],
+            BudgetItems = vm.BudgetItems.MapList(x => x.ToModel()),
             CloudID = vm.CloudID,
-            Funds = vm.Funds?.Select(x => x.ToModel()).ToList() ?? [],
-            Comments = vm.Comments?.Select(x => x.ToModel()).ToList() ?? [],
-            Expenses = vm.Expenses?.Select(x => x.ToModel()).ToList() ?? [],
-            Tags = vm.Tags?.Select(x => x.ToModel()).ToList() ?? [],
-            Dreamers = vm.Dreamers?.Select(x => x.ToModel()).ToList() ?? []
+            Funds = vm.Funds.MapList(x => x.ToModel()),
+            Comments = vm.Comments.MapList(x => x.ToModel()),
+            Expenses = vm.Expenses.MapList(x => x.ToModel()),
+            Tags = vm.Tags.MapList(x => x.ToModel()),
+            Dreamers = vm.Dreamers.MapList(x => x.ToModel())
         };
     }
 }
