@@ -59,8 +59,9 @@ public class CloudController(
         var result = await adminCloudService.Update(viewModel);
         if (result == AdminCloudServiceStatus.NotFound)
             return NotFound();
-
-        return RedirectToAction(nameof(Index), "Home");
+            
+        TempData["SuccessMessage"] = "Cloud updated successfully.";
+        return RedirectToAction(nameof(Edit), new { id = viewModel.ID });
     }
 
     public async Task<IActionResult> Delete(int? id)
