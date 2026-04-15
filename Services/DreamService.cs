@@ -18,7 +18,8 @@ public class DreamService(
     ICloudNameResolver cloudNameService,
     ITagService tagService,
     UserManager<User> userManager,
-    IAuthorizationService authorizationService
+    IAuthorizationService authorizationService,
+    IFundingRoundService fundingRoundService
 ) : IDreamService
 {
     /// <summary>
@@ -163,11 +164,7 @@ public class DreamService(
         if (dream == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.DreamNotFound);
 
-        var now = DateTime.UtcNow;
-        var activeRound = await context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
-                                     fr.StartDate <= now && fr.EndDate >= now);
-
+        var activeRound = await fundingRoundService.GetActiveRound(cloudNameService.CloudID);
         if (activeRound == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.NoActiveFundingRound, "No active funding round.");
 
@@ -180,7 +177,7 @@ public class DreamService(
             return new FundDreamServiceResult(FundDreamServiceStatus.WalletNotFound, "User wallet not found.");
 
         var userFundsForThisDream = await context.Fund
-            .Where(f => f.DreamID == dreamId && f.UserID == user.Id)
+            .Where(f => f.DreamID == dreamId && f.UserID == userId)
             .ToListAsync();
 
         decimal userFundedInCurrentRound = userFundsForThisDream
@@ -222,10 +219,7 @@ public class DreamService(
         if (wallet.Balance < amount)
             return new FundDreamServiceResult(FundDreamServiceStatus.InsufficientFunds, "Insufficient funds.");
 
-        var now = DateTime.UtcNow;
-        var activeRound = await context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameService.CloudID &&
-                                     fr.StartDate <= now && fr.EndDate >= now);
+        var activeRound = await fundingRoundService.GetActiveRound(cloudNameService.CloudID);
         if (activeRound == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.NoActiveFundingRound, "No active funding round.");
 

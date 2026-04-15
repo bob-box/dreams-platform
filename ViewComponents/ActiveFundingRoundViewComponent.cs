@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.ViewModels;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.ViewComponents;
 
-public class ActiveFundingRoundViewComponent(ApplicationDbContext context, ICloudNameResolver cloudNameResolver) : ViewComponent
+public class ActiveFundingRoundViewComponent(
+    ICloudNameResolver cloudNameResolver,
+    IFundingRoundService fundingRoundService) : ViewComponent
 {
     public async Task<IViewComponentResult> InvokeAsync(int dreamId)
     {
@@ -15,11 +17,7 @@ public class ActiveFundingRoundViewComponent(ApplicationDbContext context, IClou
             return Content(string.Empty);
         }
 
-        var now = DateTime.UtcNow;
-        var activeRound = await context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.CloudID == cloudNameResolver.CloudID &&
-                                        fr.StartDate <= now && fr.EndDate >= now);
-
+        var activeRound = await fundingRoundService.GetActiveRound(cloudNameResolver.CloudID);
         if (activeRound == null)
         {
             return Content(string.Empty);

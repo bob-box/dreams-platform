@@ -177,6 +177,15 @@ public class FundingRoundService(
         return new FundingRoundServiceResult(FundingRoundServiceStatus.Success);
     }
 
+    public async Task<FundingRoundViewModel?> GetActiveRound(int cloudId)
+    {
+        var now = DateTime.Now;
+        var activeRound = await context.FundingRound
+            .FirstOrDefaultAsync(fr => fr.CloudID == cloudId &&
+                                     fr.StartDate <= now && fr.EndDate >= now);
+        return activeRound?.ToViewModel();
+    }
+
     private async Task<FundingRoundServiceResult> LoadFundingRound(int id, FundingRoundLoadMode mode)
     {
         var fundingRound = await context.FundingRound
