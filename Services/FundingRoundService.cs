@@ -13,7 +13,9 @@ public class FundingRoundService(
     ApplicationDbContext context,
     IUserService userService,
     ICloudNameResolver cloudNameResolver,
-    FundingRoundSchedulerService schedulerService) : IFundingRoundService
+    FundingRoundSchedulerService schedulerService,
+    IAppTime appTime
+    ) : IFundingRoundService
 {
     private enum FundingRoundLoadMode
     {
@@ -38,8 +40,8 @@ public class FundingRoundService(
         return new FundingRoundViewModel
         {
             CloudID = cloudNameResolver.CloudID,
-            StartDate = DateTime.UtcNow.Date,
-            EndDate = DateTime.UtcNow.Date.AddDays(3).EndOfDay(),
+            StartDate = appTime.Now.Date.AddDays(1).StartOfDay(),
+            EndDate = appTime.Now.Date.AddDays(3).EndOfDay(),
             UsersInCloudCount = userCount
         };
     }
@@ -90,7 +92,7 @@ public class FundingRoundService(
         if (roundToUpdate == null)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
 
-        if (roundToUpdate.HasPassed())
+        if (HasPassed(roundToUpdate))
         {
             return new FundingRoundServiceResult(
                 FundingRoundServiceStatus.Error,
@@ -104,7 +106,7 @@ public class FundingRoundService(
             .Where(fr => fr.CloudID == cloudNameResolver.CloudID && fr.ID != viewModel.ID)
             .ToListAsync();
 
-        if (roundToUpdate.IsActive())
+        if (IsActive(roundToUpdate))
         {
             var errors = ValidateActiveRoundUpdate(viewModel, roundToUpdate, existingRounds);
             if (errors.Count > 0)
@@ -163,7 +165,7 @@ public class FundingRoundService(
         if (fundingRound == null)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
 
-        if (fundingRound.IsActiveOrPassed())
+        if (IsActiveOrPassed(fundingRound))
         {
             return new FundingRoundServiceResult(
                 FundingRoundServiceStatus.Error,
@@ -194,14 +196,14 @@ public class FundingRoundService(
         if (fundingRound == null)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
 
-        if (mode == FundingRoundLoadMode.Edit && fundingRound.HasPassed())
+        if (mode == FundingRoundLoadMode.Edit && HasPassed(fundingRound))
         {
             return new FundingRoundServiceResult(
                 FundingRoundServiceStatus.Error,
                 Message: "Cannot edit a funding round that has already passed.");
         }
 
-        if (mode == FundingRoundLoadMode.Delete && fundingRound.IsActiveOrPassed())
+        if (mode == FundingRoundLoadMode.Delete && IsActiveOrPassed(fundingRound))
         {
             return new FundingRoundServiceResult(
                 FundingRoundServiceStatus.Error,
@@ -219,9 +221,8 @@ public class FundingRoundService(
         List<FundingRound> existingRounds)
     {
         var errors = new Dictionary<string, List<string>>();
-        var now = DateTime.UtcNow;
 
-        if (viewModel.EndDate <= now)
+        if (viewModel.EndDate <= appTime.Now)
             AddError(errors, "EndDate", "End date must be in the future.");
         else if (existingRounds.Any(fr => fr.StartDate <= viewModel.EndDate && fr.EndDate >= roundToUpdate.StartDate))
             AddError(errors, "", "Funding round dates cannot overlap with existing rounds.");
@@ -229,20 +230,12 @@ public class FundingRoundService(
         return errors;
     }
 
-    private static Dictionary<string, List<string>> ValidateDates(
+    private Dictionary<string, List<string>> ValidateDates(
         FundingRoundViewModel viewModel,
         List<FundingRound> existingRounds)
     {
         var errors = new Dictionary<string, List<string>>();
-        var now = DateTime.UtcNow;
-        var currentUtcMinute = new DateTime(
-            now.Year,
-            now.Month,
-            now.Day,
-            now.Hour,
-            now.Minute,
-            0,
-            DateTimeKind.Utc);
+        var now = appTime.Now;
 
         if (existingRounds.Any(fr => viewModel.StartDate <= fr.EndDate && viewModel.EndDate >= fr.StartDate))
             AddError(errors, "", "Funding round dates cannot overlap with existing rounds.");
@@ -253,7 +246,7 @@ public class FundingRoundService(
         if (viewModel.EndDate <= now)
             AddError(errors, "EndDate", "End date must be in the future.");
 
-        if (viewModel.StartDate < currentUtcMinute)
+        if (viewModel.StartDate < now)
             AddError(errors, "StartDate", "Start date cannot be in the past.");
 
         return errors;
@@ -269,4 +262,9 @@ public class FundingRoundService(
 
         list.Add(message);
     }
+
+    // These 3 methods below exist both on the model and the viewmodel. 
+    private bool IsActive(FundingRound round) => round.StartDate <= appTime.UtcNow && round.EndDate >= appTime.UtcNow;
+    private bool HasPassed(FundingRound round) => round.EndDate < appTime.UtcNow;
+    private bool IsActiveOrPassed(FundingRound round) => IsActive(round) || HasPassed(round);
 }

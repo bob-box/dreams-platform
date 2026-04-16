@@ -14,7 +14,7 @@ public static class BudgetItemMapper
             Name = model.Name,
             Type = model.Type,
             DreamID = model.DreamID,
-            CreatedDate = model.CreatedDate,
+            CreatedAt = model.CreatedAt,
             MinAmount = model.MinAmount,
             MaxAmount = model.MaxAmount,
         };
@@ -29,7 +29,7 @@ public static class BudgetItemMapper
             Name = vm.Name,
             Type = vm.Type,
             DreamID = vm.DreamID,
-            CreatedDate = vm.CreatedDate,
+            CreatedAt = vm.CreatedAt,
             MinAmount = vm.MinAmount ?? 0,
             MaxAmount = vm.MaxAmount,
         };

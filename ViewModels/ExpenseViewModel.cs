@@ -12,5 +12,5 @@ public class ExpenseViewModel
     public decimal Amount { get; set; }
     public string Description { get; set; }
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
-    public DateTime CreatedDate { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

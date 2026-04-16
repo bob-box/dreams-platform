@@ -1,11 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Models;
 
-public class Fund
+public class Fund : IAutoPopulateCreatedAtOnAdd
 {
     public int ID { get; set; }
+        
+    [DataType(DataType.DateTime)]
+    public DateTime CreatedAt { get; set; }
+
     public int DreamID { get; set; }
     public string UserID { get; set; } = null!;
     public int? FundingRoundID { get; set; }
@@ -15,10 +20,7 @@ public class Fund
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Amount { get; set; }
 
-    [DataType(DataType.DateTime)]
-    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-
-    public User User { get; set; }
-    public Dream Dream { get; set; }
+    public User User { get; set; } = null!;
+    public Dream Dream { get; set; } = null!;
     public FundingRound? FundingRound { get; set; }
 }

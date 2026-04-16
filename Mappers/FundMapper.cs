@@ -15,7 +15,7 @@ public static class FundMapper
             UserID = model.UserID,
             FundingRoundID = model.FundingRoundID,
             Amount = model.Amount,
-            CreatedDate = model.CreatedDate,
+            CreatedAt = model.CreatedAt,
             User = model.User?.ToViewModel()
         };
     }
@@ -30,7 +30,7 @@ public static class FundMapper
             UserID = vm.UserID,
             FundingRoundID = vm.FundingRoundID,
             Amount = vm.Amount,
-            CreatedDate = vm.CreatedDate
+            CreatedAt = vm.CreatedAt
         };
     }
 }

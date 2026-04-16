@@ -1,14 +1,19 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Borderland.Dreams.Models;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Data;
 
 public class ApplicationDbContext : IdentityDbContext<User>
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    private readonly IAppTime _appTime;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IAppTime appTime)
         : base(options)
     {
+        _appTime = appTime;
+        ValidateCreatedAtInterfaces();
     }
 
     public DbSet<Cloud> Cloud { get; set; } = default!;
@@ -22,7 +27,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
+
         modelBuilder.Entity<User>()
             .Ignore(u => u.PhoneNumber)
             .Ignore(u => u.PhoneNumberConfirmed);
@@ -50,5 +55,47 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .IsUnique();
 
         base.OnModelCreating(modelBuilder);
+    }
+
+    private void ValidateCreatedAtInterfaces()
+    {
+        var entityTypes = Model.GetEntityTypes();
+
+        var violations = entityTypes
+            .Where(e => !e.ClrType.IsAssignableTo(typeof(IAutoPopulateCreatedAtOnAdd))
+                     && e.GetProperties().Any(p => p.Name == nameof(IAutoPopulateCreatedAtOnAdd.CreatedAt)));
+
+        if (violations.Any())
+        {
+            var names = string.Join(", ", violations.Select(e => e.ClrType.Name));
+            throw new InvalidOperationException(
+                $"The following entities have a CreatedAt property but are missing IAutoPopulateCreatedAtOnAdd: {names}");
+        }
+    }
+    public override int SaveChanges()
+    {
+        ApplyCreatedAt();
+        return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyCreatedAt();
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Sets CreatedAt to current time for all newly added entities that implement IAutoPopulateCreatedAtOnAdd.
+    /// </summary>
+    private void ApplyCreatedAt()
+    {
+        var entries = ChangeTracker
+            .Entries<IAutoPopulateCreatedAtOnAdd>()
+            .Where(e => e.State == EntityState.Added);
+
+        foreach (var entry in entries)
+        {
+            entry.Entity.CreatedAt = _appTime.UtcNow;
+        }
     }
 }

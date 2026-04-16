@@ -61,20 +61,20 @@
                 @item.TotalFundsAllocated.ToString("C")
             </td>
             <td>
-                @if (item.StartDate > DateTime.UtcNow)
+                @if (item.HasPassed(appTime))
                 {
-                    @* Future funding round *@
-                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a><text> | </text><a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                    @* Past funding round *@
+                    <span class="text-muted">Passed</span>
                 }
-                else if (item.EndDate >= DateTime.UtcNow)
+                else if (item.IsActive(appTime))
                 {
                     @* Active funding round *@
                     <a asp-action="Edit" asp-route-id="@item.ID">Edit</a><text> | </text><span class="text-muted">Active</span>
                 }
                 else
                 {
-                    @* Past funding round *@
-                    <span class="text-muted">Passed</span>
+                    @* Future funding round *@
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a><text> | </text><a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
                 }
             </td>
         </tr>

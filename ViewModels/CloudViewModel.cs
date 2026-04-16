@@ -8,7 +8,7 @@ public class CloudViewModel
     public required string Name { get; set; }
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
-    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]
     public decimal TotalFundsAvailable { get; set; }

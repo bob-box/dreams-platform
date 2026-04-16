@@ -13,7 +13,7 @@ public static class CloudMapper
         {
             ID = model.ID,
             Name = model.Name,
-            CreatedDate = model.CreatedDate,
+            CreatedAt = model.CreatedAt,
             TotalFundsAvailable = model.TotalFundsAvailable,
             TotalFundsSpent = model.TotalFundsSpent,
             Dreams = model.Dreams.MapList(x => x.ToViewModel()),
@@ -28,7 +28,7 @@ public static class CloudMapper
         {
             ID = vm.ID,
             Name = vm.Name,
-            CreatedDate = vm.CreatedDate,
+            CreatedAt = vm.CreatedAt,
             TotalFundsAvailable = vm.TotalFundsAvailable,
             TotalFundsSpent = vm.TotalFundsSpent,
             Dreams = vm.Dreams.MapList(x => x.ToModel()),

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.ViewModels;
 
@@ -11,6 +12,7 @@ public class FundingRoundViewModel
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
     public DateTime StartDate { get; set; }
+
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
     public DateTime EndDate { get; set; }
@@ -25,8 +27,7 @@ public class FundingRoundViewModel
 
     public int UsersInCloudCount { get; set; }
 
-    // These 3 methods below exist both on the model and the viewmodel.
-    public bool IsActiveOrPassed() => IsActive() || HasPassed();
-    public bool IsActive() => StartDate <= DateTime.UtcNow && EndDate >= DateTime.UtcNow;
-    public bool HasPassed() => EndDate < DateTime.UtcNow;
+    public bool IsActiveOrPassed(IAppTime appTime) => IsActive(appTime) || HasPassed(appTime);
+    public bool IsActive(IAppTime appTime) => StartDate <= appTime.Now && EndDate >= appTime.Now;
+    public bool HasPassed(IAppTime appTime) => EndDate < appTime.Now;
 }

@@ -27,7 +27,7 @@ public static class ExpenseMapper
             DreamID = vm.DreamID,
             Amount = vm.Amount,
             Description = vm.Description,
-            CreatedDate = vm.CreatedDate
+            CreatedAt = vm.CreatedAt
         };
     }
 }

@@ -1,11 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Models;
 
-public class FundingRound
+public class FundingRound : IAutoPopulateCreatedAtOnAdd
 {
     public int ID { get; set; }
+        
+    [DataType(DataType.DateTime)]
+    public DateTime CreatedAt { get; set; }
+
     public string Title { get; set; } = string.Empty;
     public int CloudID { get; set; }
     public DateTime StartDate { get; set; }
@@ -23,10 +28,5 @@ public class FundingRound
     public string? StartJobId { get; set; } // Hangfire job ID for allocation
     public string? EndJobId { get; set; } // Hangfire job ID for end processing
 
-    public Cloud Cloud { get; set; }
-
-    // These 3 methods below exist both on the model and the viewmodel.
-    public bool IsActiveOrPassed() => IsActive() || HasPassed();
-    public bool IsActive() => StartDate <= DateTime.UtcNow && EndDate >= DateTime.UtcNow;
-    public bool HasPassed() => EndDate < DateTime.UtcNow;
+    public Cloud Cloud { get; set; } = null!;
 }

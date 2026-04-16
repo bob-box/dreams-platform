@@ -1,11 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Models;
 
-public class Wallet
+public class Wallet : IAutoPopulateCreatedAtOnAdd
 {
     public int ID { get; set; }
+
+    [DataType(DataType.DateTime)]
+    public DateTime CreatedAt { get; set; }
+
     public string UserID { get; set; } = null!;
     public int CloudID { get; set; }
     public Cloud Cloud { get; set; } = null!;

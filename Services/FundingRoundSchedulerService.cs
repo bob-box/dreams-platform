@@ -1,11 +1,16 @@
 using Borderland.Dreams.Data;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace Borderland.Dreams.Services;
 
-public class FundingRoundSchedulerService(IServiceProvider serviceProvider, ILogger<FundingRoundSchedulerService> logger)
+public class FundingRoundSchedulerService(
+    ILogger<FundingRoundSchedulerService> logger,
+    IServiceProvider serviceProvider, 
+    IAppTime appTime
+    )
 {
     public void ScheduleFundingRoundJobs(FundingRound fundingRound)
     {
@@ -154,7 +159,7 @@ public class FundingRoundSchedulerService(IServiceProvider serviceProvider, ILog
 
         cloud.TotalFundsSpent += totalSpent;
         cloud.TotalFundsRemaining = cloud.TotalFundsAvailable - cloud.TotalFundsSpent;
-        fundingRound.ProcessedDate = DateTime.UtcNow;
+        fundingRound.ProcessedDate = appTime.UtcNow;
 
         await context.SaveChangesAsync();
         // Summary log at the end is useful for financial auditing

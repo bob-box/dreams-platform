@@ -6,7 +6,7 @@
 
 <h1>Edit Funding Round</h1>
 
-@if (Model.IsActive())
+@if (Model.IsActive(appTime))
 {
     <div class="alert alert-info">This funding round is currently active. Only the end date and max percentage per dream can be changed.</div>
 }
@@ -21,7 +21,7 @@
             <input type="hidden" asp-for="CloudID" />
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
-                @if (Model.IsActive())
+                @if (Model.IsActive(appTime))
                 {
                     <input type="hidden" asp-for="Title" />
                     <input asp-for="Title" class="form-control" disabled />
@@ -34,10 +34,10 @@
             </div>
             <div class="form-group">
                 <label asp-for="StartDate" class="control-label"></label>
-                @if (Model.IsActive())
+                @if (Model.IsActive(appTime))
                 {
                     <input type="hidden" asp-for="StartDate" />
-                    <input asp-for="StartDate" class="form-control" type="datetime-local" disabled />
+                    <input asp-for="StartDate" class="form-control" type="datetime-local" readonly/>
                 }
                 else
                 {
@@ -58,7 +58,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="AllocationPerUser" class="control-label"></label>
-                @if (Model.IsActive())
+                @if (Model.IsActive(appTime))
                 {
                     <input type="hidden" asp-for="AllocationPerUser" />
                     <input asp-for="AllocationPerUser" class="form-control" data-val="false" disabled />

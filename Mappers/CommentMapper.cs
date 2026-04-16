@@ -14,7 +14,7 @@ public static class CommentMapper
             DreamID = model.DreamID,
             UserID = model.UserID,
             Text = model.Text,
-            CreatedDate = model.CreatedDate
+            CreatedAt = model.CreatedAt
         };
     }
 
@@ -27,7 +27,7 @@ public static class CommentMapper
             DreamID = vm.DreamID,
             UserID = vm.UserID,
             Text = vm.Text,
-            CreatedDate = vm.CreatedDate
+            CreatedAt = vm.CreatedAt
         };
     }
 }

@@ -11,6 +11,8 @@ using Borderland.Dreams.Middleware;
 using Hangfire;
 using Hangfire.Storage.SQLite;
 using Borderland.Dreams.FilterAttributes;
+using Borderland.Dreams.Utils;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +41,19 @@ builder.Services.AddDefaultIdentity<User>(options =>
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Bind time config
+builder.Services.Configure<TimeOptions>(builder.Configuration.GetSection("Time"));
+// Register TimeProvider
+builder.Services.AddSingleton(TimeProvider.System);
+// Register AppTime
+builder.Services.AddSingleton<IAppTime>(sp =>
+{
+    var timeProvider = sp.GetRequiredService<TimeProvider>();
+    var options = sp.GetRequiredService<IOptions<TimeOptions>>().Value;
+
+    return new AppTime(timeProvider, options);
+});
 
 // Application services.
 builder.Services.AddScoped<IDreamService, DreamService>();
@@ -89,6 +104,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Migrate to latest version and seed database on startup in development environment.
     app.UseMigrationsEndPoint();
     using (var scope = app.Services.CreateScope())
     {

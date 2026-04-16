@@ -1,17 +1,20 @@
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Data;
 using Borderland.Dreams.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Borderland.Dreams.Services;
+using Borderland.Dreams.Utils;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Data;
 
 public static class DataSeeder
 {
+    private static AppTime _appTime;
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
+        _appTime = serviceProvider.GetRequiredService<IAppTime>() as AppTime ?? throw new Exception("Failed to resolve AppTime from service provider.");
         await AddRolesAsync(serviceProvider);
         string adminId = await AddAdminUserAsync(serviceProvider);
         string userId = await AddUserAsync(serviceProvider);
@@ -189,7 +192,7 @@ public static class DataSeeder
                 CloudID = cloudId,
                 Name = dreamName,
                 Description = "This is a test dream used for development and testing purposes.",
-                CreatedDate = DateTime.UtcNow,
+                CreatedAt = _appTime.UtcNow,
                 Tags = [tag],
                 Dreamers =
                 [
@@ -223,8 +226,8 @@ public static class DataSeeder
                 {
                     CloudID = cloud.ID,
                     Title = "Test Round",
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(30),
+                    StartDate = _appTime.UtcNow.AddDays(-1),
+                    EndDate = _appTime.UtcNow.AddDays(30),
                     MaxPercentagePerDream = 10m, // 10% of per-user allocation
                     AllocationPerUser = 100m // each user receives 100 units
                 };

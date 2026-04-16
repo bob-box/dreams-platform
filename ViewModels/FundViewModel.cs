@@ -13,7 +13,7 @@ public class FundViewModel
     [DataType(DataType.Currency)]
     public decimal Amount { get; set; }
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
-    public DateTime CreatedDate { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public UserViewModel User { get; set; }
 }
