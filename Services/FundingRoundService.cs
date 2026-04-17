@@ -215,7 +215,7 @@ public class FundingRoundService(
             fundingRound.ToViewModel());
     }
 
-    private static Dictionary<string, List<string>> ValidateActiveRoundUpdate(
+    private Dictionary<string, List<string>> ValidateActiveRoundUpdate(
         FundingRoundViewModel viewModel,
         FundingRound roundToUpdate,
         List<FundingRound> existingRounds)
