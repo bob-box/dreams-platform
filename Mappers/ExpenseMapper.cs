@@ -14,7 +14,7 @@ public static class ExpenseMapper
             DreamID = model.DreamID,
             Amount = model.Amount,
             Description = model.Description,
-            CreatedDate = model.CreatedDate
+            CreatedAt = model.CreatedAt
         };
     }
 
