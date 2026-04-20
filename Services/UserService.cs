@@ -12,13 +12,16 @@ using Microsoft.AspNetCore.Identity;
 namespace Borderland.Dreams.Services;
 
 public class UserService(
+    ILogger<UserService> logger,
     ApplicationDbContext _context,
     ICloudNameResolver cloudNameResolver,
-    UserManager<User> userManager) : IUserService
+    UserManager<User> userManager,
+    MapperFacade mapper
+    ) : IUserService
 {
-    private static readonly string[] ManageableRoles = [Constants.MemberRole, Constants.AdminRole];
+    private static readonly string[] ManageableRoles = [Constants.AdminRole, Constants.MemberRole];
 
-    public async Task<IEnumerable<ManageUsersViewModel>> GetAll(string filter = "")
+    public async Task<IEnumerable<UserViewModel>> GetAll(string filter = "")
     {
         int cloudId = cloudNameResolver.CloudID;
 
@@ -33,14 +36,39 @@ public class UserService(
             .ToList();
         }
 
-        var list = new List<ManageUsersViewModel>(usersInCloud.Count);
-        foreach (var user in usersInCloud)
-        {
-            var roles = await userManager.GetRolesAsync(user);
-            list.Add(user.ToManageUsersViewModel(roles.FirstOrDefault() ?? Constants.MemberRole, cloudId));
-        }
+        var roleLookup = await GetRoles(usersInCloud);
+
+        var list = usersInCloud
+            .Select(user =>
+            {
+                var vm = mapper.ToViewModel(user);
+                vm.Role = roleLookup.TryGetValue(user.Id, out var role) ? role : Constants.MemberRole;
+                return vm;
+            })
+            .ToList();
 
         return list;
+    }
+
+    private async Task<Dictionary<string, string>> GetRoles(IList<User> usersInCloud)
+    {
+        var roleLookup = new Dictionary<string, string>(); // userId → role
+        var usersInCloudIds = usersInCloud.Select(u => u.Id).ToHashSet();
+
+        foreach (var role in ManageableRoles)
+        {
+            var usersInRole = (await userManager.GetUsersInRoleAsync(role)).Where(u => usersInCloudIds.Contains(u.Id));
+            foreach (var user in usersInRole)
+            {
+                if (!roleLookup.TryAdd(user.Id, role))
+                {
+                    // User is in multiple roles — log a warning, this shouldn't happen
+                    logger.LogWarning("User {UserId} is assigned multiple roles, that's not expected", user.Id);
+                }
+            }
+        }
+
+        return roleLookup;
     }
 
     public async Task<int> Count()

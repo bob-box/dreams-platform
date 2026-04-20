@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class DreamGuidelinesMapper
+public class DreamGuidelinesMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static DreamGuidelinesViewModel ToViewModel(this DreamGuidelines model)
+    public DreamGuidelinesViewModel ToViewModel(DreamGuidelines model)
     {
         if (model == null) return null!;
         return new DreamGuidelinesViewModel
@@ -16,7 +17,7 @@ public static class DreamGuidelinesMapper
         };
     }
 
-    public static DreamGuidelines ToModel(this DreamGuidelinesViewModel vm)
+    public DreamGuidelines ToModel(DreamGuidelinesViewModel vm)
     {
         if (vm == null) return null!;
         return new DreamGuidelines

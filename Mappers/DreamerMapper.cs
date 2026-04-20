@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class DreamerMapper
+public class DreamerMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static DreamerViewModel ToViewModel(this Dreamer model)
+    public DreamerViewModel ToViewModel(Dreamer model)
     {
         if (model == null) return null!;
         return new DreamerViewModel
@@ -18,7 +19,7 @@ public static class DreamerMapper
         };
     }
 
-    public static Dreamer ToModel(this DreamerViewModel vm)
+    public Dreamer ToModel(DreamerViewModel vm)
     {
         if (vm == null) return null!;
         return new Dreamer

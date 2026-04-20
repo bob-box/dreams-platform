@@ -9,11 +9,19 @@ public enum JoinCloudStatus
     UserNotFound,
     AlreadyJoined
 }
+public enum CloudServiceStatus
+{
+    Success,
+    NotFound,
+}
 
 public record JoinCloudResult(JoinCloudStatus Status);
 
 public interface ICloudService
 {
+    Task Create(CloudViewModel viewModel);
+    Task<CloudServiceStatus> Update(CloudViewModel viewModel);
+    Task<CloudServiceStatus> Delete(int id);
     Task<CloudViewModel?> GetById(int id);
     Task<List<CloudViewModel>> GetAll();
     Task<JoinCloudResult> Join(int cloudId, string userId);

@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class CommentMapper
+public class CommentMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static CommentViewModel ToViewModel(this Comment model)
+    public CommentViewModel ToViewModel(Comment model)
     {
         if (model == null) return null!;
         return new CommentViewModel
@@ -18,7 +19,7 @@ public static class CommentMapper
         };
     }
 
-    public static Comment ToModel(this CommentViewModel vm)
+    public Comment ToModel(CommentViewModel vm)
     {
         if (vm == null) return null!;
         return new Comment
@@ -27,7 +28,6 @@ public static class CommentMapper
             DreamID = vm.DreamID,
             UserID = vm.UserID,
             Text = vm.Text,
-            CreatedAt = vm.CreatedAt
         };
     }
 }

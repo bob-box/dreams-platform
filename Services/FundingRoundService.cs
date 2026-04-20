@@ -14,7 +14,8 @@ public class FundingRoundService(
     IUserService userService,
     ICloudNameResolver cloudNameResolver,
     FundingRoundSchedulerService schedulerService,
-    IAppTime appTime
+    IAppTime appTime,
+    MapperFacade mapper
     ) : IFundingRoundService
 {
     private enum FundingRoundLoadMode
@@ -30,7 +31,7 @@ public class FundingRoundService(
             .OrderBy(fr => fr.StartDate)
             .ToListAsync();
 
-        return fundingRounds.Select(fr => fr.ToViewModel()).ToList();
+        return mapper.ToViewModels(fundingRounds);
     }
 
     public async Task<FundingRoundViewModel> BuildCreateViewModel()
@@ -66,7 +67,7 @@ public class FundingRoundService(
         if (errors.Count > 0)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
 
-        var fundingRound = viewModel.ToModel();
+        var fundingRound = mapper.ToModel(viewModel);
         context.Add(fundingRound);
         await context.SaveChangesAsync();
 
@@ -185,7 +186,7 @@ public class FundingRoundService(
         var activeRound = await context.FundingRound
             .FirstOrDefaultAsync(fr => fr.CloudID == cloudId &&
                                      fr.StartDate <= now && fr.EndDate >= now);
-        return activeRound?.ToViewModel();
+        return mapper.ToViewModel(activeRound);
     }
 
     private async Task<FundingRoundServiceResult> LoadFundingRound(int id, FundingRoundLoadMode mode)
@@ -212,7 +213,7 @@ public class FundingRoundService(
 
         return new FundingRoundServiceResult(
             FundingRoundServiceStatus.Success,
-            fundingRound.ToViewModel());
+            mapper.ToViewModel(fundingRound));
     }
 
     private Dictionary<string, List<string>> ValidateActiveRoundUpdate(

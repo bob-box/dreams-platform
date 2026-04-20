@@ -1,12 +1,13 @@
 using Borderland.Dreams.Extensions;
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class DreamMapper
+public class DreamMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static DreamViewModel ToViewModel(this Dream model)
+    public DreamViewModel ToViewModel(Dream model)
     {
         if (model == null) return null!;
         return new DreamViewModel
@@ -14,19 +15,19 @@ public static class DreamMapper
             ID = model.ID,
             Name = model.Name,
             Description = model.Description,
-            CreatedAt = model.CreatedAt,
+            CreatedAt = appTime.ToLocal(model.CreatedAt),
             Status = model.Status,
-            BudgetItems = model.BudgetItems.MapList(x => x.ToViewModel()),
+            BudgetItems = mapper.ToViewModels(model.BudgetItems),
             CloudID = model.CloudID,
-            Funds = model.Funds.MapList(x => x.ToViewModel()),
-            Comments = model.Comments.MapList(x => x.ToViewModel()),
-            Expenses = model.Expenses.MapList(x => x.ToViewModel()),
-            Tags = model.Tags.MapList(x => x.ToViewModel()),
-            Dreamers = model.Dreamers.MapList(x => x.ToViewModel())
+            Funds = mapper.ToViewModels(model.Funds),
+            Comments = mapper.ToViewModels(model.Comments),
+            Expenses = mapper.ToViewModels(model.Expenses),
+            Tags = mapper.ToViewModels(model.Tags),
+            Dreamers = mapper.ToViewModels(model.Dreamers)
         };
     }
 
-    public static Dream ToModel(this DreamViewModel vm)
+    public Dream ToModel(DreamViewModel vm)
     {
         if (vm == null) return null!;
         return new Dream
@@ -34,15 +35,14 @@ public static class DreamMapper
             ID = vm.ID,
             Name = vm.Name,
             Description = vm.Description,
-            CreatedAt = vm.CreatedAt,
             Status = vm.Status,
-            BudgetItems = vm.BudgetItems.MapList(x => x.ToModel()),
+            BudgetItems = mapper.ToModels(vm.BudgetItems),
             CloudID = vm.CloudID,
-            Funds = vm.Funds.MapList(x => x.ToModel()),
-            Comments = vm.Comments.MapList(x => x.ToModel()),
-            Expenses = vm.Expenses.MapList(x => x.ToModel()),
-            Tags = vm.Tags.MapList(x => x.ToModel()),
-            Dreamers = vm.Dreamers.MapList(x => x.ToModel())
+            Funds = mapper.ToModels(vm.Funds),
+            Comments = mapper.ToModels(vm.Comments),
+            Expenses = mapper.ToModels(vm.Expenses),
+            Tags = mapper.ToModels(vm.Tags),
+            Dreamers = mapper.ToModels(vm.Dreamers)
         };
     }
 }

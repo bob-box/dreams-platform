@@ -12,7 +12,8 @@ namespace Borderland.Dreams.Services;
 public class TagService(
     ApplicationDbContext context,
     ICloudNameResolver cloudNameResolver,
-    IMemoryCache memoryCache) : ITagService
+    IMemoryCache memoryCache,
+    MapperFacade mapper) : ITagService
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
     private string TagsCacheKey => $"tags:cloud:{cloudNameResolver.CloudID}";
@@ -25,7 +26,7 @@ public class TagService(
         var tags = await context.Tag
             .Where(t => t.CloudID == cloudNameResolver.CloudID)
             .OrderBy(t => t.Title)
-            .Select(t => t.ToViewModel())
+            .Select(t => mapper.ToViewModel(t))
             .ToListAsync();
 
         memoryCache.Set(TagsCacheKey, tags, CacheDuration);
@@ -35,7 +36,7 @@ public class TagService(
     public async Task<TagViewModel?> GetById(int id)
     {
         var tag = await GetTagInCloud(id);
-        return tag?.ToViewModel();
+        return mapper.ToViewModel(tag);
     }
 
     public async Task Create(TagViewModel viewModel)

@@ -9,7 +9,7 @@ public interface IUserService
     /// </summary>
     /// <param name="filter">An optional search term to filter users by name or email.</param>
     /// <returns>A list of users in the current cloud that match the filter criteria.</returns>
-    Task<IEnumerable<ManageUsersViewModel>> GetAll(string filter = "");
+    Task<IEnumerable<UserViewModel>> GetAll(string filter = "");
 
     /// <summary> Gets the count of users in the current cloud.
     /// </summary> 

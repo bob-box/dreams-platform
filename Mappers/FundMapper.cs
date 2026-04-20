@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class FundMapper
+public class FundMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static FundViewModel ToViewModel(this Fund model)
+    public FundViewModel ToViewModel(Fund model)
     {
         if (model == null) return null!;
         return new FundViewModel
@@ -16,11 +17,11 @@ public static class FundMapper
             FundingRoundID = model.FundingRoundID,
             Amount = model.Amount,
             CreatedAt = model.CreatedAt,
-            User = model.User?.ToViewModel()
+            User = mapper.ToViewModel(model.User)
         };
     }
 
-    public static Fund ToModel(this FundViewModel vm)
+    public Fund ToModel(FundViewModel vm)
     {
         if (vm == null) return null!;
         return new Fund
@@ -30,7 +31,6 @@ public static class FundMapper
             UserID = vm.UserID,
             FundingRoundID = vm.FundingRoundID,
             Amount = vm.Amount,
-            CreatedAt = vm.CreatedAt
         };
     }
 }

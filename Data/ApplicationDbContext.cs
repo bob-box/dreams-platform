@@ -97,5 +97,20 @@ public class ApplicationDbContext : IdentityDbContext<User>
         {
             entry.Entity.CreatedAt = _appTime.UtcNow;
         }
+
+        // Prevent modification of CreatedAt on existing entities
+        var modifiedEntries = ChangeTracker
+            .Entries<IAutoPopulateCreatedAtOnAdd>()
+            .Where(e => e.State == EntityState.Modified);
+
+        foreach (var entry in modifiedEntries)
+        {
+            var property = entry.Property(e => e.CreatedAt);
+            if (property.IsModified)
+            {
+                property.CurrentValue = property.OriginalValue;
+                property.IsModified = false;
+            }
+        }
     }
 }

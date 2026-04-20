@@ -1,6 +1,7 @@
 @using Borderland.Dreams.Authorization
 @using Borderland.Dreams.Extensions
-@model IEnumerable<Borderland.Dreams.ViewModels.ManageUsersViewModel>
+
+@model IEnumerable<Borderland.Dreams.ViewModels.UserViewModel>
 
 @{
     var currentUserId = ViewData["CurrentUserId"] as string;
@@ -13,29 +14,29 @@
         <td>@user.Name</td>
         <td>@user.Email</td>
         <td>
-            @if (user.UserId == currentUserId)
+            @if (user.Id == currentUserId)
             {
                 <span>@user.Role</span>
-                <div class="small text-muted">Current user</div>
+                <div class="small text-muted">This is you</div>
             }
             else
             {
                 <form id="update-role-form" asp-area="Admin" asp-controller="Users" asp-action="UpdateRole" method="post" class="d-flex align-items-center gap-2">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="userId" value="@user.UserId" />
+                    <input type="hidden" name="userId" value="@user.Id" />
                     <select name="role" class="form-select form-select-sm" asp-items="SelectListHelper.GetUserRoleOptions(user.Role)"></select>
                     <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
                 </form>
             }
         </td>
         <td>
-            @(user.Wallet != null ? user.Wallet.Balance.ToString("F2") : "no wallet for this cloud")
+            @(user.Wallets?.SingleOrDefault(x => x.CloudID == cloudNameResolver.CloudID)?.Balance.ToString("F2") ?? "no wallet for this cloud")
         </td>
         <td class="text-end">
             <button class="btn btn-outline-primary update-single-wallet" data-bs-toggle="modal" data-bs-target="#update-wallet-modal"
-                data-user-id="@user.UserId"
+                data-user-id="@user.Id"
                 data-user-name="@user.Name"
-                data-user-balance="@user.Wallet?.Balance"
+                data-user-balance="@user.Wallets?.SingleOrDefault(x => x.CloudID == cloudNameResolver.CloudID)?.Balance"
             >Update wallet</button>
         </td>
     </tr>

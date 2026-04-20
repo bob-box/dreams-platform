@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class FundingRoundMapper
+public class FundingRoundMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static FundingRoundViewModel ToViewModel(this FundingRound model)
+    public FundingRoundViewModel ToViewModel(FundingRound model)
     {
         if (model == null) return null!;
         return new FundingRoundViewModel
@@ -21,7 +22,7 @@ public static class FundingRoundMapper
         };
     }
 
-    public static FundingRound ToModel(this FundingRoundViewModel vm)
+    public FundingRound ToModel(FundingRoundViewModel vm)
     {
         if (vm == null) return null!;
         return new FundingRound

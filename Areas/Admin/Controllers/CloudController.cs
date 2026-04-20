@@ -9,7 +9,6 @@ namespace Borderland.Dreams.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
 public class CloudController(
-    IAdminCloudService adminCloudService,
     ICloudService cloudService)
     : Controller
 {
@@ -24,7 +23,7 @@ public class CloudController(
     {
         if (ModelState.IsValid)
         {
-            await adminCloudService.Create(viewModel);
+            await cloudService.Create(viewModel);
             return RedirectToAction(nameof(Index), "Home");
         }
         return View(viewModel);
@@ -56,8 +55,8 @@ public class CloudController(
         if (!ModelState.IsValid)
             return View(viewModel);
 
-        var result = await adminCloudService.Update(viewModel);
-        if (result == AdminCloudServiceStatus.NotFound)
+        var result = await cloudService.Update(viewModel);
+        if (result == CloudServiceStatus.NotFound)
             return NotFound();
             
         TempData["SuccessMessage"] = "Cloud updated successfully.";
@@ -84,8 +83,8 @@ public class CloudController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var result = await adminCloudService.Delete(id);
-        if (result == AdminCloudServiceStatus.NotFound)
+        var result = await cloudService.Delete(id);
+        if (result == CloudServiceStatus.NotFound)
             return NotFound();
 
         return RedirectToAction(nameof(Index), "Home", routeValues: new { cloudName = "" });

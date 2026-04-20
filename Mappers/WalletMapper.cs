@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class WalletMapper
+public class WalletMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static WalletViewModel ToViewModel(this Wallet model)
+    public WalletViewModel ToViewModel(Wallet model)
     {
         if (model == null) return null!;
         return new WalletViewModel
@@ -17,7 +18,7 @@ public static class WalletMapper
         };
     }
 
-    public static Wallet ToModel(this WalletViewModel vm)
+    public Wallet ToModel(WalletViewModel vm)
     {
         if (vm == null) return null!;
         return new Wallet

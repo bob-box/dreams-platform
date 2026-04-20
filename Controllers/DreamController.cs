@@ -20,7 +20,8 @@ public class DreamController(
     IDreamService dreamService,
     ICloudService cloudService,
     ITagService tagService,
-    ICloudNameResolver cloudNameService
+    ICloudNameResolver cloudNameService,
+    MapperFacade mapper
 ) : Controller
 {
     // GET: Dream
@@ -58,7 +59,7 @@ public class DreamController(
             return Forbid();
         }
 
-        var viewModel = dream.ToViewModel();
+        var viewModel = mapper.ToViewModel(dream);
         return View(viewModel);
     }
 
@@ -157,7 +158,7 @@ public class DreamController(
 
         var canEditDreamers = await dreamService.CheckIfUserCanEditDreamers(dreamFromDb.Dreamers, User);
         ViewData["canEditDreamers"] = canEditDreamers; // Needed for the delete button to be shown
-        var viewModel = dreamFromDb.ToViewModel();
+        var viewModel = mapper.ToViewModel(dreamFromDb);
         viewModel.SelectedTagIds = dreamFromDb.Tags.Select(t => t.ID).ToList();
         ViewBag.AvailableTags = await tagService.GetAll();
 
@@ -234,7 +235,9 @@ public class DreamController(
         if (!authorizationResult.Succeeded)
             return Forbid();
 
-        return View(result.Dream);
+        // TODO : move non controller logic to DreamService?
+        var viewModel = mapper.ToViewModel(result.Dream);
+        return View(viewModel);
     }
 
     // POST: Dream/Delete/5

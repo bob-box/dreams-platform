@@ -15,12 +15,61 @@ public class CloudService(
     ApplicationDbContext context,
     ICloudNameResolver cloudNameService,
     UserManager<User> userManager,
-    SignInManager<User> signInManager) : ICloudService
+    SignInManager<User> signInManager,
+    ICloudCache cloudCache,
+    MapperFacade mapper
+    ) : ICloudService
 {
+     public async Task Create(CloudViewModel viewModel)
+    {
+        var cloud = mapper.ToModel(viewModel);
+        context.Add(cloud);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<CloudServiceStatus> Update(CloudViewModel viewModel)
+    {
+        var cloud = await context.Cloud.FindAsync(viewModel.ID);
+        if (cloud == null)
+            return CloudServiceStatus.NotFound;
+
+        var oldName = cloud.Name;
+        cloud.Name = viewModel.Name;
+        cloud.TotalFundsAvailable = viewModel.TotalFundsAvailable;
+
+        try
+        {
+            await context.SaveChangesAsync();
+
+            if (!oldName.Equals(viewModel.Name, StringComparison.OrdinalIgnoreCase))
+                cloudCache.Remove(oldName);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!await context.Cloud.AnyAsync(e => e.ID == viewModel.ID))
+                return CloudServiceStatus.NotFound;
+            throw;
+        }
+
+        return CloudServiceStatus.Success;
+    }
+
+    public async Task<CloudServiceStatus> Delete(int id)
+    {
+        var cloud = await context.Cloud.FindAsync(id);
+        if (cloud == null)
+            return CloudServiceStatus.NotFound;
+
+        context.Cloud.Remove(cloud);
+        cloudCache.Remove(cloud.Name);
+        await context.SaveChangesAsync();
+
+        return CloudServiceStatus.Success;
+    }
     public async Task<CloudViewModel?> GetById(int id)
     {
         var cloud = await context.Cloud.FindAsync(id);
-        return cloud?.ToViewModel();
+        return mapper.ToViewModel(cloud);
     }
 
     public async Task<List<CloudViewModel>> GetAll()
@@ -29,7 +78,7 @@ public class CloudService(
             .Include(c => c.Dreams)
             .ToListAsync();
 
-        return clouds.Select(c => c.ToViewModel()).ToList();
+        return mapper.ToViewModels(clouds);
     }
 
     public async Task<JoinCloudResult> Join(int cloudId, string userId)

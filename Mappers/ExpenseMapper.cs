@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class ExpenseMapper
+public class ExpenseMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static ExpenseViewModel ToViewModel(this Expense model)
+    public ExpenseViewModel ToViewModel(Expense model)
     {
         if (model == null) return null!;
         return new ExpenseViewModel
@@ -18,7 +19,7 @@ public static class ExpenseMapper
         };
     }
 
-    public static Expense ToModel(this ExpenseViewModel vm)
+    public Expense ToModel(ExpenseViewModel vm)
     {
         if (vm == null) return null!;
         return new Expense
@@ -27,7 +28,6 @@ public static class ExpenseMapper
             DreamID = vm.DreamID,
             Amount = vm.Amount,
             Description = vm.Description,
-            CreatedAt = vm.CreatedAt
         };
     }
 }

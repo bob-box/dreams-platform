@@ -1,11 +1,12 @@
+using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public static class BudgetItemMapper
+public class BudgetItemMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public static BudgetItemViewModel ToViewModel(this BudgetItem model)
+    public  BudgetItemViewModel ToViewModel(BudgetItem model)
     {
         if (model == null) return null!;
         return new BudgetItemViewModel
@@ -14,13 +15,13 @@ public static class BudgetItemMapper
             Name = model.Name,
             Type = model.Type,
             DreamID = model.DreamID,
-            CreatedAt = model.CreatedAt,
+            CreatedAt = appTime.ToLocal(model.CreatedAt),
             MinAmount = model.MinAmount,
             MaxAmount = model.MaxAmount,
         };
     }
 
-    public static BudgetItem ToModel(this BudgetItemViewModel vm)
+    public  BudgetItem ToModel(BudgetItemViewModel vm)
     {
         if (vm == null) return null!;
         return new BudgetItem
@@ -29,7 +30,6 @@ public static class BudgetItemMapper
             Name = vm.Name,
             Type = vm.Type,
             DreamID = vm.DreamID,
-            CreatedAt = vm.CreatedAt,
             MinAmount = vm.MinAmount ?? 0,
             MaxAmount = vm.MaxAmount,
         };

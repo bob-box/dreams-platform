@@ -13,6 +13,7 @@ using Hangfire.Storage.SQLite;
 using Borderland.Dreams.FilterAttributes;
 using Borderland.Dreams.Utils;
 using Microsoft.Extensions.Options;
+using Borderland.Dreams.Mappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,11 +57,11 @@ builder.Services.AddSingleton<IAppTime>(sp =>
 });
 
 // Application services.
+builder.Services.AddScoped<MapperFacade>();
 builder.Services.AddScoped<IDreamService, DreamService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICloudService, CloudService>();
 builder.Services.AddScoped<ITagService, TagService>();
-builder.Services.AddScoped<IAdminCloudService, AdminCloudService>();
 builder.Services.AddScoped<IFundingRoundService, FundingRoundService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();

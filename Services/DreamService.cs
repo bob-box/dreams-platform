@@ -19,7 +19,8 @@ public class DreamService(
     ITagService tagService,
     UserManager<User> userManager,
     IAuthorizationService authorizationService,
-    IFundingRoundService fundingRoundService
+    IFundingRoundService fundingRoundService,
+    MapperFacade mapper
 ) : IDreamService
 {
     /// <summary>
@@ -69,7 +70,7 @@ public class DreamService(
         if (tagFilter.HasValue)
             listQuery = listQuery.Where(d => d.Tags.Any(t => t.ID == tagFilter.Value));
 
-        var viewModels = listQuery.Select(d => d.ToViewModel()).ToList();
+        var viewModels = listQuery.Select(mapper.ToViewModel).ToList();
         viewModels = sortOrder switch
         {
             DreamSortOrder.NameDesc => [.. viewModels.OrderByDescending(d => d.Name)],
@@ -99,7 +100,7 @@ public class DreamService(
 
     public async Task<int> Create(DreamViewModel viewModel)
     {
-        var dream = viewModel.ToModel();
+        var dream = mapper.ToModel(viewModel);
         dream.CloudID = cloudNameService.CloudID;
         dream.Status = DreamStatus.Draft;
 
@@ -123,8 +124,8 @@ public class DreamService(
 
         dreamToUpdate.Name = viewModel.Name;
         dreamToUpdate.Description = viewModel.Description;
-        dreamToUpdate.Dreamers = viewModel.Dreamers.Select(x => x.ToModel()).ToList();
-        dreamToUpdate.BudgetItems = viewModel.BudgetItems.Select(x => x.ToModel()).ToList();
+        dreamToUpdate.Dreamers = mapper.ToModels(viewModel.Dreamers);
+        dreamToUpdate.BudgetItems = mapper.ToModels(viewModel.BudgetItems);
         dreamToUpdate.Tags = await context.Tag
             .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)
             .ToListAsync();
