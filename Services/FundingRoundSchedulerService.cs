@@ -63,7 +63,7 @@ public class FundingRoundSchedulerService(
 
         var fundingRound = await context.FundingRound
             .Include(fr => fr.Cloud)
-            .FirstOrDefaultAsync(fr => fr.ID == fundingRoundId);
+            .SingleOrDefaultAsync(fr => fr.ID == fundingRoundId);
 
         if (fundingRound == null)
         {

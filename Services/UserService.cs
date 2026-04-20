@@ -98,7 +98,7 @@ public class UserService(
 
         foreach (var user in users)
         {
-            var wallet = user.Wallets.FirstOrDefault(w => w.CloudID == cloudId);
+            var wallet = user.Wallets.SingleOrDefault(w => w.CloudID == cloudId);
             if (wallet == null) return;
 
             switch (action)

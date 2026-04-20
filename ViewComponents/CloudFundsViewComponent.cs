@@ -34,7 +34,7 @@ public class CloudFundsViewComponent(
             userWalletBalance = await context.Wallet
                 .Where(w => w.UserID == user.Id && w.CloudID == cloudNameResolver.CloudID)
                 .Select(w => w.Balance)
-                .FirstOrDefaultAsync();
+                .SingleOrDefaultAsync();
         }
 
         var model = new CloudFundsViewModel

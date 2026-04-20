@@ -35,7 +35,7 @@ public class TagService(
 
     public async Task<TagViewModel?> GetById(int id)
     {
-        var tag = await GetTagInCloud(id);
+        var tag = await GetTag(id);
         return mapper.ToViewModel(tag);
     }
 
@@ -54,7 +54,7 @@ public class TagService(
 
     public async Task<bool> Update(TagViewModel viewModel)
     {
-        var tag = await GetTagInCloud(viewModel.ID);
+        var tag = await GetTag(viewModel.ID);
         if (tag == null)
             return false;
 
@@ -66,7 +66,7 @@ public class TagService(
 
     public async Task<bool> Delete(int id)
     {
-        var tag = await GetTagInCloud(id);
+        var tag = await GetTag(id);
         if (tag == null)
             return false;
 
@@ -76,12 +76,10 @@ public class TagService(
         return true;
     }
 
-    private Task<Tag?> GetTagInCloud(int id)
+    private Task<Tag?> GetTag(int id)
     {
-        return context.Tag
-            .FirstOrDefaultAsync(t => t.ID == id && t.CloudID == cloudNameResolver.CloudID);
+        return context.Tag.SingleOrDefaultAsync(t => t.ID == id && t.CloudID == cloudNameResolver.CloudID);
     }
-
 
     private void InvalidateGetAllCache()
     {

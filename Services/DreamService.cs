@@ -160,7 +160,7 @@ public class DreamService(
     public async Task<FundDreamServiceResult> GetFundingModal(int dreamId, string userId)
     {
         var dream = await context.Dream
-            .FirstOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
+            .SingleOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
 
         if (dream == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.DreamNotFound);
@@ -173,7 +173,7 @@ public class DreamService(
         if (user == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.UserNotFound);
 
-        var wallet = user.Wallets.FirstOrDefault(w => w.CloudID == cloudNameService.CloudID);
+        var wallet = user.Wallets.SingleOrDefault(w => w.CloudID == cloudNameService.CloudID);
         if (wallet == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.WalletNotFound, "User wallet not found.");
 
@@ -204,7 +204,7 @@ public class DreamService(
             return new FundDreamServiceResult(FundDreamServiceStatus.InvalidAmount, "Amount must be positive.");
 
         var dream = await context.Dream
-            .FirstOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
+            .SingleOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
 
         if (dream == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.DreamNotFound);
@@ -213,7 +213,7 @@ public class DreamService(
         if (user == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.UserNotFound);
 
-        var wallet = user.Wallets.FirstOrDefault(w => w.CloudID == cloudNameService.CloudID);
+        var wallet = user.Wallets.SingleOrDefault(w => w.CloudID == cloudNameService.CloudID);
         if (wallet == null)
             return new FundDreamServiceResult(FundDreamServiceStatus.WalletNotFound, "User wallet not found.");
 
@@ -226,7 +226,7 @@ public class DreamService(
 
         var maxPerDream = activeRound.AllocationPerUser * (activeRound.MaxPercentagePerDream / 100m);
         var userExistingFundForThisDream = await context.Fund
-            .FirstOrDefaultAsync(f => f.DreamID == dreamId &&
+            .SingleOrDefaultAsync(f => f.DreamID == dreamId &&
                                       f.UserID == user.Id &&
                                       f.FundingRoundID == activeRound.ID);
 
@@ -239,6 +239,8 @@ public class DreamService(
                     $"Amount exceeds the maximum allowed per dream for this round ({activeRound.MaxPercentagePerDream}% of per-user allocation). You have already funded {userExistingFundForThisDream.Amount:C}.");
             }
 
+            // Maybe instead of updating the existing fund record, we could create a new one for audit/history purposes?
+            // This depends on how we want to show funding history in the UI and whether we want to allow users to see their incremental contributions.
             userExistingFundForThisDream.Amount += amount;
             wallet.Balance -= amount;
             await context.SaveChangesAsync();

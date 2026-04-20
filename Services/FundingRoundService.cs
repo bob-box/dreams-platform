@@ -88,7 +88,7 @@ public class FundingRoundService(
             return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
 
         var roundToUpdate = await context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.ID == viewModel.ID && fr.CloudID == cloudNameResolver.CloudID);
+            .SingleOrDefaultAsync(fr => fr.ID == viewModel.ID && fr.CloudID == cloudNameResolver.CloudID);
 
         if (roundToUpdate == null)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
@@ -161,7 +161,7 @@ public class FundingRoundService(
     public async Task<FundingRoundServiceResult> Delete(int id)
     {
         var fundingRound = await context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.ID == id && fr.CloudID == cloudNameResolver.CloudID);
+            .SingleOrDefaultAsync(fr => fr.ID == id && fr.CloudID == cloudNameResolver.CloudID);
 
         if (fundingRound == null)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
@@ -182,9 +182,9 @@ public class FundingRoundService(
 
     public async Task<FundingRoundViewModel?> GetActiveRound(int cloudId)
     {
-        var now = DateTime.Now;
+        var now = appTime.UtcNow;
         var activeRound = await context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.CloudID == cloudId &&
+            .SingleOrDefaultAsync(fr => fr.CloudID == cloudId &&
                                      fr.StartDate <= now && fr.EndDate >= now);
         return mapper.ToViewModel(activeRound);
     }
@@ -192,7 +192,7 @@ public class FundingRoundService(
     private async Task<FundingRoundServiceResult> LoadFundingRound(int id, FundingRoundLoadMode mode)
     {
         var fundingRound = await context.FundingRound
-            .FirstOrDefaultAsync(fr => fr.ID == id && fr.CloudID == cloudNameResolver.CloudID);
+            .SingleOrDefaultAsync(fr => fr.ID == id && fr.CloudID == cloudNameResolver.CloudID);
 
         if (fundingRound == null)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
