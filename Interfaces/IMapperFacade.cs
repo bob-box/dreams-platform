@@ -56,6 +56,5 @@ public interface IMapperFacade
     List<Fund> ToModels(ICollection<FundViewModel> vms);
     List<Expense> ToModels(ICollection<ExpenseViewModel> vms);
     List<Dreamer> ToModels(ICollection<DreamerViewModel> vms);
-    List<Tag> ToModels(ICollection<TagViewModel> vms);
     #endregion
 }
