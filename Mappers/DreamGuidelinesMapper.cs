@@ -6,7 +6,7 @@ namespace Borderland.Dreams.Mappers;
 
 public class DreamGuidelinesMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public DreamGuidelinesViewModel ToViewModel(DreamGuidelines model)
+    public DreamGuidelinesViewModel? ToViewModel(DreamGuidelines model)
     {
         if (model == null) return null!;
         return new DreamGuidelinesViewModel
@@ -17,7 +17,7 @@ public class DreamGuidelinesMapper(MapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public DreamGuidelines ToModel(DreamGuidelinesViewModel vm)
+    public DreamGuidelines? ToModel(DreamGuidelinesViewModel vm)
     {
         if (vm == null) return null!;
         return new DreamGuidelines

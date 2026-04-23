@@ -6,7 +6,7 @@ namespace Borderland.Dreams.Mappers;
 
 public class FundMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public FundViewModel ToViewModel(Fund model)
+    public FundViewModel? ToViewModel(Fund model)
     {
         if (model == null) return null!;
         return new FundViewModel
@@ -21,7 +21,7 @@ public class FundMapper(MapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public Fund ToModel(FundViewModel vm)
+    public Fund? ToModel(FundViewModel vm)
     {
         if (vm == null) return null!;
         return new Fund

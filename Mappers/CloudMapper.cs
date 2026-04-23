@@ -1,4 +1,3 @@
-using Borderland.Dreams.Extensions;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
@@ -7,7 +6,7 @@ namespace Borderland.Dreams.Mappers;
 
 public class CloudMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public CloudViewModel ToViewModel(Cloud model)
+    public CloudViewModel? ToViewModel(Cloud model)
     {
         if (model == null) return null!;
         return new CloudViewModel
@@ -22,7 +21,7 @@ public class CloudMapper(MapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public Cloud ToModel(CloudViewModel vm)
+    public Cloud? ToModel(CloudViewModel vm)
     {
         if (vm == null) return null!;
         return new Cloud

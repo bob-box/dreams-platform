@@ -6,7 +6,7 @@ namespace Borderland.Dreams.Mappers;
 
 public class ExpenseMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public ExpenseViewModel ToViewModel(Expense model)
+    public ExpenseViewModel? ToViewModel(Expense model)
     {
         if (model == null) return null!;
         return new ExpenseViewModel
@@ -19,7 +19,7 @@ public class ExpenseMapper(MapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public Expense ToModel(ExpenseViewModel vm)
+    public Expense? ToModel(ExpenseViewModel vm)
     {
         if (vm == null) return null!;
         return new Expense

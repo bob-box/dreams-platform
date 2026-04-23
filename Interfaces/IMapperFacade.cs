@@ -6,17 +6,17 @@ namespace Borderland.Dreams.Interfaces;
 public interface IMapperFacade
 {
     #region ToViewModel
-    DreamViewModel ToViewModel(Dream model);
-    CloudViewModel ToViewModel(Cloud model);
-    TagViewModel ToViewModel(Tag model);
-    UserViewModel ToViewModel(User model);
-    WalletViewModel ToViewModel(Wallet model);
-    FundingRoundViewModel ToViewModel(FundingRound model);
-    BudgetItemViewModel ToViewModel(BudgetItem model);
-    CommentViewModel ToViewModel(Comment model);
-    FundViewModel ToViewModel(Fund model);
-    ExpenseViewModel ToViewModel(Expense model);
-    DreamerViewModel ToViewModel(Dreamer model);
+    DreamViewModel? ToViewModel(Dream model);
+    CloudViewModel? ToViewModel(Cloud model);
+    TagViewModel? ToViewModel(Tag model);
+    UserViewModel? ToViewModel(User model);
+    WalletViewModel? ToViewModel(Wallet model);
+    FundingRoundViewModel? ToViewModel(FundingRound model);
+    BudgetItemViewModel? ToViewModel(BudgetItem model);
+    CommentViewModel? ToViewModel(Comment model);
+    FundViewModel? ToViewModel(Fund model);
+    ExpenseViewModel? ToViewModel(Expense model);
+    DreamerViewModel? ToViewModel(Dreamer model);
     #endregion
 
     #region ToViewModels
@@ -34,16 +34,16 @@ public interface IMapperFacade
     #endregion
 
     #region ToModel
-    Dream ToModel(DreamViewModel vm);
-    Cloud ToModel(CloudViewModel vm);
-    Tag ToModel(TagViewModel vm);
-    Wallet ToModel(WalletViewModel vm);
-    FundingRound ToModel(FundingRoundViewModel vm);
-    BudgetItem ToModel(BudgetItemViewModel vm);
-    Comment ToModel(CommentViewModel vm);
-    Fund ToModel(FundViewModel vm);
-    Expense ToModel(ExpenseViewModel vm);
-    Dreamer ToModel(DreamerViewModel vm);
+    Dream? ToModel(DreamViewModel vm);
+    Cloud? ToModel(CloudViewModel vm);
+    Tag? ToModel(TagViewModel vm);
+    Wallet? ToModel(WalletViewModel vm);
+    FundingRound? ToModel(FundingRoundViewModel vm);
+    BudgetItem? ToModel(BudgetItemViewModel vm);
+    Comment? ToModel(CommentViewModel vm);
+    Fund? ToModel(FundViewModel vm);
+    Expense? ToModel(ExpenseViewModel vm);
+    Dreamer? ToModel(DreamerViewModel vm);
     #endregion
 
     #region ToModels

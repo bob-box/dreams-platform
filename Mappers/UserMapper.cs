@@ -6,7 +6,7 @@ namespace Borderland.Dreams.Mappers;
 
 public class UserMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public UserViewModel ToViewModel(User model)
+    public UserViewModel? ToViewModel(User model)
     {
         if (model == null) return null!;
         return new UserViewModel

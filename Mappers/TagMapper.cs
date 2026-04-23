@@ -6,7 +6,7 @@ namespace Borderland.Dreams.Mappers;
 
 public class TagMapper(MapperFacade mapper, IAppTime appTime) : IEntityMapper<Tag, TagViewModel>
 {
-    public TagViewModel ToViewModel(Tag model)
+    public TagViewModel? ToViewModel(Tag model)
     {
         if (model == null) return null!;
         return new TagViewModel
@@ -17,7 +17,7 @@ public class TagMapper(MapperFacade mapper, IAppTime appTime) : IEntityMapper<Ta
         };
     }
 
-    public Tag ToModel(TagViewModel vm)
+    public Tag? ToModel(TagViewModel vm)
     {
         if (vm == null) return null!;
         return new Tag

@@ -6,7 +6,7 @@ namespace Borderland.Dreams.Mappers;
 
 public class BudgetItemMapper(MapperFacade mapper, IAppTime appTime)
 {
-    public  BudgetItemViewModel ToViewModel(BudgetItem model)
+    public  BudgetItemViewModel? ToViewModel(BudgetItem model)
     {
         if (model == null) return null!;
         return new BudgetItemViewModel
@@ -21,7 +21,7 @@ public class BudgetItemMapper(MapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public  BudgetItem ToModel(BudgetItemViewModel vm)
+    public  BudgetItem? ToModel(BudgetItemViewModel vm)
     {
         if (vm == null) return null!;
         return new BudgetItem
