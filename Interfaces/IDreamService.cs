@@ -21,13 +21,14 @@ public record FundDreamServiceResult(
     string? Message = null,
     FundingModalViewModel? ViewModel = null);
 
-public enum DreamDeleteStatus
+public enum DreamServiceStatus
 {
     Success,
-    NotFound
+    NotFound,
+    NotAllowed
 }
 
-public record DreamDeleteResult(DreamDeleteStatus Status, DreamViewModel? Dream = null);
+public record DreamServiceResult(DreamServiceStatus Status, DreamViewModel? Dream = null);
 public record FundingContext(
     User User,
     Wallet Wallet,
@@ -35,7 +36,6 @@ public record FundingContext(
 
 public interface IDreamService
 {
-    IQueryable<Dream> GetFullQuery();
     Task<DreamFilterViewModel> BuildDreamFilterViewModel(
         string? searchText,
         DreamStatus? statusFilter,
@@ -45,12 +45,13 @@ public interface IDreamService
         bool isAdmin);
 
     Task<int> Create(DreamViewModel viewModel);
-    Task Update(Dream dreamToUpdate, DreamViewModel viewModel);
-    Task<DreamDeleteResult> GetForDelete(int id);
-    Task<DreamDeleteResult> Delete(int id);
+    Task<DreamServiceResult> Update(DreamViewModel viewModel);
+    Task<DreamServiceResult> GetForDelete(int id);
+    Task<DreamServiceResult> Delete(int id);
+    Task<DreamServiceResult> GetQuick(int id);
+    Task<DreamServiceResult> GetFull(int id);
     Task<FundDreamServiceResult> GetFundingModal(int dreamId, string userId);
     Task<FundDreamServiceResult> FundDream(int dreamId, decimal amount, string userId);
-    Task<DreamViewModel?> GetQuick(int id);
     bool DreamExists(int iD, int cloudID);
-    Task<bool> CheckIfUserCanEditDreamers(IEnumerable<IDreamersForAuthorization> dreamers, ClaimsPrincipal user);
+    Task<bool> CanUserEditDreamers(DreamViewModel dream, ClaimsPrincipal user);
 }

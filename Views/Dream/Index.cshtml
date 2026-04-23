@@ -22,12 +22,7 @@
         </div>
         <div class="col-md-2">
             <button type="submit" class="btn btn-primary">Filter</button>
-            <button type="button"
-                    class="btn btn-outline-secondary"
-                    onclick="location.href='@Url.Action("Index", "Dream")'"
-                    disabled="@(hasActiveFilters ? null : "disabled")">
-                Clear filters
-            </button>
+            <button type="reset" class="btn btn-secondary">Clear filters</button>
         </div>
         <div class="col-md-2">
             <label asp-for="StatusFilter" class="form-label">Status</label>
@@ -37,7 +32,7 @@
                 {
                     if (status != Borderland.Dreams.Enums.DreamStatus.Hidden && status != Borderland.Dreams.Enums.DreamStatus.Draft)
                     {
-                    <option value="@status">@status</option>
+                        <option value="@status">@status</option>
                     }
                 }
             </select>
@@ -54,7 +49,10 @@
         </div>
         <div class="col-md-2">
             <label asp-for="SortOrder" class="form-label">Sort by</label>
-            <select asp-for="SortOrder" asp-items="Html.GetEnumSelectList<Borderland.Dreams.Enums.DreamSortOrder>()" class="form-select" onchange="this.form.submit()"></select>
+            <select asp-for="SortOrder" 
+                    asp-items="Html.GetEnumSelectList<Borderland.Dreams.Enums.DreamSortOrder>()" 
+                    class="form-select"
+                    onchange="this.form.submit()"></select>
         </div>
         
     </div>
@@ -113,15 +111,7 @@
                     @Html.DisplayFor(modelItem => item.Dreamers.Single(d => d.IsMainDreamer).Name)
                 </td>
                 <td>
-                    @if (_authorizationService.AuthorizeAsync(User, item.Dreamers, Operations.Update).Result.Succeeded)
-                    {
-                        <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> <text>|</text>
-                    }
                     <a asp-action="Details" asp-route-id="@item.ID">Details</a>
-                    @if (_authorizationService.AuthorizeAsync(User, item.Dreamers, Operations.Delete).Result.Succeeded)
-                    {
-                        <text>|</text> <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
-                    }
                 </td>
             </tr>
         }

@@ -2,7 +2,6 @@
 @using Borderland.Dreams.Extensions
 @{
     ViewData["Title"] = "Edit";
-    bool canEditDreamers = (bool)(ViewData["canEditDreamers"] ?? false);
 }
 
 <div class="row">
@@ -52,7 +51,7 @@
                     @Html.EditorFor(model => model.Dreamers, "DreamerTableRow")
                 </tbody>
             </table>
-            @if (canEditDreamers)
+            @if (_authorizationService.AuthorizeAsync(User, Model, Operations.EditDreamers).Result.Succeeded)
             {
                 <button type="button" class="btn btn-outline-secondary mt-2" data-bs-toggle="modal" data-bs-target="#add-dreamer-modal">
                     &#65291; Add dreamer

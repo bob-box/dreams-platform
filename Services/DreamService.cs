@@ -22,30 +22,35 @@ public class DreamService(
     IFundingRoundService fundingRoundService,
     MapperFacade mapper,
     ICloudService cloudService,
-    IMembershipCheckService membershipCheckService
+    IMembershipCheckService membershipCheckService,
+    IHttpContextAccessor httpContextAccessor
 ) : IDreamService
 {
-    /// <summary>
-    /// Includes related entities (so you can run AuthorizationService checks).
-    /// </summary>
-    /// <param name="cloudId">Cloud ID that the dream belongs to</param>
-    /// <returns></returns>
-    public IQueryable<Dream> GetFullQuery()
-    {
-        int cloudId = cloudNameService.CloudID;
+    private ClaimsPrincipal CurrentUser => httpContextAccessor.HttpContext?.User
+                                            ?? throw new InvalidOperationException("No active HTTP context.");
 
-        return context.Dream
-            .Include(d => d.BudgetItems)
-            .Include(d => d.Dreamers).ThenInclude(d => d.User)
-            .Include(d => d.Funds).ThenInclude(d => d.User)
-            .Include(d => d.Tags)
-            .Where(d => d.CloudID == cloudId);
+    public async Task<DreamServiceResult> GetFull(int id)
+    {
+        var dreamFromDb = await GetFullQuery().SingleOrDefaultAsync(d => d.ID == id);
+        var dream = mapper.ToViewModel(dreamFromDb);
+        if (dream == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        var authorizationResult = await authorizationService.AuthorizeAsync(CurrentUser, dream, Operations.Read);
+        if (!authorizationResult.Succeeded)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        return new DreamServiceResult(DreamServiceStatus.Success, dream);
     }
 
-    public async Task<DreamViewModel?> GetQuick(int id)
+    public async Task<DreamServiceResult> GetQuick(int id)
     {
-        var dream = await context.Dream.SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
-        return dream != null ? mapper.ToViewModel(dream) : null;
+        var dreamFromDb = await context.Dream.SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
+        if (dreamFromDb == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        var dream = mapper.ToViewModel(dreamFromDb);
+        return new DreamServiceResult(DreamServiceStatus.Success, dream);
     }
 
     public async Task<DreamFilterViewModel> BuildDreamFilterViewModel(
@@ -58,8 +63,11 @@ public class DreamService(
     {
         var listQuery = GetFullQuery();
 
+        // Admins are allowed to see all dreams
         if (!isAdmin)
         {
+            // Do not show dreams that are in Draft or Hidden status
+            // But dreamers are still allowed to see their own dreams :)
             listQuery = listQuery.Where(x =>
                 (x.Status != DreamStatus.Hidden && x.Status != DreamStatus.Draft)
                 || x.Dreamers.Any(d => d.UserID == currentUserId));
@@ -78,20 +86,38 @@ public class DreamService(
         if (tagFilter.HasValue)
             listQuery = listQuery.Where(d => d.Tags.Any(t => t.ID == tagFilter.Value));
 
-        var viewModels = listQuery.Select(mapper.ToViewModel).ToList();
-        viewModels = sortOrder switch
+        // Sort in db
+        listQuery = sortOrder switch
         {
-            DreamSortOrder.NameDesc => [.. viewModels.OrderByDescending(d => d.Name)],
-            DreamSortOrder.MostFunded => [.. viewModels.OrderByDescending(d => d.TotalReceivedFunds)],
-            DreamSortOrder.LeastFunded => [.. viewModels.OrderBy(d => d.TotalReceivedFunds)],
-            DreamSortOrder.MostFundedPercentage => [.. viewModels.OrderByDescending(d =>
-                d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
-            DreamSortOrder.LeastFundedPercentage => [.. viewModels.OrderBy(d =>
-                d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
-            DreamSortOrder.MostBudget => [.. viewModels.OrderByDescending(d => d.TotalRequestedBudget)],
-            DreamSortOrder.LeastBudget => [.. viewModels.OrderBy(d => d.TotalRequestedBudget)],
-            _ => [.. viewModels.OrderBy(d => d.Name)],
+            DreamSortOrder.NameAsc => listQuery.OrderBy(d => d.Name),
+            DreamSortOrder.NameDesc => listQuery.OrderByDescending(d => d.Name),
+            DreamSortOrder.MostFunded => listQuery.OrderByDescending(d => d.Funds.Sum(f => f.Amount)),
+            DreamSortOrder.LeastFunded => listQuery.OrderBy(d => d.Funds.Sum(f => f.Amount)),
+            DreamSortOrder.MostFundedPercentage => listQuery.OrderByDescending(d =>
+                d.BudgetItems.Sum(b => (double)b.MinAmount) == 0 ? 0 : d.Funds.Sum(f => f.Amount) / d.BudgetItems.Sum(b => b.MinAmount)),
+            DreamSortOrder.LeastFundedPercentage => listQuery.OrderBy(d =>
+                d.BudgetItems.Sum(b => (double)b.MinAmount) == 0 ? 0 : d.Funds.Sum(f => f.Amount) / d.BudgetItems.Sum(b => b.MinAmount)),
+            DreamSortOrder.MostBudget => listQuery.OrderByDescending(d => d.BudgetItems.Sum(b => (double)b.MinAmount)),
+            DreamSortOrder.LeastBudget => listQuery.OrderBy(d => d.BudgetItems.Sum(b => (double)b.MinAmount)),
+            _ => listQuery.OrderBy(d => d.Name),
         };
+
+        var viewModels = listQuery.Select(mapper.ToViewModel).ToList();
+        // Sort in memory
+        // var viewModels = listQuery.Select(mapper.ToViewModel).ToList();
+        // viewModels = sortOrder switch
+        // {
+        //     DreamSortOrder.NameDesc => [.. viewModels.OrderByDescending(d => d.Name)],
+        //     DreamSortOrder.MostFunded => [.. viewModels.OrderByDescending(d => d.TotalReceivedFunds)],
+        //     DreamSortOrder.LeastFunded => [.. viewModels.OrderBy(d => d.TotalReceivedFunds)],
+        //     DreamSortOrder.MostFundedPercentage => [.. viewModels.OrderByDescending(d =>
+        //         d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
+        //     DreamSortOrder.LeastFundedPercentage => [.. viewModels.OrderBy(d =>
+        //         d.TotalRequestedBudget == 0 ? 0 : d.TotalReceivedFunds / d.TotalRequestedBudget)],
+        //     DreamSortOrder.MostBudget => [.. viewModels.OrderByDescending(d => d.TotalRequestedBudget)],
+        //     DreamSortOrder.LeastBudget => [.. viewModels.OrderBy(d => d.TotalRequestedBudget)],
+        //     _ => [.. viewModels.OrderBy(d => d.Name)],
+        // };
 
         var availableTags = await tagService.GetAll();
 
@@ -124,8 +150,17 @@ public class DreamService(
         return dream.ID;
     }
 
-    public async Task Update(Dream dreamToUpdate, DreamViewModel viewModel)
+    public async Task<DreamServiceResult> Update(DreamViewModel viewModel)
     {
+        // We need to fetch the dreams dreamers to check authorization
+        var dreamToUpdate = await GetFullQuery().SingleOrDefaultAsync(d => d.ID == viewModel.ID);
+        if (dreamToUpdate == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        var authorizationResult = await authorizationService.AuthorizeAsync(CurrentUser, mapper.ToViewModel(dreamToUpdate), Operations.Update);
+        if (!authorizationResult.Succeeded)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
         // Will this error (that there is no main dreamer) ever happen?
         if (!viewModel.Dreamers.Any(x => x.IsMainDreamer))
             throw new InvalidOperationException("A dream must have at least one main dreamer.");
@@ -139,28 +174,37 @@ public class DreamService(
             .ToListAsync();
 
         await context.SaveChangesAsync();
+        return new DreamServiceResult(DreamServiceStatus.Success);
     }
 
-    public async Task<DreamDeleteResult> GetForDelete(int id)
+    public async Task<DreamServiceResult> GetForDelete(int id)
     {
         var dreamFromDb = await GetFullQuery().SingleOrDefaultAsync(m => m.ID == id);
         var dream = mapper.ToViewModel(dreamFromDb);
         if (dream == null)
-            return new DreamDeleteResult(DreamDeleteStatus.NotFound);
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
 
-        return new DreamDeleteResult(DreamDeleteStatus.Success, dream);
+        var authorizationResult = await authorizationService.AuthorizeAsync(CurrentUser, dream, Operations.Delete);
+        if (!authorizationResult.Succeeded)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        return new DreamServiceResult(DreamServiceStatus.Success, dream);
     }
 
-    public async Task<DreamDeleteResult> Delete(int id)
+    public async Task<DreamServiceResult> Delete(int id)
     {
         var dream = await context.Dream.SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
 
         if (dream == null)
-            return new DreamDeleteResult(DreamDeleteStatus.NotFound);
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        var authorizationResult = await authorizationService.AuthorizeAsync(CurrentUser, mapper.ToViewModel(dream), Operations.Delete);
+        if (!authorizationResult.Succeeded)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
         context.Dream.Remove(dream);
         await context.SaveChangesAsync();
-        return new DreamDeleteResult(DreamDeleteStatus.Success);
+        return new DreamServiceResult(DreamServiceStatus.Success);
     }
 
     public async Task<FundDreamServiceResult> GetFundingModal(int dreamId, string userId)
@@ -231,17 +275,32 @@ public class DreamService(
         return context.Dream.Any(e => e.ID == id && e.CloudID == cloudID);
     }
 
-    public async Task<bool> CheckIfUserCanEditDreamers(IEnumerable<IDreamersForAuthorization> dreamers, ClaimsPrincipal user)
+    public async Task<bool> CanUserEditDreamers(DreamViewModel dream, ClaimsPrincipal user)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(user, dreamers, Operations.EditDreamers);
+        var authorizationResult = await authorizationService.AuthorizeAsync(user, dream, Operations.EditDreamers);
         return authorizationResult.Succeeded;
+    }
+
+    /// <summary>
+    /// Includes related entities (so you can run AuthorizationService checks).
+    /// </summary>
+    private IQueryable<Dream> GetFullQuery()
+    {
+        int cloudId = cloudNameService.CloudID;
+
+        return context.Dream
+            .Include(d => d.BudgetItems)
+            .Include(d => d.Dreamers).ThenInclude(d => d.User)
+            .Include(d => d.Funds).ThenInclude(d => d.User)
+            .Include(d => d.Tags)
+            .Where(d => d.CloudID == cloudId);
     }
 
     private async Task<(FundingContext? Context, FundDreamServiceResult? Error)> GetFundingContext(
        int dreamId, string userId)
     {
-        var dream = await GetQuick(dreamId);
-        if (dream == null || !dream.IsOpenForFunding())
+        var result = await GetQuick(dreamId);
+        if (result.Status == DreamServiceStatus.NotFound || result.Dream?.IsOpenToFunding() == false)
             return (null, new FundDreamServiceResult(FundDreamServiceStatus.CantFundDream,
                 "Dream not found or not fundable."));
 

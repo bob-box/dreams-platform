@@ -1,3 +1,5 @@
+using Microsoft.CodeAnalysis.Elfie.Serialization;
+
 namespace Borderland.Dreams.Authorization
 {
     public static class Constants
@@ -6,6 +8,7 @@ namespace Borderland.Dreams.Authorization
         public static readonly string READ = "Read";
         public static readonly string UPDATE = "Update";
         public static readonly string DELETE = "Delete";
+        public static readonly string EDIT_DREAMER = "EditDreamers";
 
         public const string AdminRole = "Admin";
         /// <summary>
@@ -14,6 +17,5 @@ namespace Borderland.Dreams.Authorization
         public const string MemberRole = "Member";
 
         public const string JOINED_CLOUD_CLAIM = "JoinedCloud";
-        public const string EDIT_DREAMER = "EditDreamer";
         }
 }

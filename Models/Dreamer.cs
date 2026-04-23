@@ -1,6 +1,6 @@
 namespace Borderland.Dreams.Models;
 
-public class Dreamer : IDreamersForAuthorization
+public class Dreamer
 {
     public int ID { get; set; }
     public int DreamID { get; set; }

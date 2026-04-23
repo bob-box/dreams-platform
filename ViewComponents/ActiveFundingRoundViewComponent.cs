@@ -14,21 +14,15 @@ public class ActiveFundingRoundViewComponent(
     public async Task<IViewComponentResult> InvokeAsync(int dreamId)
     {
         if (!User.Identity?.IsAuthenticated ?? true)
-        {
             return Content(string.Empty);
-        }
 
         var activeRound = await fundingRoundService.GetActiveRound(cloudNameResolver.CloudID);
         if (activeRound == null)
-        {
             return Content(string.Empty);
-        }
         
-        var dream = await dreamService.GetQuick(dreamId);
-        if (dream == null || !dream.IsOpenForFunding())
-        {
+        var result = await dreamService.GetQuick(dreamId);
+        if (result.Status == DreamServiceStatus.NotFound || result.Dream?.IsOpenToFunding() == false)
             return Content(string.Empty);
-        }
 
         var model = new ActiveFundingRoundViewModel
         {

@@ -2,20 +2,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Models;
+using Borderland.Dreams.ViewModels;
+using Borderland.Dreams.Enums;
 
 namespace Borderland.Dreams.Authorization.Dream;
 
 // Based on https://learn.microsoft.com/en-us/aspnet/core/security/authorization/secure-data?view=aspnetcore-8.0
 public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager)
-            : AuthorizationHandler<OperationAuthorizationRequirement, IEnumerable<IDreamersForAuthorization>>
+            : AuthorizationHandler<OperationAuthorizationRequirement, DreamViewModel>
 {
-    UserManager<User> _userManager = userManager;
-
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
                                OperationAuthorizationRequirement requirement,
-                               IEnumerable<IDreamersForAuthorization> dreamers)
+                               DreamViewModel dream)
     {
-        if (context.User == null || dreamers == null || !dreamers.Any())
+        if (context.User == null || dream.Dreamers == null || dream.Dreamers.Count == 0)
         {
             // Returning Task.CompletedTask without a prior call to context.Success or context.Fail
             // is not a success or failure, it allows other authorization handlers to run.
@@ -38,12 +38,27 @@ public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager
             return Task.CompletedTask;
         }
 
-        var mainDreamerUserId = dreamers.Single(x => x.IsMainDreamer).UserID;
-        if (mainDreamerUserId == _userManager.GetUserId(context.User))
+        // You can always READ your own dream
+        var mainDreamerUserId = dream.Dreamers.Single(x => x.IsMainDreamer).UserID;
+        if (mainDreamerUserId != userManager.GetUserId(context.User) &&
+            requirement.Name == Constants.READ &&
+            !dream.IsVisibleToPublic())
         {
-            context.Succeed(requirement);
+            return Task.CompletedTask;
         }
 
+        // UPDATE is only allowed when the dream is editable.
+        // All other allowed operations are always permitted for the main dreamer.
+        if ((
+            requirement.Name == Constants.UPDATE ||
+            requirement.Name == Constants.EDIT_DREAMER
+            ) &&
+            !dream.IsEditable())
+        {
+            return Task.CompletedTask;
+        }
+
+        context.Succeed(requirement);
         return Task.CompletedTask;
     }
 }

@@ -28,6 +28,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDefaultIdentity<User>(options =>
 {

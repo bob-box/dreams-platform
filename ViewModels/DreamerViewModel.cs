@@ -1,6 +1,6 @@
 namespace Borderland.Dreams.ViewModels;
 
-public class DreamerViewModel : IDreamersForAuthorization
+public class DreamerViewModel
 {
     public int ID { get; set; }
     public int DreamID { get; set; }

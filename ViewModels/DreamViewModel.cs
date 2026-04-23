@@ -42,6 +42,9 @@ public class DreamViewModel
     [DataType(DataType.Currency)]
     public decimal TotalReceivedFunds => Funds.Sum(f => f.Amount);
 
-    public bool IsOpenForFunding() => Status == DreamStatus.Active;
+    public bool IsOpenToFunding() => Status == DreamStatus.Active;
+    public bool IsReadyForFunding() => Status == DreamStatus.ReadyForFunding;
+    public bool IsEditable() => Status == DreamStatus.Draft || Status == DreamStatus.Hidden;
+    public bool IsVisibleToPublic() => Status != DreamStatus.Draft && Status != DreamStatus.Hidden;
 
 }

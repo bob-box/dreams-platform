@@ -41,7 +41,7 @@
                     @Html.DisplayFor(modelItem => item.TotalFundsAvailable)
                 </td>
                 <td>
-                    @(item.Dreams?.Count() ?? 0)
+                    @(item.Dreams.Where(x => x.IsVisibleToPublic())?.Count() ?? 0)
                 </td>
                 <td>
                     <a asp-controller="Dream" asp-action="Index" asp-route-cloudName="@item.Name">Go to Cloud</a>
