@@ -1,4 +1,4 @@
-@model Borderland.Dreams.Models.Dream
+@model Borderland.Dreams.ViewModels.DreamViewModel
 
 @{
     ViewData["Title"] = "Delete";
@@ -26,12 +26,6 @@
             @Html.DisplayFor(model => model.Name)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.CreatedAt)
         </dt>
         <dd class="col-sm-10">
@@ -42,14 +36,6 @@
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.BudgetItems)
-        </dt>
-        <dd class="col-sm-10">
-            @{
-                var budget = Model.BudgetItems.Sum(b => b.MinAmount).ToString("C");
-            }
         </dd>
     </dl>
 </div>

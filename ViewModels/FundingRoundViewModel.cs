@@ -30,4 +30,6 @@ public class FundingRoundViewModel
     public bool IsActiveOrPassed(IAppTime appTime) => IsActive(appTime) || HasPassed(appTime);
     public bool IsActive(IAppTime appTime) => StartDate <= appTime.Now && EndDate >= appTime.Now;
     public bool HasPassed(IAppTime appTime) => EndDate < appTime.Now;
+
+    public decimal MaxPerDream => AllocationPerUser * (MaxPercentagePerDream / 100m);
 }

@@ -1,3 +1,4 @@
+using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Interfaces;
@@ -26,5 +27,5 @@ public interface ICloudService
     Task<List<CloudViewModel>> GetAll();
     Task<JoinCloudResult> Join(int cloudId, string userId);
     Task<bool> UserHasJoinedCloud(string userId);
-
+    Task<bool> UserHasJoinedCloud(User user);
 }

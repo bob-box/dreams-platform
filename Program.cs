@@ -25,7 +25,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddMemoryCache();
-
+builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
 
@@ -43,11 +43,9 @@ builder.Services.AddDefaultIdentity<User>(options =>
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Bind time config
+// Configure time services and options.
 builder.Services.Configure<TimeOptions>(builder.Configuration.GetSection("Time"));
-// Register TimeProvider
 builder.Services.AddSingleton(TimeProvider.System);
-// Register AppTime
 builder.Services.AddSingleton<IAppTime>(sp =>
 {
     var timeProvider = sp.GetRequiredService<TimeProvider>();
@@ -65,6 +63,7 @@ builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IFundingRoundService, FundingRoundService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
+builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();
 builder.Services.AddSingleton<ICloudCache, CloudCache>();
 
 // Add Hangfire services.

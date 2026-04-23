@@ -50,7 +50,7 @@ public class DreamController(
             return NotFound();
         }
 
-        var dreamQuery = dreamService.GetDreamsByCloudIdBaseQuery();
+        var dreamQuery = dreamService.GetFullQuery();
         dreamQuery = IsAuthorizedToViewDream(dreamQuery);
 
         var dream = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
@@ -74,8 +74,7 @@ public class DreamController(
         return result.Status switch
         {
             FundDreamServiceStatus.Success => PartialView("_FundingModal", result.ViewModel),
-            FundDreamServiceStatus.DreamNotFound => NotFound(),
-            FundDreamServiceStatus.UserNotFound => Challenge(),
+            FundDreamServiceStatus.CantFundDream => BadRequest(),
             FundDreamServiceStatus.NoActiveFundingRound => BadRequest(result.Message),
             FundDreamServiceStatus.WalletNotFound => BadRequest(result.Message),
             _ => BadRequest("Unable to load funding data.")
@@ -142,7 +141,7 @@ public class DreamController(
             return NotFound();
         }
 
-        var dreamQuery = dreamService.GetDreamsByCloudIdBaseQuery();
+        var dreamQuery = dreamService.GetFullQuery();
         var dreamFromDb = await dreamQuery.SingleOrDefaultAsync(m => m.ID == id);
 
         if (dreamFromDb == null)
@@ -178,7 +177,7 @@ public class DreamController(
         }
 
         // We need to fetch the dreams dreamers to check authorization
-        var dreamToUpdate = await dreamService.GetDreamsByCloudIdBaseQuery()
+        var dreamToUpdate = await dreamService.GetFullQuery()
                 .SingleOrDefaultAsync(m => m.ID == id);
         if (dreamToUpdate == null)
         {
@@ -236,8 +235,7 @@ public class DreamController(
             return Forbid();
 
         // TODO : move non controller logic to DreamService?
-        var viewModel = mapper.ToViewModel(result.Dream);
-        return View(viewModel);
+        return View(result.Dream);
     }
 
     // POST: Dream/Delete/5
@@ -245,11 +243,11 @@ public class DreamController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var loadResult = await dreamService.GetForDelete(id);
-        if (loadResult.Status == DreamDeleteStatus.NotFound)
+        var result = await dreamService.GetForDelete(id);
+        if (result.Status == DreamDeleteStatus.NotFound)
             return NotFound();
 
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, loadResult.Dream!.Dreamers, Operations.Delete);
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, result.Dream!.Dreamers, Operations.Delete);
         if (!authorizationResult.Succeeded)
             return Forbid();
 
@@ -270,7 +268,7 @@ public class DreamController(
         }
 
         // Check dream stuff
-        var dreamFromDb = await dreamService.GetDreamsByCloudIdBaseQuery()
+        var dreamFromDb = await dreamService.GetFullQuery()
             .SingleOrDefaultAsync(d => d.ID == dreamID);
 
         if (dreamFromDb == null)
@@ -355,8 +353,7 @@ public class DreamController(
         return result.Status switch
         {
             FundDreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id = dreamId }),
-            FundDreamServiceStatus.DreamNotFound => NotFound(),
-            FundDreamServiceStatus.UserNotFound => Challenge(),
+            FundDreamServiceStatus.CantFundDream => BadRequest(),
             FundDreamServiceStatus.InvalidAmount => BadRequest(result.Message),
             FundDreamServiceStatus.WalletNotFound => BadRequest(result.Message),
             FundDreamServiceStatus.InsufficientFunds => BadRequest(result.Message),

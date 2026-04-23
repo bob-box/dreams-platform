@@ -9,8 +9,7 @@ public enum FundDreamServiceStatus
 {
     Success,
     InvalidAmount,
-    DreamNotFound,
-    UserNotFound,
+    CantFundDream,
     WalletNotFound,
     InsufficientFunds,
     ExceedsRoundLimit,
@@ -28,11 +27,15 @@ public enum DreamDeleteStatus
     NotFound
 }
 
-public record DreamDeleteResult(DreamDeleteStatus Status, Dream? Dream = null);
+public record DreamDeleteResult(DreamDeleteStatus Status, DreamViewModel? Dream = null);
+public record FundingContext(
+    User User,
+    Wallet Wallet,
+    FundingRoundViewModel ActiveFundingRound);
 
 public interface IDreamService
 {
-    IQueryable<Dream> GetDreamsByCloudIdBaseQuery();
+    IQueryable<Dream> GetFullQuery();
     Task<DreamFilterViewModel> BuildDreamFilterViewModel(
         string? searchText,
         DreamStatus? statusFilter,
@@ -47,6 +50,7 @@ public interface IDreamService
     Task<DreamDeleteResult> Delete(int id);
     Task<FundDreamServiceResult> GetFundingModal(int dreamId, string userId);
     Task<FundDreamServiceResult> FundDream(int dreamId, decimal amount, string userId);
+    Task<DreamViewModel?> GetQuick(int id);
     bool DreamExists(int iD, int cloudID);
     Task<bool> CheckIfUserCanEditDreamers(IEnumerable<IDreamersForAuthorization> dreamers, ClaimsPrincipal user);
 }

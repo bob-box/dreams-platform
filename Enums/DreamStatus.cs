@@ -7,7 +7,7 @@ public enum DreamStatus
     Hidden,
     Draft,
     Active,
-    PartiallyFunded,
+    PartiallyFunded, // what is the difference between this and FullyFunded? Maybe we can just have 1 "Funded"?
     FullyFunded,
     Canceled
 }
