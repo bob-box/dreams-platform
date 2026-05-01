@@ -27,6 +27,9 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Global query filters for soft delete
+        modelBuilder.Entity<Cloud>().HasQueryFilter(x => !x.IsDeleted);
+        modelBuilder.Entity<Dream>().HasQueryFilter(x => !x.IsDeleted);
 
         modelBuilder.Entity<User>()
             .Ignore(u => u.PhoneNumber)

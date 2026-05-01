@@ -59,8 +59,8 @@ public class CloudService(
         var cloud = await context.Cloud.FindAsync(id);
         if (cloud == null)
             return CloudServiceStatus.NotFound;
-
-        context.Cloud.Remove(cloud);
+  
+        cloud.IsDeleted = true;
         cloudCache.Remove(cloud.Name);
         await context.SaveChangesAsync();
 

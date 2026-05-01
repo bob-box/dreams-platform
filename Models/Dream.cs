@@ -24,4 +24,5 @@ public class Dream : IAutoPopulateCreatedAtOnAdd
     public ICollection<Expense> Expenses { get; set; } = [];
     public ICollection<Tag> Tags { get; set; } = [];
     public ICollection<Dreamer> Dreamers { get; set; } = [];
+    public bool IsDeleted { get; set; } = false;
 }

@@ -193,7 +193,9 @@ public class DreamService(
 
     public async Task<DreamServiceResult> Delete(int id)
     {
-        var dream = await context.Dream.SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
+        var dream = await context.Dream
+        .Include(d => d.Dreamers).ThenInclude(d => d.User)
+        .SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
 
         if (dream == null)
             return new DreamServiceResult(DreamServiceStatus.NotFound);
@@ -202,7 +204,7 @@ public class DreamService(
         if (!authorizationResult.Succeeded)
             return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
-        context.Dream.Remove(dream);
+        dream.IsDeleted = true;
         await context.SaveChangesAsync();
         return new DreamServiceResult(DreamServiceStatus.Success);
     }
