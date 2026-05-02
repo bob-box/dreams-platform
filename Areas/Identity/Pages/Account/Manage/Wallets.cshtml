@@ -25,7 +25,10 @@ else
                 @foreach (var wallet in Model.Wallets)
                 {
                     <tr>
-                        <td>@wallet.CloudName</td>
+                        
+                        <td>
+                            <a asp-area="" asp-controller="Dream" asp-action="Index" asp-route-cloudName="@wallet.CloudName">@wallet.CloudName</a>
+                        </td>
                         <td>@wallet.Balance.ToString("C")</td>
                     </tr>
                 }
