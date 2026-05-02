@@ -15,7 +15,7 @@ public class TagService(
     IMemoryCache memoryCache,
     MapperFacade mapper) : ITagService
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(60);
     private string TagsCacheKey => $"tags:cloud:{cloudNameResolver.CloudID}";
 
     public async Task<List<TagViewModel>> GetAll()

@@ -16,6 +16,7 @@ namespace Borderland.Dreams.Controllers;
 public class DreamController(
     UserManager<User> userManager,
     IDreamService dreamService,
+    IDreamFundingService dreamFundingService,
     ICloudService cloudService,
     ITagService tagService,
     ICloudNameResolver cloudNameService
@@ -245,7 +246,7 @@ public class DreamController(
     public async Task<IActionResult> GetFundingModal(int dreamId)
     {
         var userId = GetCurrentUserId();
-        var result = await dreamService.GetFundingModal(dreamId, userId);
+        var result = await dreamFundingService.GetFundingModal(dreamId, userId);
         return result.Status switch
         {
             FundDreamServiceStatus.Success => PartialView("_FundingModal", result.ViewModel),
@@ -262,7 +263,7 @@ public class DreamController(
     {
         var userId = GetCurrentUserId();
 
-        var result = await dreamService.FundDream(dreamId, amount, userId);
+        var result = await dreamFundingService.FundDream(dreamId, amount, userId);
         return result.Status switch
         {
             FundDreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id = dreamId }),

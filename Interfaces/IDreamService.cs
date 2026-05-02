@@ -5,22 +5,6 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Interfaces;
 
-public enum FundDreamServiceStatus
-{
-    Success,
-    InvalidAmount,
-    CantFundDream,
-    WalletNotFound,
-    InsufficientFunds,
-    ExceedsRoundLimit,
-    NoActiveFundingRound
-}
-
-public record FundDreamServiceResult(
-    FundDreamServiceStatus Status,
-    string? Message = null,
-    FundingModalViewModel? ViewModel = null);
-
 public enum DreamServiceStatus
 {
     Success,
@@ -29,10 +13,6 @@ public enum DreamServiceStatus
 }
 
 public record DreamServiceResult(DreamServiceStatus Status, DreamViewModel? Dream = null);
-public record FundingContext(
-    User User,
-    Wallet Wallet,
-    FundingRoundViewModel ActiveFundingRound);
 
 public interface IDreamService
 {
@@ -50,8 +30,6 @@ public interface IDreamService
     Task<DreamServiceResult> Delete(int id);
     Task<DreamServiceResult> GetQuick(int id);
     Task<DreamServiceResult> GetFull(int id);
-    Task<FundDreamServiceResult> GetFundingModal(int dreamId, string userId);
-    Task<FundDreamServiceResult> FundDream(int dreamId, decimal amount, string userId);
     bool DreamExists(int iD, int cloudID);
     Task<bool> CanUserEditDreamers(DreamViewModel dream, ClaimsPrincipal user);
 }

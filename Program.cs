@@ -21,6 +21,13 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+// Add Hangfire services.
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSQLiteStorage());
+    
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -58,6 +65,7 @@ builder.Services.AddSingleton<IAppTime>(sp =>
 // Application services.
 builder.Services.AddScoped<MapperFacade>();
 builder.Services.AddScoped<IDreamService, DreamService>();
+builder.Services.AddScoped<IDreamFundingService, DreamFundingService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICloudService, CloudService>();
 builder.Services.AddScoped<ITagService, TagService>();
@@ -66,13 +74,6 @@ builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
 builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();
 builder.Services.AddSingleton<ICloudCache, CloudCache>();
-
-// Add Hangfire services.
-builder.Services.AddHangfire(configuration => configuration
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UseSQLiteStorage());
 
 builder.Services.AddHangfireServer(options =>
 {
