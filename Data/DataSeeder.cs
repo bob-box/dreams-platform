@@ -22,8 +22,9 @@ public static class DataSeeder
         await AddUsersToCloudAsync(serviceProvider, cloudId, adminId, userId);
         var testTags = await AddTestTagsAsync(serviceProvider, cloudId);
         var firstTag = testTags.First();
-        await AddTestDreamAsync(serviceProvider, userId, cloudId, firstTag);
-        //await AddTestFundingRoundAsync(serviceProvider);
+        var dreamId = await AddTestDreamAsync(serviceProvider, userId, cloudId, firstTag);
+        var fundingRoundId = await AddTestFundingRoundAsync(serviceProvider, cloudId);
+        await AddFundsToTestDreamAsync(serviceProvider, cloudId, userId, dreamId, fundingRoundId);
     }
 
     private static async Task AddRolesAsync(IServiceProvider serviceProvider)
@@ -176,7 +177,7 @@ public static class DataSeeder
             .ToList();
     }
 
-    private static async Task AddTestDreamAsync(IServiceProvider serviceProvider, string userId, int cloudId, Tag tag)
+    private static async Task<int> AddTestDreamAsync(IServiceProvider serviceProvider, string userId, int cloudId, Tag tag)
     {
         var dreamName = "Test Dream";
         var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
@@ -187,20 +188,20 @@ public static class DataSeeder
 
         if (dream == null)
         {
-            context.Dream.Add(new Dream
+            dream = new Dream
             {
                 CloudID = cloudId,
                 Name = dreamName,
                 Description = "This is a test dream used for development and testing purposes.",
-                CreatedAt = _appTime.UtcNow,
                 Tags = [tag],
+                Status = Enums.DreamStatus.Active,
                 Dreamers =
                 [
                     new Dreamer { UserID = userId, IsMainDreamer = true }
                 ]
-            });
+            };
+            context.Dream.Add(dream);
             await context.SaveChangesAsync();
-            return;
         }
 
         if (!dream.Tags.Any(x => x.ID == tag.ID))
@@ -208,36 +209,57 @@ public static class DataSeeder
             dream.Tags.Add(tag);
             await context.SaveChangesAsync();
         }
+        return dream.ID;
     }
 
-    public static async Task AddTestFundingRoundAsync(IServiceProvider serviceProvider)
+    public static async Task<int> AddTestFundingRoundAsync(IServiceProvider serviceProvider, int cloudId)
     {
         var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
         var schedulerService = serviceProvider.GetRequiredService<FundingRoundSchedulerService>();
 
-        var cloud = await context.Cloud.SingleOrDefaultAsync(x => x.Name == "test");
-        if (cloud != null)
+        var fundingRound = await context.FundingRound
+            .SingleOrDefaultAsync(fr => fr.CloudID == cloudId && fr.Title == "Test Round");
+        if (fundingRound == null)
         {
-            var existingRound = await context.FundingRound
-                .SingleOrDefaultAsync(fr => fr.CloudID == cloud.ID && fr.Title == "Test Round");
-            if (existingRound == null)
+            fundingRound = new FundingRound
             {
-                var fundingRound = new FundingRound
-                {
-                    CloudID = cloud.ID,
-                    Title = "Test Round",
-                    StartDate = _appTime.UtcNow.AddDays(-1),
-                    EndDate = _appTime.UtcNow.AddDays(30),
-                    MaxPercentagePerDream = 10m, // 10% of per-user allocation
-                    AllocationPerUser = 100m // each user receives 100 units
-                };
-                context.FundingRound.Add(fundingRound);
-                await context.SaveChangesAsync();
+                CloudID = cloudId,
+                Title = "Test Round",
+                StartDate = _appTime.UtcNow.AddDays(-1),
+                EndDate = _appTime.UtcNow.AddDays(30),
+                MaxPercentagePerDream = 10m, // 10% of per-user allocation
+                AllocationPerUser = 100m // each user receives 100 units
+            };
+            context.FundingRound.Add(fundingRound);
+            await context.SaveChangesAsync();
 
-                // Schedule Hangfire jobs for this funding round and save job IDs
-                schedulerService.ScheduleFundingRoundJobs(fundingRound);
-                await context.SaveChangesAsync();
-            }
+            // Schedule Hangfire jobs for this funding round and save job IDs
+            schedulerService.ScheduleFundingRoundJobs(fundingRound);
+            await context.SaveChangesAsync();
+
+            return fundingRound.ID;
+        }
+        return fundingRound.ID;
+    }
+
+    private static async Task AddFundsToTestDreamAsync(IServiceProvider serviceProvider, int cloudId, string userId, int dreamId, int fundingRoundId)
+    {
+        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var existingFund = await context.Fund
+            .FirstOrDefaultAsync(f => f.DreamID == dreamId && f.UserID == userId && f.FundingRoundID == fundingRoundId);
+
+        if (existingFund == null)
+        {
+            var fund = new Fund
+            {
+                DreamID = dreamId,
+                UserID = userId,
+                FundingRoundID = fundingRoundId,
+                Amount = 10m,
+            };
+            context.Fund.Add(fund);
+            await context.SaveChangesAsync();
         }
     }
 }
