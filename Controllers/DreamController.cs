@@ -107,7 +107,7 @@ public class DreamController(
         if (result.Status == DreamServiceStatus.NotFound) return NotFound();
         if (result.Status == DreamServiceStatus.NotAllowed) return Forbid();
 
-        result.Dream.SelectedTagIds = result.Dream.Tags.Select(t => t.ID).ToList();
+        result.Dream!.SelectedTagIds = result.Dream.Tags.Select(t => t.ID).ToList();
         ViewBag.AvailableTags = await tagService.GetAll();
 
         return View(result.Dream);
@@ -209,7 +209,7 @@ public class DreamController(
         {
             return BadRequest("This user has not confirmed their email address and cannot be added as a dreamer.");
         }
-        if (result.Dream.Dreamers.Any(d => d.UserID == userToAdd.Id))
+        if (result.Dream!.Dreamers.Any(d => d.UserID == userToAdd.Id))
         {
             return BadRequest("This user is already a dreamer for this dream.");
         }
@@ -246,6 +246,9 @@ public class DreamController(
     public async Task<IActionResult> GetFundingModal(int dreamId)
     {
         var userId = GetCurrentUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return BadRequest("User not authenticated.");
+            
         var result = await dreamFundingService.GetFundingModal(dreamId, userId);
         return result.Status switch
         {
@@ -262,6 +265,8 @@ public class DreamController(
     public async Task<IActionResult> Fund(int dreamId, decimal amount)
     {
         var userId = GetCurrentUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return BadRequest("User not authenticated.");
 
         var result = await dreamFundingService.FundDream(dreamId, amount, userId);
         return result.Status switch

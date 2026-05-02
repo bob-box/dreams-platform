@@ -64,10 +64,10 @@ public class DreamService(
         // Admins are allowed to see all dreams
         if (!isAdmin)
         {
-            // Do not show dreams that are in Draft or Hidden status
+            // Do not show dreams that are in Hidden status
             // But dreamers are still allowed to see their own dreams :)
             listQuery = listQuery.Where(x =>
-                (x.Status != DreamStatus.Hidden && x.Status != DreamStatus.Draft)
+                (x.Status != DreamStatus.Hidden)
                 || x.Dreamers.Any(d => d.UserID == currentUserId));
         }
 

@@ -11,7 +11,7 @@ namespace Borderland.Dreams.Data;
 
 public static class DataSeeder
 {
-    private static AppTime _appTime;
+    private static AppTime _appTime = null!; // Will be set in SeedAsync method
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
         _appTime = serviceProvider.GetRequiredService<IAppTime>() as AppTime ?? throw new Exception("Failed to resolve AppTime from service provider.");
