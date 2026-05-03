@@ -3,7 +3,6 @@ using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Enums;
 using Borderland.Dreams.Interfaces;
-using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
@@ -18,7 +17,7 @@ public class DreamService(
     ICloudNameResolver cloudNameService,
     ITagService tagService,
     IAuthorizationService authorizationService,
-    MapperFacade mapper,
+    IMapperFacade mapper,
     IHttpContextAccessor httpContextAccessor
 ) : IDreamService
 {

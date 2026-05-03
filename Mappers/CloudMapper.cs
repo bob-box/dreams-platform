@@ -4,7 +4,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class CloudMapper(MapperFacade mapper, IAppTime appTime)
+public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
 {
     public CloudViewModel? ToViewModel(Cloud model)
     {

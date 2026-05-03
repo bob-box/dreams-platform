@@ -3,7 +3,6 @@ using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Enums;
 using Borderland.Dreams.Interfaces;
-using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
@@ -16,7 +15,7 @@ public class UserService(
     ApplicationDbContext _context,
     ICloudNameResolver cloudNameResolver,
     UserManager<User> userManager,
-    MapperFacade mapper
+    IMapperFacade mapper
     ) : IUserService
 {
     private static readonly string[] ManageableRoles = [Constants.AdminRole, Constants.MemberRole];

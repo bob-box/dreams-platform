@@ -1,7 +1,6 @@
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Extensions;
 using Borderland.Dreams.Interfaces;
-using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
@@ -15,7 +14,7 @@ public class FundingRoundService(
     ICloudNameResolver cloudNameResolver,
     FundingRoundSchedulerService schedulerService,
     IAppTime appTime,
-    MapperFacade mapper
+    IMapperFacade mapper
     ) : IFundingRoundService
 {
     private enum FundingRoundLoadMode

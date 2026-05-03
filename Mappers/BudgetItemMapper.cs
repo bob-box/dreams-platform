@@ -4,7 +4,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class BudgetItemMapper(MapperFacade mapper, IAppTime appTime)
+public class BudgetItemMapper(IMapperFacade mapper, IAppTime appTime)
 {
     public  BudgetItemViewModel? ToViewModel(BudgetItem model)
     {

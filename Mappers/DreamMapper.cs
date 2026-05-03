@@ -1,11 +1,10 @@
-using Borderland.Dreams.Extensions;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class DreamMapper(MapperFacade mapper, IAppTime appTime)
+public class DreamMapper(IMapperFacade mapper, IAppTime appTime)
 {
     public DreamViewModel? ToViewModel(Dream model)
     {

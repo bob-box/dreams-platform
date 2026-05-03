@@ -4,7 +4,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class WalletMapper(MapperFacade mapper, IAppTime appTime)
+public class WalletMapper(IMapperFacade mapper, IAppTime appTime)
 {
     public WalletViewModel? ToViewModel(Wallet model)
     {

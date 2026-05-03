@@ -1,6 +1,5 @@
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Interfaces;
-using Borderland.Dreams.Mappers;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
@@ -13,7 +12,7 @@ public class TagService(
     ApplicationDbContext context,
     ICloudNameResolver cloudNameResolver,
     IMemoryCache memoryCache,
-    MapperFacade mapper) : ITagService
+    IMapperFacade mapper) : ITagService
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(60);
     private string TagsCacheKey => $"tags:cloud:{cloudNameResolver.CloudID}";

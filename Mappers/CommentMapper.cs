@@ -4,7 +4,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class CommentMapper(MapperFacade mapper, IAppTime appTime)
+public class CommentMapper(IMapperFacade mapper, IAppTime appTime)
 {
     public CommentViewModel? ToViewModel(Comment model)
     {

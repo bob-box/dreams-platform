@@ -4,7 +4,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class DreamerMapper(MapperFacade mapper, IAppTime appTime)
+public class DreamerMapper(IMapperFacade mapper, IAppTime appTime)
 {
     public DreamerViewModel? ToViewModel(Dreamer model)
     {

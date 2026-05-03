@@ -4,7 +4,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class FundingRoundMapper(MapperFacade mapper, IAppTime appTime)
+public class FundingRoundMapper(IMapperFacade mapper, IAppTime appTime)
 {
     public FundingRoundViewModel? ToViewModel(FundingRound model)
     {

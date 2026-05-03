@@ -4,7 +4,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class TagMapper(MapperFacade mapper, IAppTime appTime) : IEntityMapper<Tag, TagViewModel>
+public class TagMapper(IMapperFacade mapper, IAppTime appTime) : IEntityMapper<Tag, TagViewModel>
 {
     public TagViewModel? ToViewModel(Tag model)
     {
