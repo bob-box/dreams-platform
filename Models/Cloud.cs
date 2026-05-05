@@ -31,8 +31,8 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
     public decimal TotalFundsSpent { get; set; } = 0;
 
     // Navigation properties
-    public ICollection<Dream>? Dreams { get; set; } = [];
-    public ICollection<FundingRound>? FundingRounds { get; set; } = [];
+    public ICollection<Dream>? Dreams { get; set; }
+    public ICollection<FundingRound>? FundingRounds { get; set; }
     public ICollection<Tag> Tags { get; set; } = [];
     public bool IsDeleted { get; set; } = false;
 }

@@ -147,10 +147,13 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 });
 
 app.MapControllerRoute(
-    name: "areas",
+    name: "areas-within-a-cloud", // For example editing a cloud or its funding rounds
     pattern: "{cloudName:required}/{area:exists}/{controller:required}/{action=Index}/{id?}"
     );
-
+app.MapControllerRoute(
+    name: "areas-outside-of-cloud", // for example creating a new cloud
+    pattern: "{area:exists}/{controller:required}/{action=Index}/{id?}"
+    );
 app.MapControllerRoute(
     name: "cloudName-dreams-group",
     pattern: "{cloudName:required}/{controller:required}/{action=Index}/{id?}"

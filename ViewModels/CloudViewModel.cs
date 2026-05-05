@@ -16,6 +16,6 @@ public class CloudViewModel
     public decimal TotalFundsRemaining { get; set; } = 0;
     [DataType(DataType.Currency)]
     public decimal TotalFundsSpent { get; set; }
-    public List<DreamViewModel>? Dreams { get; set; }
-    public List<FundingRoundViewModel>? FundingRounds { get; set; }
+    public List<DreamViewModel>? Dreams { get; set; } = [];
+    public List<FundingRoundViewModel>? FundingRounds { get; set; } = [];
 }

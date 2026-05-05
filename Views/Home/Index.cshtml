@@ -6,9 +6,12 @@
 
 <h1>Clouds List</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+@if(User.IsInRole(Constants.AdminRole))
+{
+    <p>
+        <a asp-area="Admin" asp-controller="Cloud" asp-action="Create">Create New</a>
+    </p>
+}
 <table class="table">
     <thead>
         <tr>
