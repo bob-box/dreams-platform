@@ -5,12 +5,14 @@ using Borderland.Dreams.Middleware;
 using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Models;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.ViewComponents;
 
 public class CloudFundsViewComponent(
     ApplicationDbContext context,
     ICloudNameResolver cloudNameResolver,
+    IFundingRoundService fundingRoundService,
     UserManager<User> userManager) : ViewComponent
 {
 
@@ -37,12 +39,16 @@ public class CloudFundsViewComponent(
                 .SingleOrDefaultAsync();
         }
 
+        var fundingRounds = await fundingRoundService.GetAll();
+        
+
         var model = new CloudFundsViewModel
         {
             TotalFundsAvailable = cloud.TotalFundsAvailable,
             TotalFundsSpent = cloud.TotalFundsSpent,
             TotalFundsRemaining = cloud.TotalFundsRemaining,
-            UserWalletBalance = userWalletBalance
+            UserWalletBalance = userWalletBalance,
+            FundingRounds = fundingRounds
         };
 
         return View(model);

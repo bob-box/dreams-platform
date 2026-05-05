@@ -6,4 +6,6 @@ public class CloudFundsViewModel
     public decimal TotalFundsSpent { get; set; }
     public decimal TotalFundsRemaining { get; set; }
     public decimal UserWalletBalance { get; set; }
+    
+    public List<FundingRoundViewModel> FundingRounds { get; set; }
 }

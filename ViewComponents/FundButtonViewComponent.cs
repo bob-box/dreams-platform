@@ -5,7 +5,7 @@ using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.ViewComponents;
 
-public class ActiveFundingRoundViewComponent(
+public class FundButtonViewComponent(
     ICloudNameResolver cloudNameResolver,
     IFundingRoundService fundingRoundService,
     IDreamService dreamService
@@ -24,7 +24,7 @@ public class ActiveFundingRoundViewComponent(
         if (result.Status == DreamServiceStatus.NotFound || result.Dream?.IsOpenToFunding() == false)
             return Content(string.Empty);
 
-        var model = new ActiveFundingRoundViewModel
+        var model = new FundButtonViewModel
         {
             DreamId = dreamId
         };

@@ -1,6 +1,6 @@
 namespace Borderland.Dreams.ViewModels;
 
-public class ActiveFundingRoundViewModel
+public class FundButtonViewModel
 {
     public int DreamId { get; set; }
 }
