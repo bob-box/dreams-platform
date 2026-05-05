@@ -6,7 +6,7 @@
 }
 
 <h1>@cloudNameResolver.CloudName - Dreams List</h1>
-<cache expires-after="@TimeSpan.FromSeconds(60)">
+<cache expires-after="@TimeSpan.FromSeconds(60)" vary-by="@cloudNameResolver.CloudID">
     <vc:cloud-funds />
 </cache>
 @if (User.Identity?.IsAuthenticated == true)

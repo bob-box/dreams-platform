@@ -48,7 +48,7 @@ public class CloudFundsViewComponent(
             TotalFundsSpent = cloud.TotalFundsSpent,
             TotalFundsRemaining = cloud.TotalFundsRemaining,
             UserWalletBalance = userWalletBalance,
-            FundingRounds = fundingRounds
+            FundingRounds = fundingRounds.OrderBy(x => x.StartDate).ToList()
         };
 
         return View(model);

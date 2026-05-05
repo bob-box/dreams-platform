@@ -8,9 +8,21 @@
                 <ul class="list-group">
                     @foreach (var round in Model.FundingRounds)
                     {
-                        var cssClass = round.IsActive(appTime) ? "list-group-item active" : round.HasPassed(appTime) ? "disabled" : "";
+                        var cssClass = round.HasPassed(appTime) ? "disabled" : "";
                         <li class="list-group-item @cssClass">
                             @round.StartDate.ToShortDateString() - @round.EndDate.ToShortDateString()
+                            @if (round.IsActive(appTime))
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else if (round.HasPassed(appTime))
+                            {
+                                <span class="badge bg-secondary">Passed</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">Upcoming</span>
+                            }
                         </li>
                     }
                 </ul>
