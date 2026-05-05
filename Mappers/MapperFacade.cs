@@ -36,45 +36,45 @@ public class MapperFacade : IMapperFacade
     }
 
     #region ToViewModel
-    public DreamViewModel? ToViewModel(Dream model) => _dreamMapper.ToViewModel(model);
-    public CloudViewModel? ToViewModel(Cloud model) => _cloudMapper.ToViewModel(model);
-    public TagViewModel? ToViewModel(Tag model) => _tagMapper.ToViewModel(model);
-    public UserViewModel? ToViewModel(User model) => _userMapper.ToViewModel(model);
-    public WalletViewModel? ToViewModel(Wallet model) => _walletMapper.ToViewModel(model);
-    public FundingRoundViewModel? ToViewModel(FundingRound model) => _fundingRoundMapper.ToViewModel(model);
-    public BudgetItemViewModel? ToViewModel(BudgetItem model) => _budgetItemMapper.ToViewModel(model);
-    public CommentViewModel? ToViewModel(Comment model) => _commentMapper.ToViewModel(model);
-    public FundViewModel? ToViewModel(Fund model) => _fundMapper.ToViewModel(model);
-    public ExpenseViewModel? ToViewModel(Expense model) => _expenseMapper.ToViewModel(model);
-    public DreamerViewModel? ToViewModel(Dreamer model) => _dreamerMapper.ToViewModel(model);
+    public DreamViewModel ToViewModel(Dream model) => _dreamMapper.ToViewModel(model);
+    public CloudViewModel ToViewModel(Cloud model) => _cloudMapper.ToViewModel(model);
+    public TagViewModel ToViewModel(Tag model) => _tagMapper.ToViewModel(model);
+    public UserViewModel ToViewModel(User model) => _userMapper.ToViewModel(model);
+    public WalletViewModel ToViewModel(Wallet model) => _walletMapper.ToViewModel(model);
+    public FundingRoundViewModel ToViewModel(FundingRound model) => _fundingRoundMapper.ToViewModel(model);
+    public BudgetItemViewModel ToViewModel(BudgetItem model) => _budgetItemMapper.ToViewModel(model);
+    public CommentViewModel ToViewModel(Comment model) => _commentMapper.ToViewModel(model);
+    public FundViewModel ToViewModel(Fund model) => _fundMapper.ToViewModel(model);
+    public ExpenseViewModel ToViewModel(Expense model) => _expenseMapper.ToViewModel(model);
+    public DreamerViewModel ToViewModel(Dreamer model) => _dreamerMapper.ToViewModel(model);
     #endregion ToViewModel
 
     #region ToViewModels
-    public List<DreamViewModel> ToViewModels(ICollection<Dream> models) => models.Select(ToViewModel).ToList();
-    public List<FundingRoundViewModel> ToViewModels(ICollection<FundingRound> models) => models.Select(ToViewModel).ToList();
-    public List<BudgetItemViewModel> ToViewModels(ICollection<BudgetItem> models) => models.Select(ToViewModel).ToList();
-    public List<CommentViewModel> ToViewModels(ICollection<Comment> models) => models.Select(ToViewModel).ToList();
-    public List<FundViewModel> ToViewModels(ICollection<Fund> models) => models.Select(ToViewModel).ToList();
-    public List<ExpenseViewModel> ToViewModels(ICollection<Expense> models) => models.Select(ToViewModel).ToList();
-    public List<DreamerViewModel> ToViewModels(ICollection<Dreamer> models) => models.Select(ToViewModel).ToList();
-    public List<TagViewModel> ToViewModels(ICollection<Tag> models) => models.Select(ToViewModel).ToList();
-    public List<CloudViewModel> ToViewModels(ICollection<Cloud> models) => models.Select(ToViewModel).ToList();
-    public List<UserViewModel> ToViewModels(ICollection<User> models) => models.Select(ToViewModel).ToList();
-    public List<WalletViewModel> ToViewModels(ICollection<Wallet> models) => models.Select(ToViewModel).ToList();
+    public List<DreamViewModel> ToViewModels(ICollection<Dream> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<FundingRoundViewModel> ToViewModels(ICollection<FundingRound> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<BudgetItemViewModel> ToViewModels(ICollection<BudgetItem> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<CommentViewModel> ToViewModels(ICollection<Comment> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<FundViewModel> ToViewModels(ICollection<Fund> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<ExpenseViewModel> ToViewModels(ICollection<Expense> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<DreamerViewModel> ToViewModels(ICollection<Dreamer> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<TagViewModel> ToViewModels(ICollection<Tag> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<CloudViewModel> ToViewModels(ICollection<Cloud> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<UserViewModel> ToViewModels(ICollection<User> models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<WalletViewModel> ToViewModels(ICollection<Wallet> models) => models?.Select(ToViewModel).ToList() ?? [];
     #endregion ToViewModels
 
     #region ToModel
-    public Dream? ToModel(DreamViewModel vm) => _dreamMapper.ToModel(vm);
-    public Cloud? ToModel(CloudViewModel vm) => _cloudMapper.ToModel(vm);
-    public Tag? ToModel(TagViewModel vm) => _tagMapper.ToModel(vm);
-    // public User? ToModel(UserViewModel vm) => _userMapper.ToModel(vm);
-    public Wallet? ToModel(WalletViewModel vm) => _walletMapper.ToModel(vm);
-    public FundingRound? ToModel(FundingRoundViewModel vm) => _fundingRoundMapper.ToModel(vm);
-    public BudgetItem? ToModel(BudgetItemViewModel vm) => _budgetItemMapper.ToModel(vm);
-    public Comment? ToModel(CommentViewModel vm) => _commentMapper.ToModel(vm);
-    public Fund? ToModel(FundViewModel vm) => _fundMapper.ToModel(vm);
-    public Expense? ToModel(ExpenseViewModel vm) => _expenseMapper.ToModel(vm);
-    public Dreamer? ToModel(DreamerViewModel vm) => _dreamerMapper.ToModel(vm);
+    public Dream ToModel(DreamViewModel vm) => _dreamMapper.ToModel(vm);
+    public Cloud ToModel(CloudViewModel vm) => _cloudMapper.ToModel(vm);
+    public Tag ToModel(TagViewModel vm) => _tagMapper.ToModel(vm);
+    // public User ToModel(UserViewModel vm) => _userMapper.ToModel(vm);
+    public Wallet ToModel(WalletViewModel vm) => _walletMapper.ToModel(vm);
+    public FundingRound ToModel(FundingRoundViewModel vm) => _fundingRoundMapper.ToModel(vm);
+    public BudgetItem ToModel(BudgetItemViewModel vm) => _budgetItemMapper.ToModel(vm);
+    public Comment ToModel(CommentViewModel vm) => _commentMapper.ToModel(vm);
+    public Fund ToModel(FundViewModel vm) => _fundMapper.ToModel(vm);
+    public Expense ToModel(ExpenseViewModel vm) => _expenseMapper.ToModel(vm);
+    public Dreamer ToModel(DreamerViewModel vm) => _dreamerMapper.ToModel(vm);
     #endregion ToModel
 
     #region ToModels

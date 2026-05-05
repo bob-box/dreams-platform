@@ -6,9 +6,8 @@ namespace Borderland.Dreams.Mappers;
 
 public class DreamerMapper(IMapperFacade mapper, IAppTime appTime)
 {
-    public DreamerViewModel? ToViewModel(Dreamer model)
+    public DreamerViewModel ToViewModel(Dreamer model)
     {
-        if (model == null) return null!;
         return new DreamerViewModel
         {
             ID = model.ID,
@@ -19,9 +18,8 @@ public class DreamerMapper(IMapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public Dreamer? ToModel(DreamerViewModel vm)
+    public Dreamer ToModel(DreamerViewModel vm)
     {
-        if (vm == null) return null!;
         return new Dreamer
         {
             ID = vm.ID,

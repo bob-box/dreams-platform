@@ -6,9 +6,8 @@ namespace Borderland.Dreams.Mappers;
 
 public class ExpenseMapper(IMapperFacade mapper, IAppTime appTime)
 {
-    public ExpenseViewModel? ToViewModel(Expense model)
+    public ExpenseViewModel ToViewModel(Expense model)
     {
-        if (model == null) return null!;
         return new ExpenseViewModel
         {
             ID = model.ID,
@@ -19,9 +18,8 @@ public class ExpenseMapper(IMapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public Expense? ToModel(ExpenseViewModel vm)
+    public Expense ToModel(ExpenseViewModel vm)
     {
-        if (vm == null) return null!;
         return new Expense
         {
             ID = vm.ID,

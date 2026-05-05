@@ -6,9 +6,8 @@ namespace Borderland.Dreams.Mappers;
 
 public class FundingRoundMapper(IMapperFacade mapper, IAppTime appTime)
 {
-    public FundingRoundViewModel? ToViewModel(FundingRound model)
+    public FundingRoundViewModel ToViewModel(FundingRound model)
     {
-        if (model == null) return null!;
         return new FundingRoundViewModel
         {
             ID = model.ID,
@@ -22,9 +21,8 @@ public class FundingRoundMapper(IMapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public FundingRound? ToModel(FundingRoundViewModel vm)
+    public FundingRound ToModel(FundingRoundViewModel vm)
     {
-        if (vm == null) return null!;
         return new FundingRound
         {
             ID = vm.ID,

@@ -6,9 +6,8 @@ namespace Borderland.Dreams.Mappers;
 
 public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
 {
-    public CloudViewModel? ToViewModel(Cloud model)
+    public CloudViewModel ToViewModel(Cloud model)
     {
-        if (model == null) return null!;
         return new CloudViewModel
         {
             ID = model.ID,
@@ -21,9 +20,8 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public Cloud? ToModel(CloudViewModel vm)
+    public Cloud ToModel(CloudViewModel vm)
     {
-        if (vm == null) return null!;
         return new Cloud
         {
             ID = vm.ID,

@@ -6,9 +6,8 @@ namespace Borderland.Dreams.Mappers;
 
 public class CommentMapper(IMapperFacade mapper, IAppTime appTime)
 {
-    public CommentViewModel? ToViewModel(Comment model)
+    public CommentViewModel ToViewModel(Comment model)
     {
-        if (model == null) return null!;
         return new CommentViewModel
         {
             ID = model.ID,
@@ -19,9 +18,8 @@ public class CommentMapper(IMapperFacade mapper, IAppTime appTime)
         };
     }
 
-    public Comment? ToModel(CommentViewModel vm)
+    public Comment ToModel(CommentViewModel vm)
     {
-        if (vm == null) return null!;
         return new Comment
         {
             ID = vm.ID,
