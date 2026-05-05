@@ -28,4 +28,5 @@ public interface ICloudService
     Task<JoinCloudResult> Join(int cloudId, string userId);
     Task<bool> UserHasJoinedCloud(string userId);
     Task<bool> UserHasJoinedCloud(User user);
+    Task<bool> IsDreamingPeriodActive(int cloudID);
 }

@@ -23,4 +23,26 @@ public static partial class Extensions
     {
         return new DateTime(@this.Year, @this.Month, @this.Day);
     }
+
+    /// <summary>
+    /// Determines whether a nullable date falls within a nullable date range.
+    /// </summary>
+    /// <param name="date">The date to evaluate.</param>
+    /// <param name="start">The start of the range (inclusive by default). If null, no lower bound is applied.</param>
+    /// <param name="end">The end of the range (inclusive by default). If null, no upper bound is applied.</param>
+    /// <param name="inclusive">
+    /// If <c>true</c> (default), the comparison is inclusive of <paramref name="start"/> and <paramref name="end"/>.
+    /// If <c>false</c>, the boundaries are excluded.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if <paramref name="date"/> is within the specified range; otherwise <c>false</c>.
+    /// Returns <c>true</c> if both <paramref name="start"/> and <paramref name="end"/> are null.
+    /// </returns>
+    public static bool IsBetween(this DateTime date, DateTime? start, DateTime? end, bool inclusive = true)
+    {
+        var afterStart = start is null || (inclusive ? date >= start : date > start);
+        var beforeEnd = end is null || (inclusive ? date <= end : date < end);
+
+        return afterStart && beforeEnd;
+    }
 }

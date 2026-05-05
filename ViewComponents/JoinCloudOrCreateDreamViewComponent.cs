@@ -10,7 +10,9 @@ namespace Borderland.Dreams.ViewComponents;
 public partial class JoinCloudOrCreateDreamViewComponent(
     ICloudService cloudService,
     UserManager<User> userManager,
-    ICloudNameResolver cloudNameResolver) : ViewComponent
+    ICloudNameResolver cloudNameResolver,
+    IAppTime appTime
+    ) : ViewComponent
 {
     public async Task<IViewComponentResult> InvokeAsync()
     {
@@ -20,10 +22,13 @@ public partial class JoinCloudOrCreateDreamViewComponent(
             !string.IsNullOrWhiteSpace(currentUserId) &&
             await cloudService.UserHasJoinedCloud(currentUserId);
 
+        var cloudViewModel = await cloudService.GetById(cloudNameResolver.CloudID);
+
         var model = new JoinCloudOrCreateDreamViewModel
         {
             ShowJoinCloudButton = !userHasAlreadyJoinedTheCloud,
-            CloudId = cloudNameResolver.CloudID
+            CloudId = cloudNameResolver.CloudID,
+            IsDreamingPeriodActive = cloudViewModel?.IsDreamingPeriodActive(appTime) ?? false
         };
 
         return View(model);

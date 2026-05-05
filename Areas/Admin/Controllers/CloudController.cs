@@ -19,7 +19,7 @@ public class CloudController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ID,Name,TotalFundsAvailable")] CloudViewModel viewModel)
+    public async Task<IActionResult> Create(CloudViewModel viewModel)
     {
         if (ModelState.IsValid)
         {
@@ -47,7 +47,7 @@ public class CloudController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,TotalFundsAvailable")] CloudViewModel viewModel)
+    public async Task<IActionResult> Edit(int id, CloudViewModel viewModel)
     {
         if (id != viewModel.ID)
             return NotFound();

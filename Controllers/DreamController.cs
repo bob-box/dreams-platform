@@ -64,6 +64,9 @@ public class DreamController(
         if (!await CurrentUserHasJoinedCloud())
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
 
+        if (!await cloudService.IsDreamingPeriodActive(cloudNameService.CloudID))
+            return Problem("The dreaming period is not active, so you are not allowed to create a dream here.");
+
         var viewModel = new DreamViewModel();
         var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
         var dreamer = new DreamerViewModel
@@ -87,6 +90,9 @@ public class DreamController(
     {
         if (!await CurrentUserHasJoinedCloud())
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
+        
+        if (!await cloudService.IsDreamingPeriodActive(cloudNameService.CloudID))
+            return Problem("The dreaming period is not active, so you are not allowed to create a dream here.");
 
         if (!ModelState.IsValid)
         {

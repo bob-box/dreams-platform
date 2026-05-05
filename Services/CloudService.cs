@@ -16,7 +16,8 @@ public class CloudService(
     UserManager<User> userManager,
     SignInManager<User> signInManager,
     ICloudCache cloudCache,
-    IMapperFacade mapper
+    IMapperFacade mapper,
+    IAppTime appTime
     ) : ICloudService
 {
      public async Task Create(CloudViewModel viewModel)
@@ -122,5 +123,16 @@ public class CloudService(
         return userClaims.Any(c =>
             c.Type == Constants.JOINED_CLOUD_CLAIM &&
             c.Value == cloudId);
+    }
+
+    public async Task<bool> IsDreamingPeriodActive(int cloudID)
+    {
+        var cloud = await context.Cloud.FindAsync(cloudID);
+        if (cloud == null)
+            return false;
+        
+        var viewModel = mapper.ToViewModel(cloud);
+    
+        return viewModel.IsDreamingPeriodActive(appTime);
     }
 }

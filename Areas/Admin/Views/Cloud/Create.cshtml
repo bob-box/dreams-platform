@@ -23,6 +23,21 @@
                 <span asp-validation-for="TotalFundsAvailable" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="DreamCreatePeriodStart" class="control-label"></label>
+                <input asp-for="DreamCreatePeriodStart" class="form-control" />
+                <span asp-validation-for="DreamCreatePeriodStart" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DreamCreatePeriodEnd" class="control-label"></label>
+                <input asp-for="DreamCreatePeriodEnd" class="form-control" />
+                <span asp-validation-for="DreamCreatePeriodEnd" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DreamEditDeadline" class="control-label"></label>
+                <input asp-for="DreamEditDeadline" class="form-control" />
+                <span asp-validation-for="DreamEditDeadline" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>

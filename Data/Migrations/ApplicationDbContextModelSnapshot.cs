@@ -58,6 +58,15 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DreamCreatePeriodEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DreamCreatePeriodStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DreamEditDeadline")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 

@@ -111,7 +111,16 @@ public static class DataSeeder
         var cloudExists = await context.Cloud.SingleOrDefaultAsync(x => x.Name == "test");
         if (cloudExists == null)
         {
-            var cloud = new Cloud { Name = "test" };
+            var cloud = new Cloud
+            {
+                Name = "test",
+                TotalFundsAvailable = 1000m,
+                TotalFundsRemaining = 1000m,
+                TotalFundsSpent = 0m,
+                DreamCreatePeriodStart = _appTime.UtcNow,
+                DreamCreatePeriodEnd = _appTime.UtcNow.AddDays(7),
+                DreamEditDeadline = _appTime.UtcNow.AddDays(10)
+            };
             context.Cloud.Add(cloud);
             await context.SaveChangesAsync();
             return cloud.ID;
