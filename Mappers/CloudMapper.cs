@@ -15,9 +15,9 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
             CreatedAt = model.CreatedAt,
             TotalFundsAvailable = model.TotalFundsAvailable,
             TotalFundsSpent = model.TotalFundsSpent,
-            DreamCreatePeriodStart = model.DreamCreatePeriodStart,
-            DreamCreatePeriodEnd = model.DreamCreatePeriodEnd,
-            DreamEditDeadline = model.DreamEditDeadline,
+            DreamCreatePeriodStart = appTime.ToLocal(model.DreamCreatePeriodStart),
+            DreamCreatePeriodEnd = appTime.ToLocal(model.DreamCreatePeriodEnd),
+            DreamEditDeadline = appTime.ToLocal(model.DreamEditDeadline),
             Dreams = mapper.ToViewModels(model.Dreams),
             FundingRounds = mapper.ToViewModels(model.FundingRounds)
         };
@@ -31,9 +31,9 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
             Name = vm.Name,
             TotalFundsAvailable = vm.TotalFundsAvailable,
             TotalFundsSpent = vm.TotalFundsSpent,
-            DreamCreatePeriodStart = vm.DreamCreatePeriodStart,
-            DreamCreatePeriodEnd = vm.DreamCreatePeriodEnd,
-            DreamEditDeadline = vm.DreamEditDeadline,
+            DreamCreatePeriodStart = appTime.ToUtc(vm.DreamCreatePeriodStart),
+            DreamCreatePeriodEnd = appTime.ToUtc(vm.DreamCreatePeriodEnd),
+            DreamEditDeadline = appTime.ToUtc(vm.DreamEditDeadline),
             Dreams = mapper.ToModels(vm.Dreams),
             FundingRounds  = mapper.ToModels(vm.FundingRounds)
         };

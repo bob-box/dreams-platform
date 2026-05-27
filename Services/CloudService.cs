@@ -34,8 +34,11 @@ public class CloudService(
             return CloudServiceStatus.NotFound;
 
         var oldName = cloud.Name;
-        cloud.Name = viewModel.Name;
-        cloud.TotalFundsAvailable = viewModel.TotalFundsAvailable;
+        // map all fields from viewModel to the tracked entity
+        var updated = mapper.ToModel(viewModel);
+        // ensure we keep the tracked entity's key (and any EF tracking info)
+        updated.ID = cloud.ID;
+        context.Entry(cloud).CurrentValues.SetValues(updated);
 
         try
         {

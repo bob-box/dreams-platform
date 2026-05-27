@@ -21,17 +21,17 @@ public class CloudViewModel
     public decimal TotalFundsSpent { get; set; }
 
     [DataType(DataType.DateTime)]
-    [DisplayName("Dreaming Period Start")]
+    [Display(Name="Dreaming Period Start", Description = "The period during which new dreams can be created. After this period ends, no new dreams can be created, but existing dreams can still be edited until the edit deadline. If not set, dream creation is open indefinitely.")]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     public DateTime? DreamCreatePeriodStart { get; set; }
     
     [DataType(DataType.DateTime)]
-    [DisplayName("Dreaming Period End")]
+    [Display(Name="Dream Period End")]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     public DateTime? DreamCreatePeriodEnd { get; set; }
     
     [DataType(DataType.DateTime)]
-    [DisplayName("Dream Edit Deadline")]
+    [Display(Name="Dream Edit Deadline")]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     public DateTime? DreamEditDeadline { get; set; }
 
@@ -40,6 +40,6 @@ public class CloudViewModel
 
     public bool IsDreamingPeriodActive(IAppTime appTime)
     {
-        return appTime.UtcNow.IsBetween(DreamCreatePeriodStart, DreamCreatePeriodEnd);
+        return appTime.Now.IsBetween(DreamCreatePeriodStart, DreamCreatePeriodEnd);
     }
 }

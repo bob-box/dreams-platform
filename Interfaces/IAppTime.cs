@@ -10,4 +10,10 @@ public interface IAppTime
     /// </summary>
     DateTime ToLocal(DateTime utc);
     DateTime ToUtc(DateTime local);
+
+    /// <summary>
+    /// Nullable-aware overloads. If the input is null, the result will be null.
+    /// </summary>
+    DateTime? ToLocal(DateTime? utc);
+    DateTime? ToUtc(DateTime? local);
 }

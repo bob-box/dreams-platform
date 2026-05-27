@@ -30,4 +30,14 @@ public class AppTime(TimeProvider timeProvider, TimeOptions options) : IAppTime
     /// <param name="local"></param>
     /// <returns></returns>
     public DateTime ToUtc(DateTime local) => TimeZoneInfo.ConvertTimeToUtc(local, _timeZone);
+
+    /// <summary>
+    /// Nullable-aware overload: returns null when input is null.
+    /// </summary>
+    public DateTime? ToLocal(DateTime? utc) => utc.HasValue ? ToLocal(utc.Value) : null;
+
+    /// <summary>
+    /// Nullable-aware overload: returns null when input is null.
+    /// </summary>
+    public DateTime? ToUtc(DateTime? local) => local.HasValue ? ToUtc(local.Value) : null;
 }

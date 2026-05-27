@@ -1,17 +1,21 @@
 @model Borderland.Dreams.ViewModels.JoinCloudOrCreateDreamViewModel
 
+<p>
 @if (Model.ShowJoinCloudButton)
 {
-    <p>
-        <form asp-action="Join" asp-controller="Cloud" method="post">
-            <input type="hidden" name="id" value="@Model.CloudId" />
-            <button type="submit">Join Cloud</button>
-        </form>
-    </p>
+    <form asp-action="Join" asp-controller="Cloud" method="post">
+        <input type="hidden" name="id" value="@Model.CloudId" />
+        <button type="submit">Join Cloud</button>
+    </form>
 }
 else if (Model.IsDreamingPeriodActive)
 {
-    <p>
-        <a asp-action="Create">Create New Dream</a>
-    </p>
+    <a asp-action="Create" class="btn btn-primary">Create New Dream</a>
 }
+else
+{
+    <span class="d-inline-block" data-bs-toggle="tooltip" title="The dreaming period for this cloud has ended." tabindex="0">
+        <button class="btn btn-primary" style="pointer-events: none;" disabled>Create New Dream</button>
+    </span>
+}
+</p>
