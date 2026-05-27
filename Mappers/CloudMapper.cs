@@ -12,7 +12,7 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
         {
             ID = model.ID,
             Name = model.Name,
-            CreatedAt = model.CreatedAt,
+            CreatedAt = appTime.ToLocal(model.CreatedAt),
             TotalFundsAvailable = model.TotalFundsAvailable,
             TotalFundsSpent = model.TotalFundsSpent,
             DreamCreatePeriodStart = appTime.ToLocal(model.DreamCreatePeriodStart),

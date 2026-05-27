@@ -13,8 +13,8 @@ public class FundingRoundMapper(IMapperFacade mapper, IAppTime appTime)
             ID = model.ID,
             CloudID = model.CloudID,
             Title = model.Title,
-            StartDate = model.StartDate,
-            EndDate = model.EndDate,
+            StartDate = appTime.ToUtc(model.StartDate),
+            EndDate = appTime.ToUtc(model.EndDate),
             MaxPercentagePerDream = model.MaxPercentagePerDream,
             AllocationPerUser = model.AllocationPerUser,
             TotalFundsAllocated = model.TotalFundsAllocated
@@ -28,8 +28,8 @@ public class FundingRoundMapper(IMapperFacade mapper, IAppTime appTime)
             ID = vm.ID,
             CloudID = vm.CloudID,
             Title = vm.Title,
-            StartDate = vm.StartDate,
-            EndDate = vm.EndDate,
+            StartDate = appTime.ToLocal(vm.StartDate),
+            EndDate = appTime.ToLocal(vm.EndDate),
             MaxPercentagePerDream = vm.MaxPercentagePerDream,
             AllocationPerUser = vm.AllocationPerUser
         };

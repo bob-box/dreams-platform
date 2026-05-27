@@ -15,7 +15,7 @@ public class FundMapper(IMapperFacade mapper, IAppTime appTime)
             UserID = model.UserID,
             FundingRoundID = model.FundingRoundID,
             Amount = model.Amount,
-            CreatedAt = model.CreatedAt,
+            CreatedAt = appTime.ToLocal(model.CreatedAt),
             User = mapper.ToViewModel(model.User)
         };
     }

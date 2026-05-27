@@ -10,7 +10,7 @@
                     {
                         var cssClass = round.HasPassed(appTime) ? "disabled" : "";
                         <li class="list-group-item @cssClass">
-                            @round.StartDate.ToShortDateString() - @round.EndDate.ToShortDateString()
+                            @round.StartDate - @round.EndDate
                             @if (round.IsActive(appTime))
                             {
                                 <span class="badge bg-success">Active</span>
@@ -27,7 +27,7 @@
                     }
                 </ul>
             </div>
-            <div class="col">
+            @* <div class="col">
                 <h5 class="card-title">Cloud funds</h5>
                 <div class="row">
                     <div class="col">
@@ -55,10 +55,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> *@
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <div class="col-3">
+                <div class="col-5">
                     <h5 class="card-title">Your funds</h5>
                     <div class="row">
                         <div class="col">
