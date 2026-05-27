@@ -1,6 +1,11 @@
 html {
   font-size: 14px;
   min-height: 100%;
+    position: relative;
+}
+
+body {
+  margin-bottom: 60px;
 }
 
 @media (min-width: 768px) {
@@ -11,10 +16,6 @@ html {
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-body {
-  margin-bottom: 60px;
 }
 
 input.input-validation-error,
@@ -29,64 +30,52 @@ select.input-validation-error
     border-bottom: 2px solid #258cfb;
 }
 
-/*Lets start with the cloud formation rather*/
-/*The container will also serve as the SKY*/
-body {
-  /*To hide the horizontal scroller appearing during the animation*/
-	overflow-x: hidden;
-	background: linear-gradient(to top, rgba(160, 205, 239, 0.5), #fffffff6);
-  background-image: linear-gradient(180deg, #fff 5%, rgba(77, 163, 214, 0.5) 15%, rgba(99, 170, 212, 0.5) 95%, rgba(9, 111, 36, 0.5) 96%, rgba(17, 179, 59, 0.5) 100%);
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
 }
 
-/*Time to finalise the cloud shape*/
-/* Source https://css-shape.com/cloud/ */
-/* Perhaps in the future we can add people walking at the bottom? See https://codepen.io/yogeshraturi/pen/abpKjXJ c*/
-.cloud {
-        height: 200px;
-        position: absolute;
-        left: 100vw;
-        z-index: -1;
-        /* control the size */
-        aspect-ratio: 1.8;
-        --g: radial-gradient(50% 50%, #000 98%, #0000) no-repeat;
-        mask: var(--g) 100% 100%/30% 60%, var(--g) 70% 0/50% 100%, var(--g) 0 100%/36% 68%, var(--g) 27% 18%/26% 40%, linear-gradient(#000 0 0) bottom/67% 58% no-repeat;
-        background: linear-gradient(to top, #ECE9E6,#FFFFFF);
-    }
-
-/*Time to animate*/
-.x1 {
-	animation: moveclouds 50s linear infinite;
-  opacity: 0.6;
+a {
+  color: #0077cc;
 }
 
-/*variable speed, opacity, and position of clouds for realistic effect*/
-.x2 {
-	transform: scale(0.8);
-	opacity: 0.5; /*opacity proportional to the size*/
-	/*Speed will also be proportional to the size and opacity*/
-	/*More the speed. Less the time in 's' = seconds*/
-	animation: moveclouds 60s linear infinite;
+.btn-primary {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
 }
 
-.x3 {
-	transform: scale(0.6);
-	opacity: 0.4;
-	animation: moveclouds 70s linear infinite;
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
 }
 
-.x4 {
-	transform: scale(0.4);
-	opacity: 0.3;
-	animation: moveclouds 80s linear infinite;
+.border-top {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom {
+  border-bottom: 1px solid #e5e5e5;
 }
 
-.x5 {
-	transform: scale(0.2);
-	opacity: 0.2;
-	animation: moveclouds 90s linear infinite;
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
 
-@keyframes moveclouds {
-	0% {margin-left: 100vw;}
-	100% {margin-left: -100vw;}
+button.accept-policy {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+
+.box-shadow-inset {
+  box-shadow: inset 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
