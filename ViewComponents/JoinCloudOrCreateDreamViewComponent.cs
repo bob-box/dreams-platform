@@ -28,7 +28,7 @@ public partial class JoinCloudOrCreateDreamViewComponent(
         {
             ShowJoinCloudButton = !userHasAlreadyJoinedTheCloud,
             CloudId = cloudNameResolver.CloudID,
-            IsDreamingPeriodActive = cloudViewModel?.IsDreamingPeriodActive(appTime) ?? false
+            IsDreamingPeriodActive = cloudViewModel.IsDreamingPeriodActive(appTime)
         };
 
         return View(model);

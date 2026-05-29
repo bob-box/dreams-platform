@@ -69,9 +69,9 @@ public class CloudService(
 
         return CloudServiceStatus.Success;
     }
-    public async Task<CloudViewModel?> GetById(int id)
+    public async Task<CloudViewModel> GetById(int id)
     {
-        var cloud = await context.Cloud.FindAsync(id);
+        var cloud = await context.Cloud.FindAsync(id) ?? throw new KeyNotFoundException($"Cloud with ID {id} not found.");
         return mapper.ToViewModel(cloud);
     }
 

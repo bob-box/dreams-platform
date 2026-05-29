@@ -19,6 +19,7 @@ public class DreamController(
     IDreamFundingService dreamFundingService,
     ICloudService cloudService,
     ITagService tagService,
+    IAppTime appTime,
     ICloudNameResolver cloudNameService
 ) : Controller
 {
@@ -55,17 +56,18 @@ public class DreamController(
         if (result.Status == DreamServiceStatus.NotFound) return NotFound();
         if (result.Status == DreamServiceStatus.NotAllowed) return Forbid();
 
+        // Expose whether editing is allowed (based on cloud's DreamEditDeadline) to the view
+        var cloud = await cloudService.GetById(result.Dream!.CloudID);
+        ViewBag.IsEditAllowed = User.IsInRole(Constants.AdminRole) || cloud.IsBeforeEditDeadline(appTime);
+
         return View(result.Dream);
     }
 
     // GET: Dream/Create
     public async Task<IActionResult> Create()
     {
-        if (!await CurrentUserHasJoinedCloud())
-            return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
-
-        if (!await cloudService.IsDreamingPeriodActive(cloudNameService.CloudID))
-            return Problem("The dreaming period is not active, so you are not allowed to create a dream here.");
+        if (await GetCreateDreamGuardResult() is { } guardResult)
+            return guardResult;
 
         var viewModel = new DreamViewModel();
         var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
@@ -88,11 +90,8 @@ public class DreamController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("ID,Name,Description,BudgetItems,Dreamers,SelectedTagIds")] DreamViewModel viewModel)
     {
-        if (!await CurrentUserHasJoinedCloud())
-            return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
-        
-        if (!await cloudService.IsDreamingPeriodActive(cloudNameService.CloudID))
-            return Problem("The dreaming period is not active, so you are not allowed to create a dream here.");
+        if (await GetCreateDreamGuardResult() is { } guardResult)
+            return guardResult;
 
         if (!ModelState.IsValid)
         {
@@ -108,6 +107,13 @@ public class DreamController(
     {
         if (id == null)
             return NotFound();
+
+        // Check cloud edit deadline
+        var cloud = await cloudService.GetById(cloudNameService.CloudID);
+        if (!User.IsInRole(Constants.AdminRole) || !cloud.IsBeforeEditDeadline(appTime))
+        {
+            return BadRequest("The editing deadline for this cloud has passed.");
+        }
 
         var result = await dreamService.GetFull(id.Value);
         if (result.Status == DreamServiceStatus.NotFound) return NotFound();
@@ -135,6 +141,13 @@ public class DreamController(
         {
             ViewBag.AvailableTags = await tagService.GetAll();
             return View(viewModel);
+        }
+
+        // Check cloud edit deadline before attempting update
+        var cloud = await cloudService.GetById(viewModel.CloudID);
+        if (!User.IsInRole(Constants.AdminRole) || !cloud.IsBeforeEditDeadline(appTime))
+        {
+            return BadRequest("The editing deadline for this cloud has passed.");
         }
 
         try
@@ -254,7 +267,7 @@ public class DreamController(
         var userId = GetCurrentUserId();
         if (string.IsNullOrWhiteSpace(userId))
             return BadRequest("User not authenticated.");
-            
+
         var result = await dreamFundingService.GetFundingModal(dreamId, userId);
         return result.Status switch
         {
@@ -288,7 +301,7 @@ public class DreamController(
         };
     }
 
-    
+
     private async Task<bool> CurrentUserHasJoinedCloud()
     {
         var userId = GetCurrentUserId();
@@ -298,4 +311,14 @@ public class DreamController(
 
     private string? GetCurrentUserId() => userManager.GetUserId(User);
 
+    private async Task<IActionResult?> GetCreateDreamGuardResult()
+    {
+        if (!await CurrentUserHasJoinedCloud())
+            return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
+
+        if (!User.IsInRole(Constants.AdminRole) && !await cloudService.IsDreamingPeriodActive(cloudNameService.CloudID))
+            return Problem("The dreaming period is not active, so you are not allowed to create a dream here.");
+
+        return null;
+    }
 }

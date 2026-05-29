@@ -42,4 +42,12 @@ public class CloudViewModel
     {
         return appTime.Now.IsBetween(DreamCreatePeriodStart, DreamCreatePeriodEnd);
     }
+
+    /// <summary>
+    /// Returns true if the current time is before the DreamEditDeadline, or if no deadline is set.
+    /// </summary>
+    public bool IsBeforeEditDeadline(IAppTime appTime)
+    {
+        return DreamEditDeadline == null || appTime.Now <= DreamEditDeadline.Value;
+    }
 }

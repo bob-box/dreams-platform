@@ -211,6 +211,7 @@ public class DreamService(
 
         var query = context.Dream
             .Include(d => d.BudgetItems)
+            .Include(d => d.Cloud)
             .Include(d => d.Dreamers).ThenInclude(d => d.User)
             .Include(d => d.Funds).ThenInclude(d => d.User)
             .Include(d => d.Tags)

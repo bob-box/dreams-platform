@@ -37,11 +37,6 @@ public class CloudController(
         }
 
         var viewModel = await cloudService.GetById(id.Value);
-        if (viewModel == null)
-        {
-            return NotFound();
-        }
-
         return View(viewModel);
     }
 
@@ -71,11 +66,6 @@ public class CloudController(
         }
 
         var viewModel = await cloudService.GetById(id.Value);
-        if (viewModel == null)
-        {
-            return NotFound();
-        }
-
         return View(viewModel);
     }
 
