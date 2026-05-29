@@ -20,9 +20,9 @@ Admin can
 1. Edit any dream at any time
 1. Access the Admin Control Panel in a cloud to manage  
     1. Cloud settings
-    1. Users and wallets
+    1. Users and wallets (you can manually update wallets)
     1. Tags
-    1. Funding rounds
+    1. Funding rounds (will automatically start/end on set time)
 
 
 ## Getting The Project Started
