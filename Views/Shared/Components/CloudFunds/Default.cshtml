@@ -4,6 +4,32 @@
     <div class="card-body">
         <div class="row">
             <div class="col">
+                <h5 class="card-title">Dreaming period</h5>
+                <ul class="list-group">
+                    @if (Model.DreamingPeriodStart.HasValue)
+                    {
+                        <li class="list-group-item">
+                            @Model.DreamingPeriodStart
+                            <span class="badge bg-success">Start</span>
+                        </li>
+                    }
+                    @if (Model.DreamingPeriodEnd.HasValue)
+                    {
+                        <li class="list-group-item">
+                            @Model.DreamingPeriodEnd
+                            <span class="badge bg-success">End</span>
+                        </li>
+                    }
+                    @if (Model.DreamEditDeadline.HasValue)
+                    {
+                        <li class="list-group-item">
+                            @Model.DreamEditDeadline
+                            <span class="badge bg-success">Edit deadline</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="col">
                 <h5 class="card-title">Funding rounds</h5>
                 <ul class="list-group">
                     @foreach (var round in Model.FundingRounds)
@@ -27,35 +53,6 @@
                     }
                 </ul>
             </div>
-            @* <div class="col">
-                <h5 class="card-title">Cloud funds</h5>
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-subtitle">Funds available</h6>
-                                <p class="card-text">@Model.TotalFundsAvailable.ToString("F2") SEK</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-subtitle">Funds spent</h6>
-                                <p class="card-text">@Model.TotalFundsSpent.ToString("F2") SEK</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-subtitle">Funds remaining</h6>
-                                <p class="card-text">@Model.TotalFundsRemaining.ToString("F2") SEK</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> *@
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <div class="col-5">

@@ -44,11 +44,11 @@ public class CloudFundsViewComponent(
 
         var model = new CloudFundsViewModel
         {
-            TotalFundsAvailable = cloud.TotalFundsAvailable,
-            TotalFundsSpent = cloud.TotalFundsSpent,
-            TotalFundsRemaining = cloud.TotalFundsRemaining,
             UserWalletBalance = userWalletBalance,
-            FundingRounds = fundingRounds.OrderBy(x => x.StartDate).ToList()
+            FundingRounds = fundingRounds.OrderBy(x => x.StartDate).ToList(),
+            DreamingPeriodStart = cloud.DreamCreatePeriodStart,
+            DreamingPeriodEnd = cloud.DreamCreatePeriodEnd,
+            DreamEditDeadline = cloud.DreamEditDeadline
         };
 
         return View(model);

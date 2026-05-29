@@ -110,7 +110,7 @@ public class DreamController(
 
         // Check cloud edit deadline
         var cloud = await cloudService.GetById(cloudNameService.CloudID);
-        if (!User.IsInRole(Constants.AdminRole) || !cloud.IsBeforeEditDeadline(appTime))
+        if (!User.IsInRole(Constants.AdminRole) && !cloud.IsBeforeEditDeadline(appTime))
         {
             return BadRequest("The editing deadline for this cloud has passed.");
         }
@@ -145,7 +145,7 @@ public class DreamController(
 
         // Check cloud edit deadline before attempting update
         var cloud = await cloudService.GetById(viewModel.CloudID);
-        if (!User.IsInRole(Constants.AdminRole) || !cloud.IsBeforeEditDeadline(appTime))
+        if (!User.IsInRole(Constants.AdminRole) && !cloud.IsBeforeEditDeadline(appTime))
         {
             return BadRequest("The editing deadline for this cloud has passed.");
         }
