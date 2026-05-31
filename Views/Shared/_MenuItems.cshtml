@@ -12,7 +12,7 @@
 
 <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
     <div class="container-fluid">
-        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="" asp-route-cloudName="">☁️ Look at the sky ☁️</a>
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="" asp-route-cloudName="">☁️ Home</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                 aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -22,11 +22,12 @@
                 @if (isWithinACloud)
                 {
                     <li class="nav-item">
-                        <a class="nav-link text-dark @(GetActiveClass("Dream"))" asp-area="" asp-controller="Dream" asp-action="Index" asp-route-cloudName="@cloudNameResolver.CloudName">Dreams</a>
+                        <a class="nav-link text-dark @(GetActiveClass("Dream"))" asp-area="" asp-controller="Dream" asp-action="Index"
+                           asp-route-cloudName="@cloudNameResolver.CloudName">Dreams</a>
                     </li>
                 }
             </ul>
-            @if (isWithinACloud && User.IsInRole(Constants.AdminRole))
+            @if (User.IsInRole(Constants.AdminRole))
             {
                 <ul class="navbar-nav">
                     <li class="nav-item ms-sm-auto dropdown">
@@ -35,23 +36,31 @@
                             @if (isWithinACloud)
                             {
                                 <li>
-                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Cloud" asp-action="Edit" asp-route-id="@cloudNameResolver.CloudID">Edit Cloud</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="Index">Manage Users</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Tag" asp-action="Index">Manage Tags</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="Admin" asp-controller="FundingRound" asp-action="Index">Manage Funding Rounds</a>
-                                </li>
-                            }
-                        </ul>
-                    </li>
-                </ul>
-            }
-            <partial name="_LoginPartial" />
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Cloud" asp-action="Edit" asp-route-id="@cloudNameResolver.CloudID">Edit
+                                        Cloud</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="Index">Manage Users</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Tag" asp-action="Index">Manage Tags</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="FundingRound" asp-action="Index">Manage Funding Rounds</a>
+                                    </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                }
+                            <li>
+                                <a class="dropdown-item" asp-area="" asp-controller="Hangfire" asp-action="" asp-route-cloudName="">Hangfire scheduler</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Home" asp-action="Logs" asp-route-cloudName="">Logs</a>
+                            </li>
+                            </ul>
+                        </li>
+                    </ul>
+                }
+                <partial name="_LoginPartial" />
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>

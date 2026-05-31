@@ -2,12 +2,16 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Borderland.Dreams.Authorization;
+using Borderland.Dreams.Utils;
 
 namespace Borderland.Dreams.Controllers;
 
 public class HomeController(
     ILogger<HomeController> logger,
-    ICloudService cloudService
+    ICloudService cloudService,
+    InMemoryLogStore logStore
 ) : Controller
 {
     public async Task<IActionResult> Index()
@@ -27,4 +31,8 @@ public class HomeController(
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+
+    [Authorize(Roles = Constants.AdminRole)]
+    public IActionResult Logs() => View(logStore.Entries.Reverse().ToList());
+
 }

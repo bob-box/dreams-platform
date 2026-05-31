@@ -33,7 +33,7 @@ public class FundingRoundSchedulerService(
         fundingRound.EndJobId = endJobId;
 
         logger.LogInformation(
-            "Scheduled jobs for FundingRound {ID}. StartJob: {StartJobId} at {StartDate}, EndJob: {EndJobId} at {EndDate}",
+            "Scheduler: Added job for FundingRound {ID}. StartJob: {StartJobId} at {StartDate}, EndJob: {EndJobId} at {EndDate}",
             fundingRound.ID, startJobId, fundingRound.StartDate, endJobId, fundingRound.EndDate);
     }
 
@@ -41,14 +41,14 @@ public class FundingRoundSchedulerService(
     {
         if (!string.IsNullOrEmpty(fundingRound.StartJobId))
         {
-            logger.LogInformation("Cancelling existing start job {JobId} for FundingRound {ID}",
-                fundingRound.StartJobId, fundingRound.ID);
+            logger.LogInformation("Scheduler: FundingRound {ID} - Cancelling existing start job {JobId}",
+                fundingRound.ID, fundingRound.StartJobId);
             BackgroundJob.Delete(fundingRound.StartJobId);
         }
         if (!string.IsNullOrEmpty(fundingRound.EndJobId))
         {
-            logger.LogInformation("Cancelling existing end job {JobId} for FundingRound {ID}",
-                fundingRound.EndJobId, fundingRound.ID);
+            logger.LogInformation("Scheduler: FundingRound {ID} - Cancelling existing end job {JobId}",
+                fundingRound.ID, fundingRound.EndJobId);
             BackgroundJob.Delete(fundingRound.EndJobId);
         }
     }
@@ -57,7 +57,7 @@ public class FundingRoundSchedulerService(
     [AutomaticRetry(Attempts = 3)]
     public async Task AllocateFundsToWallets(int fundingRoundId)
     {
-        logger.LogInformation("Starting wallet allocation for FundingRound {ID}", fundingRoundId);
+        logger.LogInformation("Scheduler: FundingRound {ID} - Starting wallet allocation", fundingRoundId);
 
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -68,22 +68,22 @@ public class FundingRoundSchedulerService(
 
         if (fundingRound == null)
         {
-            logger.LogWarning("FundingRound {ID} not found, skipping allocation", fundingRoundId);
+            logger.LogWarning("Scheduler: FundingRound {ID} -  not found, skipping allocation", fundingRoundId);
             return;
         }
         if (fundingRound.AllocationPerUser <= 0)
         {
-            logger.LogWarning("FundingRound {ID} has no allocation per user, skipping", fundingRoundId);
+            logger.LogWarning("Scheduler: FundingRound {ID} -  has no allocation per user, skipping", fundingRoundId);
             return;
         }
         if (fundingRound.TotalFundsAllocated > 0)
         {
-            logger.LogWarning("FundingRound {ID} already allocated, skipping (idempotency check)", fundingRoundId);
+            logger.LogWarning("Scheduler: FundingRound {ID} - already allocated, skipping (idempotency check)", fundingRoundId);
             return;
         }
         if (fundingRound.ProcessedDate != null)
         {
-            logger.LogWarning("FundingRound {ID} already processed, skipping", fundingRoundId);
+            logger.LogWarning("Scheduler: FundingRound {ID} -  already processed, skipping", fundingRoundId);
             return;
         }
 
@@ -97,7 +97,7 @@ public class FundingRoundSchedulerService(
         {
             // Warning because this is a business problem that needs admin attention
             logger.LogWarning(
-                "FundingRound {ID}: insufficient funds. Required: {Required}, Available: {Available}",
+                "Scheduler: FundingRound {ID} - insufficient funds. Required: {Required}, Available: {Available}",
                 fundingRoundId, totalAllocation, fundingRound.Cloud.TotalFundsAvailable);
             return;
         }
@@ -105,7 +105,8 @@ public class FundingRoundSchedulerService(
         var affectedRows = await context.Dream
             .Where(d => d.CloudID == cloud.ID && d.Status == DreamStatus.ReadyForFunding)
             .ExecuteUpdateAsync(setters => setters.SetProperty(d => d.Status, DreamStatus.Active));
-        logger.LogInformation("Number of dreams updated from ReadyForFunding to Active: {affectedRows}.", affectedRows);
+        logger.LogInformation("Scheduler: FundingRound {ID} - Number of dreams updated from ReadyForFunding to Active: {affectedRows}.",
+        fundingRoundId, affectedRows);
 
         foreach (var wallet in usersInCloud)
             wallet.Balance = fundingRound.AllocationPerUser;
@@ -114,7 +115,7 @@ public class FundingRoundSchedulerService(
         await context.SaveChangesAsync();
 
         logger.LogInformation(
-        "FundingRound {ID}: allocation complete. {UserCount} wallets given funds, total allocated: {TotalAllocation}",
+        "Scheduler: FundingRound {ID} - allocation complete. {UserCount} wallets given funds, total allocated: {TotalAllocation}",
         fundingRoundId, usersInCloud.Count, totalAllocation);
     }
 
@@ -122,20 +123,20 @@ public class FundingRoundSchedulerService(
     [DisableConcurrentExecution(300)] // Prevent overlapping executions for the same funding round
     public async Task ProcessFundingRoundEnd(int fundingRoundId)
     {
-        logger.LogInformation("Starting end processing for FundingRound {ID}", fundingRoundId);
+        logger.LogInformation("Scheduler: FundingRound {ID} - Starting end processing", fundingRoundId);
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var fundingRound = await context.FundingRound.FindAsync(fundingRoundId);
         if (fundingRound == null)
         {
-            logger.LogWarning("FundingRound {ID} not found, skipping end processing", fundingRoundId);
+            logger.LogWarning("Scheduler: FundingRound {ID} - not found, skipping end processing", fundingRoundId);
             return;
         }
         if (fundingRound.ProcessedDate != null)
         {
             logger.LogWarning(
-                "FundingRound {ID} already processed on {ProcessedDate}, skipping (idempotency check)",
+                "Scheduler: FundingRound {ID} - already processed on {ProcessedDate}, skipping (idempotency check)",
                 fundingRoundId, fundingRound.ProcessedDate);
             return;
         }
@@ -143,7 +144,7 @@ public class FundingRoundSchedulerService(
         if (cloud == null)
         {
             logger.LogError(
-                "FundingRound {ID}: Cloud {CloudID} not found during end processing",
+                "Scheduler: FundingRound {ID} - Cloud {CloudID} not found during end processing",
                 fundingRoundId, fundingRound.CloudID);
             return;
         }
@@ -154,7 +155,7 @@ public class FundingRoundSchedulerService(
 
         // Remove remaining funds
         logger.LogInformation(
-            "FundingRound {ID}: zeroing balances for {WalletCount} wallets",
+            "Scheduler: FundingRound {ID} - zeroing balances for {WalletCount} wallets",
             fundingRoundId, wallets.Count);
         foreach (var wallet in wallets)
             wallet.Balance = 0;
@@ -170,7 +171,7 @@ public class FundingRoundSchedulerService(
         await context.SaveChangesAsync();
         // Summary log at the end is useful for financial auditing
         logger.LogInformation(
-            "FundingRound {ID} end processing complete. TotalSpent: {TotalSpent}, CloudID: {CloudID}, remaining funds: {Remaining}",
+            "Scheduler: FundingRound {ID} - end processing complete. TotalSpent: {TotalSpent}, CloudID: {CloudID}, remaining funds: {Remaining}",
             fundingRoundId, totalSpent, cloud.ID, cloud.TotalFundsRemaining);
     }
 }

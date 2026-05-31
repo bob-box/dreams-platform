@@ -96,6 +96,11 @@ builder.Services.AddRouting(options =>
     options.LowercaseUrls = true;
 });
 
+// during dev
+var logStore = new InMemoryLogStore();
+builder.Services.AddSingleton(logStore);
+builder.Logging.AddProvider(new InMemoryLoggerProvider(logStore));
+
 var app = builder.Build();
 
 app.UseRequestLocalization(new RequestLocalizationOptions

@@ -1,0 +1,66 @@
+@using Borderland.Dreams.Utils
+@model IEnumerable<LogEntry>
+    
+@{
+    ViewData["Title"] = "Application Logs";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Application logs (dev purposes)</h2>
+    <small class="text-muted">Showing most recent first — capped at 1,000 entries</small>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted text-center py-4">No log entries yet.</p>
+}
+else
+{
+    <table class="table table-sm table-hover table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 175px;">Timestamp</th>
+                <th style="width: 90px;">Level</th>
+                <th style="width: 220px;">Category</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <td class="text-muted text-nowrap font-monospace">
+                        @entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                    </td>
+                    <td>
+                        <span class="badge @GetBadgeClass(entry.Level)">@entry.Level</span>
+                    </td>
+                    <td class="text-truncate" style="max-width: 220px;" title="@entry.Category">
+                        @ShortCategory(entry.Category)
+                    </td>
+                    <td>@entry.Message</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@functions {
+    string GetBadgeClass(Microsoft.Extensions.Logging.LogLevel level) => level switch
+    {
+        LogLevel.Trace       => "bg-secondary",
+        LogLevel.Debug       => "bg-secondary",
+        LogLevel.Information => "bg-primary",
+        LogLevel.Warning     => "bg-warning text-dark",
+        LogLevel.Error       => "bg-danger",
+        LogLevel.Critical    => "bg-danger",
+        _                    => "bg-secondary"
+    };
+
+    string ShortCategory(string category)
+    {
+        // Show only the last segment: "MyApp.Controllers.DreamController" → "DreamController"
+        var lastDot = category.LastIndexOf('.');
+        return lastDot >= 0 ? category[(lastDot + 1)..] : category;
+    }
+}
