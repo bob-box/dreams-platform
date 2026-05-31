@@ -97,9 +97,9 @@ builder.Services.AddRouting(options =>
 });
 
 // during dev
-// var logStore = new InMemoryLogStore();
-// builder.Services.AddSingleton(logStore);
-// builder.Logging.AddProvider(new InMemoryLoggerProvider(logStore));
+var logStore = new InMemoryLogStore();
+builder.Services.AddSingleton(logStore);
+builder.Logging.AddProvider(new InMemoryLoggerProvider(logStore));
 
 var app = builder.Build();
 
