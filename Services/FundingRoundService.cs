@@ -185,6 +185,7 @@ public class FundingRoundService(
         var activeRound = await context.FundingRound
             .SingleOrDefaultAsync(fr => fr.CloudID == cloudId &&
                                      fr.StartDate <= now && fr.EndDate >= now);
+        if (activeRound == null) return null;
         return mapper.ToViewModel(activeRound);
     }
 

@@ -10,8 +10,8 @@ namespace Borderland.Dreams.Controllers;
 
 public class HomeController(
     ILogger<HomeController> logger,
-    ICloudService cloudService,
-    InMemoryLogStore logStore
+    ICloudService cloudService//,
+    // InMemoryLogStore logStore
 ) : Controller
 {
     public async Task<IActionResult> Index()
@@ -32,7 +32,7 @@ public class HomeController(
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
-    [Authorize(Roles = Constants.AdminRole)]
-    public IActionResult Logs() => View(logStore.Entries.Reverse().ToList());
+    // [Authorize(Roles = Constants.AdminRole)]
+    // public IActionResult Logs() => View(logStore.Entries.Reverse().ToList());
 
 }
