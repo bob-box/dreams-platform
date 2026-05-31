@@ -20,7 +20,8 @@ public class DreamController(
     ICloudService cloudService,
     ITagService tagService,
     IAppTime appTime,
-    ICloudNameResolver cloudNameService
+    ICloudNameResolver cloudNameService,
+    IFundingRoundService fundingRoundService
 ) : Controller
 {
     // GET: Dream
@@ -57,9 +58,13 @@ public class DreamController(
         if (result.Status == DreamServiceStatus.NotAllowed) return Forbid();
 
         // Expose whether editing is allowed (based on cloud's DreamEditDeadline) to the view
-        var cloud = await cloudService.GetById(result.Dream!.CloudID);
+        var cloud = await cloudService.GetById(cloudNameService.CloudID);
         ViewBag.IsEditAllowed = User.IsInRole(Constants.AdminRole) || cloud.IsBeforeEditDeadline(appTime);
-
+        
+        var isAllowedToPublish = !await fundingRoundService.HasActiveOrPassedFundingRound(cloudNameService.CloudID);
+        ViewBag.IsPublishAllowed = result.Dream.Status == DreamStatus.Draft 
+            && (User.IsInRole(Constants.AdminRole) || isAllowedToPublish);
+            
         return View(result.Dream);
     }
 
@@ -197,6 +202,51 @@ public class DreamController(
         if (result.Status == DreamServiceStatus.NotAllowed) return Forbid();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // POST: Dream/Publish/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Publish(int id)
+    {
+        var result = await dreamService.Publish(id);
+        return result.Status switch
+        {
+            DreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id = id }),
+            DreamServiceStatus.NotFound => NotFound(),
+            DreamServiceStatus.NotAllowed => Forbid(),
+            _ => BadRequest("Unable to publish dream.")
+        };
+    }
+
+    [HttpPost]
+    [Authorize(Roles = Constants.AdminRole)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Hide(int id)
+    {
+        var result = await dreamService.SetDreamStatusTo(id, DreamStatus.Hidden);
+        return result.Status switch
+        {
+            DreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id = id }),
+            DreamServiceStatus.NotFound => NotFound(),
+            DreamServiceStatus.NotAllowed => Forbid(),
+            _ => BadRequest("Unable to hide dream.")
+        };
+    }
+
+    [HttpPost]
+    [Authorize(Roles = Constants.AdminRole)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnHide(int id)
+    {
+        var result = await dreamService.SetDreamStatusTo(id, DreamStatus.Draft);
+        return result.Status switch
+        {
+            DreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id = id }),
+            DreamServiceStatus.NotFound => NotFound(),
+            DreamServiceStatus.NotAllowed => Forbid(),
+            _ => BadRequest("Unable to hide dream.")
+        };
     }
 
     [HttpPost]

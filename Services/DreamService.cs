@@ -18,7 +18,8 @@ public class DreamService(
     ITagService tagService,
     IAuthorizationService authorizationService,
     IMapperFacade mapper,
-    IHttpContextAccessor httpContextAccessor
+    IHttpContextAccessor httpContextAccessor,
+    IFundingRoundService fundingRoundService
 ) : IDreamService
 {
     private ClaimsPrincipal CurrentUser => httpContextAccessor.HttpContext?.User
@@ -187,6 +188,49 @@ public class DreamService(
             return authorizationFailure;
 
         dream.IsDeleted = true;
+        await context.SaveChangesAsync();
+        return new DreamServiceResult(DreamServiceStatus.Success);
+    }
+
+    public async Task<DreamServiceResult> Publish(int id)
+    {
+        var dream = await GetFullQuery()
+            .SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
+
+        if (dream == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        var dreamViewModel = mapper.ToViewModel(dream)!;
+        var authorizationResult = await authorizationService.AuthorizeAsync(CurrentUser, dreamViewModel, Operations.Publish);
+        if (!authorizationResult.Succeeded)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        // Only allow publishing if the dream is in Draft status
+        if (dream.Status != DreamStatus.Draft)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        var activeFundingRound = await fundingRoundService.GetActiveRound(cloudNameService.CloudID);
+        if (activeFundingRound == null)
+            dream.Status = DreamStatus.ReadyForFunding;
+        else 
+            dream.Status = DreamStatus.Active;
+    
+        await context.SaveChangesAsync();
+        return new DreamServiceResult(DreamServiceStatus.Success);
+    }
+
+    public async Task<DreamServiceResult> SetDreamStatusTo(int id, DreamStatus dreamStatus)
+    {
+        if (!CurrentUser.IsInRole(Constants.AdminRole))
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        var dream = await GetFullQuery()
+            .SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
+
+        if (dream == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        dream.Status = dreamStatus;
         await context.SaveChangesAsync();
         return new DreamServiceResult(DreamServiceStatus.Success);
     }

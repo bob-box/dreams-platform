@@ -188,6 +188,13 @@ public class FundingRoundService(
         return mapper.ToViewModel(activeRound);
     }
 
+    public async Task<bool> HasActiveOrPassedFundingRound(int cloudId)
+    {
+        var now = appTime.UtcNow;
+        return await context.FundingRound
+            .AnyAsync(fr => fr.CloudID == cloudId && fr.StartDate <= now);
+    }
+
     private async Task<FundingRoundServiceResult> LoadFundingRound(int id, FundingRoundLoadMode mode)
     {
         var fundingRound = await context.FundingRound

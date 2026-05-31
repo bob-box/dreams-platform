@@ -9,7 +9,7 @@ To create a dream a user must first ***Join The Cloud*** and create their dream 
 
 A user must also ***Join The Cloud***(and have an active BL membership status STILL A TODO) before they can participate in funding rounds.
 
-A ***Funding Round*** is a period between two dates where users automatically gets ***Funds*** in their ***Wallets***, to give to dreams.
+A ***Funding Round*** is a period between two dates where users automatically gets ***Funds*** in their ***Wallets***, to give to dreams. A funding round sets all dreams that are in ***ReadyForFunding*** status to ***Active***.
 
 When a funding round is over, all unspent funds get removed from the wallets and the cloud fund stats gets updated.
 
@@ -17,7 +17,7 @@ When a funding round is over, all unspent funds get removed from the wallets and
 ## Admins
 Admin can
 1. Create clouds
-1. Edit any dream at any time
+1. Create, edit, publish and hide any dream at any-ish time
 1. Access the Admin Control Panel in a cloud to manage  
     1. Cloud settings
     1. Users and wallets (you can manually update wallets)

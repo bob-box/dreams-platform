@@ -1,4 +1,5 @@
 using Borderland.Dreams.Data;
+using Borderland.Dreams.Enums;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Hangfire;
@@ -8,7 +9,7 @@ namespace Borderland.Dreams.Services;
 
 public class FundingRoundSchedulerService(
     ILogger<FundingRoundSchedulerService> logger,
-    IServiceProvider serviceProvider, 
+    IServiceProvider serviceProvider,
     IAppTime appTime
     )
 {
@@ -72,7 +73,7 @@ public class FundingRoundSchedulerService(
         }
         if (fundingRound.AllocationPerUser <= 0)
         {
-            logger.LogInformation("FundingRound {ID} has no allocation per user, skipping", fundingRoundId);
+            logger.LogWarning("FundingRound {ID} has no allocation per user, skipping", fundingRoundId);
             return;
         }
         if (fundingRound.TotalFundsAllocated > 0)
@@ -100,6 +101,11 @@ public class FundingRoundSchedulerService(
                 fundingRoundId, totalAllocation, fundingRound.Cloud.TotalFundsAvailable);
             return;
         }
+
+        var affectedRows = await context.Dream
+            .Where(d => d.CloudID == cloud.ID && d.Status == DreamStatus.ReadyForFunding)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(d => d.Status, DreamStatus.Active));
+        logger.LogInformation("Number of dreams updated from ReadyForFunding to Active: {affectedRows}.", affectedRows);
 
         foreach (var wallet in usersInCloud)
             wallet.Balance = fundingRound.AllocationPerUser;

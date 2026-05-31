@@ -25,5 +25,6 @@ public interface IFundingRoundService
     Task<FundingRoundServiceResult> GetForDelete(int id);
     Task<FundingRoundServiceResult> Delete(int id);
     Task<FundingRoundViewModel?> GetActiveRound(int cloudId);
+    Task<bool> HasActiveOrPassedFundingRound(int cloudId);
 
 }

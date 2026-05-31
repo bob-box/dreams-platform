@@ -88,6 +88,7 @@ builder.Services.AddHangfireServer(options =>
 // UserIsMainDreamer and UserIsCoDreamer uses ASP.NET Core Identity (UserManager), which is built on Entity Framework Core.
 builder.Services.AddScoped<IAuthorizationHandler, UserIsMainDreamerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, UserIsCoDreamerAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, UserCanPublishDreamAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, UserIsAdminAuthorizationHandler>();
 
 builder.Services.AddRouting(options =>

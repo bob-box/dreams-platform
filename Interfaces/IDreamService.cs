@@ -28,8 +28,10 @@ public interface IDreamService
     Task<DreamServiceResult> Update(DreamViewModel viewModel);
     Task<DreamServiceResult> GetForDelete(int id);
     Task<DreamServiceResult> Delete(int id);
+    Task<DreamServiceResult> SetDreamStatusTo(int id, DreamStatus dreamStatus);
     Task<DreamServiceResult> GetQuick(int id);
     Task<DreamServiceResult> GetFull(int id);
+    Task<DreamServiceResult> Publish(int id);
     bool DreamExists(int iD, int cloudID);
     Task<bool> CanUserEditDreamers(DreamViewModel dream, ClaimsPrincipal user);
 }
