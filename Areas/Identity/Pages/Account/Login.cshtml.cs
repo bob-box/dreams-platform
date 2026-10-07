@@ -123,7 +123,7 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(user.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
+                    _logger.LogInformation($"User {Input.Email} logged in.");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -132,7 +132,7 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    _logger.LogWarning($"User {Input.Email} account locked out.");
                     return RedirectToPage("./Lockout");
                 }
                 else
