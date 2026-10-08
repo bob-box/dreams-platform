@@ -74,6 +74,11 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("TotalFundsAvailable")
                         .HasColumnType("decimal(18, 2)");
 
@@ -86,6 +91,9 @@ namespace Borderland.Dreams.Data.Migrations
                     b.HasKey("ID");
 
                     b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
                         .IsUnique();
 
                     b.ToTable("Cloud");

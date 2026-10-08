@@ -115,7 +115,8 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Migrate to latest version and seed database on startup in development environment.
+    // Add development middleware that lets you apply pending EF Core migrations through the browser’s Database Error Page.
+    // It does not run migrations automatically when the app starts; it provides a way to trigger them after a migration-related database error.
     app.UseMigrationsEndPoint();
     using (var scope = app.Services.CreateScope())
     {
@@ -158,15 +159,15 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 
 app.MapControllerRoute(
     name: "areas-within-a-cloud", // For example editing a cloud or its funding rounds
-    pattern: "{cloudName:required}/{area:exists}/{controller:required}/{action=Index}/{id?}"
+    pattern: "{cloudSlug:required}/{area:exists}/{controller:required}/{action=Index}/{id?}"
     );
 app.MapControllerRoute(
     name: "areas-outside-of-cloud", // for example creating a new cloud
     pattern: "{area:exists}/{controller:required}/{action=Index}/{id?}"
     );
 app.MapControllerRoute(
-    name: "cloudName-dreams-group",
-    pattern: "{cloudName:required}/{controller:required}/{action=Index}/{id?}"
+    name: "cloudSlug-dreams-group",
+    pattern: "{cloudSlug:required}/{controller:required}/{action=Index}/{id?}"
     );
 
 app.MapControllerRoute(

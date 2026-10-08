@@ -9,6 +9,7 @@ public class CloudViewModel
 {
     public int ID { get; set; }
     public required string Name { get; set; }
+    public string Slug { get; set; } = "";
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; }

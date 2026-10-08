@@ -16,7 +16,10 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
     /// </summary>
     [Required]
     public required string Name { get; set; }
-    
+
+    [Required]
+    [MaxLength(128)]
+    public string Slug { get; set; } = "";
 
     [DataType(DataType.Currency)]
     [Column(TypeName = "decimal(18, 2)")]

@@ -23,11 +23,12 @@ public class FundedDreamsModel(ApplicationDbContext context, UserManager<User> u
 
         var rawGroups = await context.Fund
             .Where(f => f.UserID == user.Id)
-            .GroupBy(f => new { f.Dream.CloudID, f.Dream.Cloud.Name })
+            .GroupBy(f => new { f.Dream.CloudID, f.Dream.Cloud.Name, f.Dream.Cloud.Slug })
             .Select(g => new
             {
                 CloudId = g.Key.CloudID,
                 CloudName = g.Key.Name,
+                CloudSlug = g.Key.Slug,
                 TotalAmountFunded = g.Sum(f => f.Amount),
                 Dreams = g.Select(f => new
                 {
@@ -43,6 +44,7 @@ public class FundedDreamsModel(ApplicationDbContext context, UserManager<User> u
         {
             CloudId = g.CloudId,
             CloudName = g.CloudName,
+            CloudSlug = g.CloudSlug,
             TotalAmountFunded = g.TotalAmountFunded,
             Dreams = g.Dreams
                 .DistinctBy(d => d.ID)
@@ -61,6 +63,7 @@ public class FundedDreamsModel(ApplicationDbContext context, UserManager<User> u
     {
         public int CloudId { get; set; }
         public string CloudName { get; set; } = string.Empty;
+        public string CloudSlug { get; set; } = string.Empty;
         public decimal TotalAmountFunded { get; set; }
         public List<FundedDreamEntry> Dreams { get; set; } = [];
     }

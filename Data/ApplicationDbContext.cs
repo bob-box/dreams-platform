@@ -55,6 +55,10 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasIndex(e => e.Name)
             .IsUnique();
 
+        modelBuilder.Entity<Cloud>()
+            .HasIndex(e => e.Slug)
+            .IsUnique();
+
         modelBuilder.Entity<CloudInfo>()
             .HasOne(e => e.Cloud)
             .WithOne(e => e.Info)

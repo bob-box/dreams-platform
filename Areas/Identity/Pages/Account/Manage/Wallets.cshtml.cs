@@ -24,11 +24,12 @@ public class WalletsModel(ApplicationDbContext context, UserManager<User> userMa
 
         Wallets = await _context.Wallet
             .Where(w => w.UserID == user.Id)
-            .GroupBy(w => new { w.CloudID, w.Cloud.Name })
+            .GroupBy(w => new { w.CloudID, w.Cloud.Name, w.Cloud.Slug })
             .Select(g => new WalletEntry
             {
                 CloudId = g.Key.CloudID,
                 CloudName = g.Key.Name,
+                CloudSlug = g.Key.Slug,
                 Balance = g.Sum(w => w.Balance)
             })
             .OrderBy(w => w.CloudName)
@@ -41,6 +42,7 @@ public class WalletsModel(ApplicationDbContext context, UserManager<User> userMa
     {
         public int CloudId { get; set; }
         public string CloudName { get; set; } = string.Empty;
+        public string CloudSlug { get; set; } = string.Empty;
         public decimal Balance { get; set; }
     }
 }

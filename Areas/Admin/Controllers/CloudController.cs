@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.ViewModels;
+using Borderland.Dreams.Utils;
 
 namespace Borderland.Dreams.Areas.Admin.Controllers;
 
@@ -14,19 +15,31 @@ public class CloudController(
 {
     public async Task<IActionResult> Create()
     {
-        return View();
+        return View(new CloudViewModel { Name = "" });
+    }
+
+    [HttpGet]
+    public IActionResult PreviewSlug(string? name)
+    {
+        return Json(new { slug = CloudSlugGenerator.Generate(name) });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CloudViewModel viewModel)
     {
-        if (ModelState.IsValid)
+        viewModel.Slug = CloudSlugGenerator.Generate(viewModel.Name);
+        if (!ModelState.IsValid)
+            return View(viewModel);
+
+        var result = await cloudService.Create(viewModel);
+        if (result == CloudServiceStatus.SlugAlreadyInUse)
         {
-            await cloudService.Create(viewModel);
-            return RedirectToAction(nameof(Index), "Home");
+            ModelState.AddModelError(nameof(viewModel.Name), "Another cloud already uses this URL slug. Choose a different name.");
+            return View(viewModel);
         }
-        return View(viewModel);
+
+        return RedirectToAction(nameof(Index), "Home");
     }
 
     public async Task<IActionResult> Edit(int? id)
@@ -77,6 +90,6 @@ public class CloudController(
         if (result == CloudServiceStatus.NotFound)
             return NotFound();
 
-        return RedirectToAction(nameof(Index), "Home", routeValues: new { cloudName = "" });
+        return RedirectToAction(nameof(Index), "Home", routeValues: new { cloudSlug = "" });
     }
 }

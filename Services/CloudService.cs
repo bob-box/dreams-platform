@@ -5,6 +5,7 @@ using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
+using Borderland.Dreams.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,11 +21,16 @@ public class CloudService(
     IAppTime appTime
     ) : ICloudService
 {
-     public async Task Create(CloudViewModel viewModel)
+     public async Task<CloudServiceStatus> Create(CloudViewModel viewModel)
     {
         var cloud = mapper.ToModel(viewModel);
+        cloud.Slug = CloudSlugGenerator.Generate(cloud.Name);
+        if (await context.Cloud.IgnoreQueryFilters().AnyAsync(x => x.Slug == cloud.Slug))
+            return CloudServiceStatus.SlugAlreadyInUse;
+
         context.Add(cloud);
         await context.SaveChangesAsync();
+        return CloudServiceStatus.Success;
     }
 
     public async Task<CloudServiceStatus> Update(CloudViewModel viewModel)
@@ -38,14 +44,16 @@ public class CloudService(
         var updated = mapper.ToModel(viewModel);
         // ensure we keep the tracked entity's key (and any EF tracking info)
         updated.ID = cloud.ID;
+        updated.Slug = cloud.Slug;
         context.Entry(cloud).CurrentValues.SetValues(updated);
 
         try
         {
             await context.SaveChangesAsync();
 
-            if (!oldName.Equals(viewModel.Name, StringComparison.OrdinalIgnoreCase))
-                cloudCache.Remove(oldName);
+            if (!oldName.Equals(cloud.Name, StringComparison.Ordinal))
+                cloudCache.Remove(cloud.Slug);
+
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -64,7 +72,7 @@ public class CloudService(
             return CloudServiceStatus.NotFound;
   
         cloud.IsDeleted = true;
-        cloudCache.Remove(cloud.Name);
+        cloudCache.Remove(cloud.Slug);
         await context.SaveChangesAsync();
 
         return CloudServiceStatus.Success;

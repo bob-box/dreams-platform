@@ -12,6 +12,7 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
         {
             ID = model.ID,
             Name = model.Name,
+            Slug = model.Slug,
             CreatedAt = appTime.ToLocal(model.CreatedAt),
             TotalFundsAvailable = model.TotalFundsAvailable,
             TotalFundsSpent = model.TotalFundsSpent,
@@ -29,6 +30,7 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
         {
             ID = vm.ID,
             Name = vm.Name,
+            Slug = vm.Slug,
             TotalFundsAvailable = vm.TotalFundsAvailable,
             TotalFundsSpent = vm.TotalFundsSpent,
             DreamCreatePeriodStart = appTime.ToUtc(vm.DreamCreatePeriodStart),

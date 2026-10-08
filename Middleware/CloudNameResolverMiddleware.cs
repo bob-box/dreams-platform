@@ -11,32 +11,36 @@ public class CloudNameResolverMiddleware(RequestDelegate _next)
         ICloudCache cloudCache
         )
     {
-        resolver.CloudName = httpContext.Request.RouteValues["cloudName"]?.ToString() ?? "";
-        if (string.IsNullOrWhiteSpace(resolver.CloudName))
+        resolver.CloudSlug = httpContext.Request.RouteValues["cloudSlug"]?.ToString() ?? "";
+        if (string.IsNullOrWhiteSpace(resolver.CloudSlug))
         {
             resolver.CloudID = -1;
+            resolver.CloudName = "";
             await _next(httpContext);
             return;
         }
 
-        if (cloudCache.TryGet(resolver.CloudName, out int cloudID))
+        if (cloudCache.TryGet(resolver.CloudSlug, out int cloudID, out var cloudName))
         {
             resolver.CloudID = cloudID;
+            resolver.CloudName = cloudName;
             await _next(httpContext);
             return;
         }
 
-        var id = context.Cloud.SingleOrDefault(x => x.Name == resolver.CloudName)?.ID;
-        if (id == null)
+        var cloud = context.Cloud.SingleOrDefault(x => x.Slug == resolver.CloudSlug);
+        if (cloud == null)
         {
             resolver.CloudID = -1;
+            resolver.CloudName = "";
             httpContext.Response.Redirect("/");
             await _next(httpContext);
             return;
         }
 
-        cloudCache.Set(resolver.CloudName, id.Value);
-        resolver.CloudID = id.Value;
+        cloudCache.Set(resolver.CloudSlug, cloud.ID, cloud.Name);
+        resolver.CloudID = cloud.ID;
+        resolver.CloudName = cloud.Name;
         await _next(httpContext);
     }
 }
@@ -44,11 +48,13 @@ public class CloudNameResolverMiddleware(RequestDelegate _next)
 public class CloudNameResolver : ICloudNameResolver
 {
     public string CloudName { get; set; } = "";
+    public string CloudSlug { get; set; } = "";
     public int CloudID { get; set; } = -1;
 }
 
 public interface ICloudNameResolver
 {
     public string CloudName { get; set; }
+    public string CloudSlug { get; set; }
     public int CloudID { get; set; }
 }

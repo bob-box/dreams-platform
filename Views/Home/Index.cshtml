@@ -47,7 +47,7 @@
                     @(item.Dreams.Where(x => x.IsVisibleToPublic())?.Count() ?? 0)
                 </td>
                 <td>
-                    <a asp-controller="Dream" asp-action="Index" asp-route-cloudName="@item.Name">Go to Cloud</a>
+                    <a asp-controller="Dream" asp-action="Index" asp-route-cloudSlug="@item.Slug">Go to Cloud</a>
                 </td>
             </tr>
         }
@@ -74,7 +74,7 @@
             }
 
     </style>
-    <a asp-controller="Dream" asp-action="Index" asp-route-cloudName="@item.Name" style="position: relative; display: inline-block;">
+    <a asp-controller="Dream" asp-action="Index" asp-route-cloudSlug="@item.Slug" style="position: relative; display: inline-block;">
         <div class="cloud"></div>
         <div style="
             position: absolute;

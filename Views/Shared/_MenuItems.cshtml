@@ -1,7 +1,7 @@
 ﻿@using Microsoft.Identity.Client
 @{
-    var cloudName = cloudNameResolver.CloudName;
-    var isWithinACloud = !string.IsNullOrWhiteSpace(cloudName);
+    var cloudSlug = cloudNameResolver.CloudSlug;
+    var isWithinACloud = !string.IsNullOrWhiteSpace(cloudSlug);
 }
 @functions {
     public string GetActiveClass(string controllerName)
@@ -12,7 +12,7 @@
 
 <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
     <div class="container-fluid">
-        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="" asp-route-cloudName="">☁️ Home</a>
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="" asp-route-cloudSlug="">☁️ Home</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                 aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -23,11 +23,11 @@
                 {
                     <li class="nav-item">
                         <a class="nav-link text-dark @(GetActiveClass("Dream"))" asp-area="" asp-controller="Dream" asp-action="Index"
-                           asp-route-cloudName="@cloudNameResolver.CloudName">Dreams</a>
+                           asp-route-cloudSlug="@cloudSlug">Dreams</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-dark @(GetActiveClass("Info"))" asp-area="" asp-controller="Cloud" asp-action="Info"
-                           asp-route-cloudName="@cloudNameResolver.CloudName">Cloud Info</a>
+                           asp-route-cloudSlug="@cloudSlug">Info</a>
                     </li>
                 }
             </ul>
@@ -55,10 +55,10 @@
                                         <li><hr class="dropdown-divider"></li>
                                 }
                             <li>
-                                <a class="dropdown-item" asp-area="" asp-controller="Hangfire" asp-action="" asp-route-cloudName="">Hangfire scheduler</a>
+                                <a class="dropdown-item" asp-area="" asp-controller="Hangfire" asp-action="" asp-route-cloudSlug="">Hangfire scheduler</a>
                             </li>
                             <li>
-                                <a class="dropdown-item" asp-controller="Home" asp-action="Logs" asp-route-cloudName="">Logs</a>
+                                <a class="dropdown-item" asp-controller="Home" asp-action="Logs" asp-route-cloudSlug="">Logs</a>
                             </li>
                             </ul>
                         </li>

@@ -14,13 +14,14 @@ public enum CloudServiceStatus
 {
     Success,
     NotFound,
+    SlugAlreadyInUse,
 }
 
 public record JoinCloudResult(JoinCloudStatus Status);
 
 public interface ICloudService
 {
-    Task Create(CloudViewModel viewModel);
+    Task<CloudServiceStatus> Create(CloudViewModel viewModel);
     Task<CloudServiceStatus> Update(CloudViewModel viewModel);
     Task<CloudServiceStatus> Delete(int id);
     Task<CloudViewModel> GetById(int id);

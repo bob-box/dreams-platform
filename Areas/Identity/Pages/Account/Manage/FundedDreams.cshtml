@@ -30,7 +30,7 @@ else
                         {
                             <tr>
                                 <td>
-                                    <a asp-area="" asp-controller="Dream" asp-action="Details" asp-route-cloudName="@cloud.CloudName" asp-route-id="@dream.ID">@dream.Name</a>
+                                    <a asp-area="" asp-controller="Dream" asp-action="Details" asp-route-cloudSlug="@cloud.CloudSlug" asp-route-id="@dream.ID">@dream.Name</a>
                                 </td>
                                 <td>@dream.AmountFundedByMe.ToString("C")</td>
                             </tr>

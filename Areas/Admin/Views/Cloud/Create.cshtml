@@ -18,6 +18,11 @@
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="Slug" class="control-label">URL slug</label>
+                <input asp-for="Slug" class="form-control" readonly />
+                <small class="form-text text-muted">Generated from the cloud name and fixed after creation.</small>
+            </div>
+            <div class="form-group">
                 <label asp-for="TotalFundsAvailable" class="control-label"></label>
                 <input asp-for="TotalFundsAvailable" class="form-control" />
                 <span asp-validation-for="TotalFundsAvailable" class="text-danger"></span>
@@ -58,4 +63,31 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const cloudNameInput = document.getElementById('Name');
+        const cloudSlugInput = document.getElementById('Slug');
+        const slugPreviewUrl = '@Url.Action("PreviewSlug", "Cloud", new { area = "Admin" })';
+        let previewRequest = 0;
+
+        cloudNameInput.addEventListener('blur', async () => {
+            const name = cloudNameInput.value.trim();
+            const requestId = ++previewRequest;
+            if (!name) {
+                cloudSlugInput.value = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${slugPreviewUrl}?name=${encodeURIComponent(name)}`);
+                if (!response.ok || requestId !== previewRequest) return;
+
+                const result = await response.json();
+                if (requestId === previewRequest) {
+                    cloudSlugInput.value = result.slug;
+                }
+            } catch {
+                cloudSlugInput.value = '';
+            }
+        });
+    </script>
 }
