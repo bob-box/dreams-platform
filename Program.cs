@@ -14,6 +14,7 @@ using Borderland.Dreams.FilterAttributes;
 using Borderland.Dreams.Utils;
 using Microsoft.Extensions.Options;
 using Borderland.Dreams.Mappers;
+using Ganss.Xss;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +76,8 @@ builder.Services.AddScoped<FundingRoundSchedulerService>();
 builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();
 builder.Services.AddSingleton<ICloudCache, CloudCache>();
 
+builder.Services.AddSingleton<HtmlSanitizer>(_ => new HtmlSanitizer());
+
 builder.Services.AddHangfireServer(options =>
 {
     if (builder.Environment.IsDevelopment())
@@ -133,12 +136,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// When to use the CloudNameResolverMiddleware:
+// When to use the CloudNameResolverMiddleware. 
+// Seems to always be needed when adding a new controller
 app.UseWhen(context =>
 {
     var controller = context.Request.RouteValues["controller"]?.ToString();
     var area = context.Request.RouteValues["area"]?.ToString();
-    return new[] { "Dream", "Cloud" }.Contains(controller) || area == "Admin";
+    return new[] { "Dream", "Cloud", "Info" }.Contains(controller) || area == "Admin";
 }, appBuilder =>
 {
     // Custom middleware to resolve CloudName to CloudID. Must be placed after UseRouting to get route data.

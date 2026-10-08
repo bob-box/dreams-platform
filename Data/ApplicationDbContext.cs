@@ -24,12 +24,14 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<FundingRound> FundingRound { get; set; } = default!;
     public DbSet<Fund> Fund { get; set; } = default!;
     public DbSet<Tag> Tag { get; set; } = default!;
+    public DbSet<CloudInfo> CloudInfo { get; set; } = default!;
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Global query filters for soft delete
         modelBuilder.Entity<Cloud>().HasQueryFilter(x => !x.IsDeleted);
         modelBuilder.Entity<Dream>().HasQueryFilter(x => !x.IsDeleted);
+        modelBuilder.Entity<CloudInfo>().HasQueryFilter(x => !x.Cloud.IsDeleted);
 
         modelBuilder.Entity<User>()
             .Ignore(u => u.PhoneNumber)
@@ -52,6 +54,12 @@ public class ApplicationDbContext : IdentityDbContext<User>
         modelBuilder.Entity<Cloud>()
             .HasIndex(e => e.Name)
             .IsUnique();
+
+        modelBuilder.Entity<CloudInfo>()
+            .HasOne(e => e.Cloud)
+            .WithOne(e => e.Info)
+            .HasForeignKey<CloudInfo>(e => e.CloudID)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Wallet>()
             .HasIndex(x => new { x.UserID, x.CloudID })

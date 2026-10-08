@@ -91,6 +91,27 @@ namespace Borderland.Dreams.Data.Migrations
                     b.ToTable("Cloud");
                 });
 
+            modelBuilder.Entity("Borderland.Dreams.Models.CloudInfo", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CloudID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("CloudID")
+                        .IsUnique();
+
+                    b.ToTable("CloudInfo");
+                });
+
             modelBuilder.Entity("Borderland.Dreams.Models.Comment", b =>
                 {
                     b.Property<int>("ID")
@@ -558,6 +579,17 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Borderland.Dreams.Models.CloudInfo", b =>
+                {
+                    b.HasOne("Borderland.Dreams.Models.Cloud", "Cloud")
+                        .WithOne("Info")
+                        .HasForeignKey("Borderland.Dreams.Models.CloudInfo", "CloudID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cloud");
+                });
+
             modelBuilder.Entity("Borderland.Dreams.Models.Comment", b =>
                 {
                     b.HasOne("Borderland.Dreams.Models.Dream", "Dream")
@@ -751,6 +783,8 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Navigation("Dreams");
 
                     b.Navigation("FundingRounds");
+
+                    b.Navigation("Info");
 
                     b.Navigation("Tags");
                 });

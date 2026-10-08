@@ -25,6 +25,10 @@
                         <a class="nav-link text-dark @(GetActiveClass("Dream"))" asp-area="" asp-controller="Dream" asp-action="Index"
                            asp-route-cloudName="@cloudNameResolver.CloudName">Dreams</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark @(GetActiveClass("Info"))" asp-area="" asp-controller="Cloud" asp-action="Info"
+                           asp-route-cloudName="@cloudNameResolver.CloudName">Cloud Info</a>
+                    </li>
                 }
             </ul>
             @if (User.IsInRole(Constants.AdminRole))

@@ -1,0 +1,27 @@
+@model Borderland.Dreams.ViewModels.CloudInfoViewModel
+
+@{
+    ViewData["Title"] = "Cloud Info";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/lib/wysi/wysi.min.css" />
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Cloud Info: @cloudNameResolver.CloudName</h1>
+    @if (User.IsInRole(Constants.AdminRole))
+    {
+        <a class="btn btn-primary" asp-action="EditInfo">Edit</a>
+    }
+</div>
+
+@if (string.IsNullOrWhiteSpace(Model.Content))
+{
+    <p>No cloud information has been added yet.</p>
+}
+else
+{
+    <article>
+        @Html.Raw(Model.Content)
+    </article>
+}

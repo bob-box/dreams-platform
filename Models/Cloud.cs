@@ -43,4 +43,5 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
     public ICollection<Dream>? Dreams { get; set; }
     public ICollection<FundingRound>? FundingRounds { get; set; }
     public ICollection<Tag> Tags { get; set; } = [];
+    public CloudInfo? Info { get; set; }
 }
