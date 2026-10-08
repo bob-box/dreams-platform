@@ -1,0 +1,140 @@
+@model Borderland.Dreams.ViewModels.DreamFilterViewModel
+
+@{
+    ViewData["Title"] = "Dreams List";
+    bool hasActiveFilters = !string.IsNullOrEmpty(Model.SearchText) || Model.StatusFilter.HasValue || Model.TagFilter.HasValue;
+}
+
+<h1>@cloudNameResolver.CloudName - Dreams List</h1>
+@* <cache expires-after="@TimeSpan.FromSeconds(60)" vary-by="@cloudNameResolver.CloudID"> *@
+    <vc:cloud-funds />
+@* </cache> *@
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <vc:join-cloud-or-create-dream />
+}
+
+<form method="get" asp-action="Index" asp-route-cloudSlug="@cloudNameResolver.CloudSlug" id="dream-filter-form">
+    <div class="row g-2 mb-3 align-items-end">
+        <div class="col-md-4">
+            <label asp-for="SearchText" class="form-label">Search</label>
+            <input asp-for="SearchText" class="form-control" placeholder="Search by title or description" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a class="btn btn-secondary" asp-controller="Cloud" asp-action="Index" asp-route-cloudSlug="@cloudNameResolver.CloudSlug" id="clear-dream-filters">Clear filters</a>
+        </div>
+        <div class="col-md-2">
+            <label asp-for="StatusFilter" class="form-label">Status</label>
+            <select asp-for="StatusFilter" class="form-select">
+                <option value="">All statuses</option>
+                @foreach (var status in Enum.GetValues<Borderland.Dreams.Enums.DreamStatus>())
+                {
+                    if (status != Borderland.Dreams.Enums.DreamStatus.Hidden && status != Borderland.Dreams.Enums.DreamStatus.Draft)
+                    {
+                        <option value="@status">@status</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label asp-for="TagFilter" class="form-label">Tag</label>
+            <select asp-for="TagFilter" class="form-select">
+                <option value="">All tags</option>
+                @foreach (var tag in Model.AvailableTags)
+                {
+                    <option value="@tag.ID">@tag.Title</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label asp-for="SortOrder" class="form-label">Sort by</label>
+            <select asp-for="SortOrder" 
+                    asp-items="Html.GetEnumSelectList<Borderland.Dreams.Enums.DreamSortOrder>()" 
+                    class="form-select"></select>
+        </div>
+        
+    </div>
+</form>
+
+<span id="dream-filter-status" class="visually-hidden" role="status" aria-live="polite"></span>
+<div id="dream-table" aria-live="polite">
+    <partial name="_DreamTable" model="Model" />
+</div>
+
+@section Scripts {
+    <script>
+        const filterForm = document.getElementById('dream-filter-form');
+        const clearFiltersLink = document.getElementById('clear-dream-filters');
+        const dreamTable = document.getElementById('dream-table');
+        const filterStatus = document.getElementById('dream-filter-status');
+        let activeFilterRequest;
+
+        function buildFilterUrl() {
+            const url = new URL(filterForm.action, window.location.href);
+            url.search = '';
+
+            for (const [key, value] of new FormData(filterForm)) {
+                if (typeof value === 'string' && value !== '') {
+                    url.searchParams.set(key, value);
+                }
+            }
+
+            return url;
+        }
+
+        async function updateDreamTable(url, pushHistory = true) {
+            activeFilterRequest?.abort();
+            activeFilterRequest = new AbortController();
+            dreamTable.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: activeFilterRequest.signal
+                });
+                if (!response.ok) throw new Error('Unable to load filtered dreams.');
+
+                dreamTable.innerHTML = await response.text();
+                if (pushHistory) window.history.pushState({}, '', url);
+                filterStatus.textContent = 'Dream list updated.';
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    filterStatus.textContent = 'Could not update the dream list. Please try again.';
+                }
+            } finally {
+                dreamTable.removeAttribute('aria-busy');
+            }
+        }
+
+        filterForm.addEventListener('submit', event => {
+            event.preventDefault();
+            updateDreamTable(buildFilterUrl());
+        });
+
+        filterForm.addEventListener('change', event => {
+            if (event.target instanceof HTMLSelectElement) {
+                filterForm.requestSubmit();
+            }
+        });
+
+        clearFiltersLink.addEventListener('click', event => {
+            event.preventDefault();
+            filterForm.elements.namedItem('SearchText').value = '';
+            filterForm.elements.namedItem('StatusFilter').value = '';
+            filterForm.elements.namedItem('TagFilter').value = '';
+            const sortOrder = filterForm.elements.namedItem('SortOrder');
+            sortOrder.value = sortOrder.options[0].value;
+            updateDreamTable(new URL(clearFiltersLink.href, window.location.href));
+        });
+
+        window.addEventListener('popstate', () => {
+            const url = new URL(window.location.href);
+            for (const name of ['SearchText', 'StatusFilter', 'TagFilter', 'SortOrder']) {
+                const field = filterForm.elements.namedItem(name);
+                field.value = url.searchParams.get(name) ?? (name === 'SortOrder' ? field.options[0].value : '');
+            }
+            updateDreamTable(url, false);
+        });
+    </script>
+}

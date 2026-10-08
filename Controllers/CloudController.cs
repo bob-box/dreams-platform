@@ -9,6 +9,7 @@ using Borderland.Dreams.Authorization;
 using Borderland.Dreams.ViewModels;
 using Borderland.Dreams.Middleware;
 using Microsoft.EntityFrameworkCore;
+using Borderland.Dreams.Enums;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -16,10 +17,36 @@ public class CloudController(
     UserManager<User> userManager,
     ApplicationDbContext context,
     ICloudService cloudService,
+    IDreamService dreamService,
     ICloudNameResolver cloudNameResolver,
     HtmlSanitizer sanitizer
 ) : Controller
 {
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Index(
+        string? searchText,
+        DreamStatus? statusFilter,
+        int? tagFilter,
+        DreamSortOrder sortOrder = DreamSortOrder.NameAsc
+    )
+    {
+        var currentUserId = userManager.GetUserId(User);
+
+        var filterViewModel = await dreamService.BuildDreamFilterViewModel(
+            searchText,
+            statusFilter,
+            tagFilter,
+            sortOrder,
+            currentUserId,
+            User.IsInRole(Constants.AdminRole));
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return PartialView("_DreamTable", filterViewModel);
+
+        return View(filterViewModel);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize]

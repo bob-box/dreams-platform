@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Borderland.Dreams.ViewModels;
 
-public class DreamViewModel
+public class DreamViewModel : IValidatableObject
 {
     public int ID { get; set; }
     public string Name { get; set; }
@@ -47,4 +47,15 @@ public class DreamViewModel
     public bool IsEditable() => Status == DreamStatus.Draft || Status == DreamStatus.Hidden;
     public bool IsVisibleToPublic() => Status != DreamStatus.Draft && Status != DreamStatus.Hidden;
 
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (TotalRequestedBudget <= 0)
+        {
+            // Dreams requesting 0 is invalid.
+            yield return new ValidationResult(
+                "The total requested budget must be greater than 0.",
+                [nameof(BudgetItems)]
+            );
+        }
+    }
 }

@@ -89,12 +89,12 @@ public class DreamService(
         {
             DreamSortOrder.NameAsc => listQuery.OrderBy(d => d.Name),
             DreamSortOrder.NameDesc => listQuery.OrderByDescending(d => d.Name),
-            DreamSortOrder.MostFunded => listQuery.OrderByDescending(d => d.Funds.Sum(f => f.Amount)),
-            DreamSortOrder.LeastFunded => listQuery.OrderBy(d => d.Funds.Sum(f => f.Amount)),
+            DreamSortOrder.MostFunded => listQuery.OrderByDescending(d => d.Funds.Sum(f => (double)f.Amount)),
+            DreamSortOrder.LeastFunded => listQuery.OrderBy(d => d.Funds.Sum(f => (double)f.Amount)),
             DreamSortOrder.MostFundedPercentage => listQuery.OrderByDescending(d =>
-                d.BudgetItems.Sum(b => (double)b.MinAmount) == 0 ? 0 : d.Funds.Sum(f => f.Amount) / d.BudgetItems.Sum(b => b.MinAmount)),
+                d.BudgetItems.Sum(b => (double)b.MinAmount) == 0 ? 0 : d.Funds.Sum(f => (double)f.Amount) / d.BudgetItems.Sum(b => (double)b.MinAmount)),
             DreamSortOrder.LeastFundedPercentage => listQuery.OrderBy(d =>
-                d.BudgetItems.Sum(b => (double)b.MinAmount) == 0 ? 0 : d.Funds.Sum(f => f.Amount) / d.BudgetItems.Sum(b => b.MinAmount)),
+                d.BudgetItems.Sum(b => (double)b.MinAmount) == 0 ? 0 : d.Funds.Sum(f => (double)f.Amount) / d.BudgetItems.Sum(b => (double)b.MinAmount)),
             DreamSortOrder.MostBudget => listQuery.OrderByDescending(d => d.BudgetItems.Sum(b => (double)b.MinAmount)),
             DreamSortOrder.LeastBudget => listQuery.OrderBy(d => d.BudgetItems.Sum(b => (double)b.MinAmount)),
             _ => listQuery.OrderBy(d => d.Name),

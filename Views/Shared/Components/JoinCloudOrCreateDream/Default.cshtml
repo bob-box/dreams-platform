@@ -10,13 +10,13 @@
 }
 else if (Model.IsDreamingPeriodActive)
 {
-    <a asp-action="Create" class="btn btn-primary">Create New Dream</a>
+    <a asp-controller="Dream" asp-action="Create" class="btn btn-primary">Create New Dream</a>
 }
 else
 {
     @if (User.IsInRole(Constants.AdminRole))
     {
-        <a asp-action="Create" class="btn btn-primary">Create New Dream</a>
+        <a asp-controller="Dream" asp-action="Create" class="btn btn-primary">Create New Dream</a>
         <text>(Dreaming period has ended, but still enabled for admins)</text>
     }
 }

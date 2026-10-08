@@ -4,9 +4,10 @@
     var isWithinACloud = !string.IsNullOrWhiteSpace(cloudSlug);
 }
 @functions {
-    public string GetActiveClass(string controllerName)
+    public string GetActiveClass(string actionName, string controllerName)
     {
-        return ViewContext.RouteData.Values["controller"]?.ToString() == controllerName ? "active" : "";
+        return ViewContext.RouteData.Values["action"]?.ToString() == actionName 
+        && ViewContext.RouteData.Values["controller"]?.ToString() == controllerName? "active" : "";
     }
 }
 
@@ -22,11 +23,11 @@
                 @if (isWithinACloud)
                 {
                     <li class="nav-item">
-                        <a class="nav-link text-dark @(GetActiveClass("Dream"))" asp-area="" asp-controller="Dream" asp-action="Index"
+                        <a class="nav-link text-dark @(GetActiveClass("Index", "Cloud"))" asp-area="" asp-controller="Cloud" asp-action="Index"
                            asp-route-cloudSlug="@cloudSlug">Dreams</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark @(GetActiveClass("Info"))" asp-area="" asp-controller="Cloud" asp-action="Info"
+                        <a class="nav-link text-dark @(GetActiveClass("Info", "Cloud"))" asp-area="" asp-controller="Cloud" asp-action="Info"
                            asp-route-cloudSlug="@cloudSlug">Info</a>
                     </li>
                 }
