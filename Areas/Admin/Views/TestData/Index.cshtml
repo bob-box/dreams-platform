@@ -1,0 +1,118 @@
+@model Borderland.Dreams.ViewModels.TestDataRunViewModel
+
+@{
+    ViewData["Title"] = "Create Test Data";
+}
+
+<h1>Create Test Data</h1>
+<p>
+    Generate an isolated cloud, five confirmed test accounts, sample dreams and tags, and two scheduled funding rounds.
+    <br>
+    Set the round schedule, break, and funding amounts for this run.
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+<form asp-action="Create" method="post" class="mb-4">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="row g-4 mb-3">
+        <div class="col-md-3">
+            <h2 class="h5">Funding round schedule</h2>
+            <div class="mb-3">
+                <label asp-for="FundingRoundStartInMinutes" class="form-label">Round 1 starts in (minutes)</label>
+                <input asp-for="FundingRoundStartInMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="FundingRoundStartInMinutes" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="FirstFundingRoundLengthInMinutes" class="form-label">Round 1 length (minutes)</label>
+                <input asp-for="FirstFundingRoundLengthInMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="FirstFundingRoundLengthInMinutes" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="BreakBetweenFundingRoundsInMinutes" class="form-label">Break between rounds (minutes)</label>
+                <input asp-for="BreakBetweenFundingRoundsInMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="BreakBetweenFundingRoundsInMinutes" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="SecondFundingRoundLengthInMinutes" class="form-label">Round 2 length (minutes)</label>
+                <input asp-for="SecondFundingRoundLengthInMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="SecondFundingRoundLengthInMinutes" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <h2 class="h5">Funding amounts</h2>
+            <div class="mb-3">
+                <label asp-for="AllocationPerUser" class="form-label">Allocation per user</label>
+                <input asp-for="AllocationPerUser" class="form-control" type="number" min="0.01" step="0.01" />
+                <span asp-validation-for="AllocationPerUser" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="CloudFundsAvailable" class="form-label">Cloud funds available</label>
+                <input asp-for="CloudFundsAvailable" class="form-control" type="number" min="0.01" step="0.01" />
+                <span asp-validation-for="CloudFundsAvailable" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Create test data</button>
+</form>
+
+@if (Model.HasRun)
+{
+    <section class="border-top pt-3">
+        <h2>Test environment ready</h2>
+        <p>
+            <strong>Cloud:</strong> @Model.CloudName
+            <a asp-area="" asp-controller="Cloud" asp-action="Index" asp-route-cloudSlug="@Model.CloudSlug">Open cloud</a>
+        </p>
+        <p><strong>Slug:</strong> @Model.CloudSlug</p>
+        <h3>Funding rounds</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Round</th>
+                        <th>Starts</th>
+                        <th>Ends</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var round in Model.FundingRounds)
+                    {
+                        <tr>
+                            <td>@round.Title</td>
+                            <td>@round.StartUtc.ToLocalTime()</td>
+                            <td>@round.EndUtc.ToLocalTime()</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test users</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var account in Model.Accounts)
+                    {
+                        <tr>
+                            <td>@account.Name</td>
+                            <td>@account.Email</td>
+                            <td><code>@Model.TemporaryPassword</code></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted">The password is only shown on this page immediately after generation. Copy it before leaving.</p>
+    </section>
+}

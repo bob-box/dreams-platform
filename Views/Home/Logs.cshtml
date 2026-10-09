@@ -32,7 +32,7 @@ else
             {
                 <tr>
                     <td class="text-muted text-nowrap font-monospace">
-                        @entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                        @entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
                     </td>
                     <td>
                         <span class="badge @GetBadgeClass(entry.Level)">@entry.Level</span>

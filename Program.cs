@@ -71,6 +71,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICloudService, CloudService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IFundingRoundService, FundingRoundService>();
+builder.Services.AddScoped<TestDataService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
 builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();

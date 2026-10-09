@@ -114,6 +114,7 @@ public static class DataSeeder
             var cloud = new Cloud
             {
                 Name = "test",
+                Slug = CloudSlugGenerator.Generate("test"),
                 TotalFundsAvailable = 1000m,
                 TotalFundsRemaining = 1000m,
                 TotalFundsSpent = 0m,

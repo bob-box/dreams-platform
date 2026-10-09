@@ -1,4 +1,6 @@
 ﻿@using Microsoft.Identity.Client
+@using Microsoft.AspNetCore.Hosting
+@inject Microsoft.AspNetCore.Hosting.IHostingEnvironment env
 @{
     var cloudSlug = cloudNameResolver.CloudSlug;
     var isWithinACloud = !string.IsNullOrWhiteSpace(cloudSlug);
@@ -61,6 +63,12 @@
                             <li>
                                 <a class="dropdown-item" asp-controller="Home" asp-action="Logs" asp-route-cloudSlug="">Logs</a>
                             </li>
+                            @if (env.IsDevelopment())
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="TestData" asp-action="Index" asp-route-cloudSlug="">Create test data</a>
+                                </li>
+                            }
                             </ul>
                         </li>
                     </ul>
