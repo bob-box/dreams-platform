@@ -201,7 +201,7 @@ public class DreamController(
         if (result.Status == DreamServiceStatus.NotFound) return NotFound();
         if (result.Status == DreamServiceStatus.NotAllowed) return Forbid();
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index", "Cloud");
     }
 
     // POST: Dream/Publish/5

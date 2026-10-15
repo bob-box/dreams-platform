@@ -64,10 +64,10 @@ public class DreamService(
         // Admins are allowed to see all dreams
         if (!isAdmin)
         {
-            // Do not show dreams that are in Hidden status
-            // But dreamers are still allowed to see their own dreams :)
+            // Do not show dreams that are in Hidden or Draft status
+            // unless it is your own dream.
             listQuery = listQuery.Where(x =>
-                (x.Status != DreamStatus.Hidden)
+                ((x.Status != DreamStatus.Hidden) && (x.Status != DreamStatus.Draft))
                 || x.Dreamers.Any(d => d.UserID == currentUserId));
         }
 
@@ -150,7 +150,8 @@ public class DreamService(
 
         dreamToUpdate.Name = viewModel.Name;
         dreamToUpdate.Description = viewModel.Description;
-        dreamToUpdate.Dreamers = mapper.ToModels(viewModel.Dreamers);
+        // Removed dreamers show up as null because Html.BeginCollectionItem adds hidden fields that are picked up as an empty item when deleting. 
+        dreamToUpdate.Dreamers = mapper.ToModels(viewModel.Dreamers.Where(x => x != null).ToList()); 
         dreamToUpdate.BudgetItems = mapper.ToModels(viewModel.BudgetItems);
         dreamToUpdate.Tags = await context.Tag
             .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)

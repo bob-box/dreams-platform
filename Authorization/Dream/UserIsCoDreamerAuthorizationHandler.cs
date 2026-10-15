@@ -34,16 +34,21 @@ public class UserIsCoDreamerAuthorizationHandler(UserManager<User> userManager) 
             return Task.CompletedTask;
         }
 
-        var coDreamerUserIds = dream.Dreamers.Where(x => !x.IsMainDreamer)
-                                             .Select(x => x.UserID);
-        // You can always READ your own dream
-        if (!coDreamerUserIds.Contains(userManager.GetUserId(context.User)) &&
-            requirement.Name == Constants.READ &&
+        var currentUserId = userManager.GetUserId(context.User);
+        var isCoDreamer = dream.Dreamers.Any(x =>
+            !x.IsMainDreamer && x.UserID == currentUserId);
+
+        // Private dreams are only visible to their dreamers.
+        if (requirement.Name == Constants.READ &&
+            !isCoDreamer &&
             !dream.IsVisibleToPublic())
+        {
             return Task.CompletedTask;
+        }
 
         // UPDATE is only allowed when the dream is editable.
-        if (requirement.Name == Constants.UPDATE && !dream.IsEditable())
+        if (requirement.Name == Constants.UPDATE &&
+            (!isCoDreamer || !dream.IsEditable()))
             return Task.CompletedTask;
 
         context.Succeed(requirement);
