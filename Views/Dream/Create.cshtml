@@ -33,7 +33,7 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             @{
-                var availableTags = ViewBag.AvailableTags as IEnumerable<Borderland.Dreams.Models.Tag>;
+                var availableTags = ViewBag.AvailableTags as IEnumerable<TagViewModel>;
                 var tagOptions = SelectListHelper.GetTagOptions(availableTags, Model.SelectedTagIds);
             }
             <partial name="~/Views/Shared/_TagOptions.cshtml" model="tagOptions" />

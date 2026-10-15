@@ -1,5 +1,5 @@
 using Borderland.Dreams.Authorization;
-using Borderland.Dreams.Models;
+using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Borderland.Dreams.Extensions;
@@ -22,7 +22,7 @@ public static class SelectListHelper
         });
     }
 
-    public static IEnumerable<SelectListItem> GetTagOptions(IEnumerable<Tag>? availableTags, IEnumerable<int>? selectedTagIds = null)
+    public static IEnumerable<SelectListItem> GetTagOptions(IEnumerable<TagViewModel>? availableTags, IEnumerable<int>? selectedTagIds = null)
     {
         if (availableTags == null)
             return [];
