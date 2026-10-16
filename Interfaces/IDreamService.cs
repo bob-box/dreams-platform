@@ -28,6 +28,9 @@ public interface IDreamService
     Task<DreamServiceResult> Update(DreamViewModel viewModel);
     Task<DreamServiceResult> GetForDelete(int id);
     Task<DreamServiceResult> Delete(int id);
+    Task<IReadOnlyList<DreamViewModel>> GetDeletedDreams();
+    Task<DreamServiceResult> GetDeletedDream(int id);
+    Task<DreamServiceResult> RestoreDeletedDream(int id);
     Task<DreamServiceResult> SetDreamStatusTo(int id, DreamStatus dreamStatus);
     Task<DreamServiceResult> GetQuick(int id);
     Task<DreamServiceResult> GetFull(int id);

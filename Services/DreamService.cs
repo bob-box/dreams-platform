@@ -193,6 +193,46 @@ public class DreamService(
         return new DreamServiceResult(DreamServiceStatus.Success);
     }
 
+    public async Task<IReadOnlyList<DreamViewModel>> GetDeletedDreams()
+    {
+        var dreams = await GetFullQuery(asNoTracking: true, includeDeleted: true)
+            .Where(d => d.IsDeleted)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+
+        return dreams.Select(d => mapper.ToViewModel(d)!).ToList();
+    }
+
+    public async Task<DreamServiceResult> GetDeletedDream(int id)
+    {
+        var dream = await GetFullQuery(asNoTracking: true, includeDeleted: true)
+            .SingleOrDefaultAsync(d => d.ID == id && d.IsDeleted);
+
+        return dream == null
+            ? new DreamServiceResult(DreamServiceStatus.NotFound)
+            : new DreamServiceResult(DreamServiceStatus.Success, mapper.ToViewModel(dream));
+    }
+
+    public async Task<DreamServiceResult> RestoreDeletedDream(int id)
+    {
+        if (!CurrentUser.IsInRole(Constants.AdminRole))
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        var dream = await context.Dream
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(d =>
+                d.ID == id &&
+                d.CloudID == cloudNameService.CloudID &&
+                d.IsDeleted);
+
+        if (dream == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        dream.IsDeleted = false;
+        await context.SaveChangesAsync();
+        return new DreamServiceResult(DreamServiceStatus.Success);
+    }
+
     public async Task<DreamServiceResult> Publish(int id)
     {
         var dream = await GetFullQuery()
@@ -250,11 +290,12 @@ public class DreamService(
     /// <summary>
     /// Includes related entities (so you can run AuthorizationService checks).
     /// </summary>
-    private IQueryable<Dream> GetFullQuery(bool asNoTracking = false)
+    private IQueryable<Dream> GetFullQuery(bool asNoTracking = false, bool includeDeleted = false)
     {
         int cloudId = cloudNameService.CloudID;
 
-        var query = context.Dream
+        var dreams = includeDeleted ? context.Dream.IgnoreQueryFilters() : context.Dream;
+        var query = dreams
             .Include(d => d.BudgetItems)
             .Include(d => d.Cloud)
             .Include(d => d.Dreamers).ThenInclude(d => d.User)

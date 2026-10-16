@@ -47,13 +47,16 @@
                                         Cloud</a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="Index">Manage Users</a>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Users</a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Tag" asp-action="Index">Manage Tags</a>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Tag" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Tags</a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="FundingRound" asp-action="Index">Manage Funding Rounds</a>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="FundingRound" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Funding Rounds</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="DeletedDreams" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Deleted Dreams</a>
                                     </li>
                                         <li><hr class="dropdown-divider"></li>
                                 }

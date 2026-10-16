@@ -62,7 +62,7 @@ public class DreamController(
         ViewBag.IsEditAllowed = User.IsInRole(Constants.AdminRole) || cloud.IsBeforeEditDeadline(appTime);
         
         var isAllowedToPublish = !await fundingRoundService.HasActiveOrPassedFundingRound(cloudNameService.CloudID);
-        ViewBag.IsPublishAllowed = result.Dream.Status == DreamStatus.Draft 
+        ViewBag.IsPublishAllowed = result.Dream!.Status == DreamStatus.Draft 
             && (User.IsInRole(Constants.AdminRole) || isAllowedToPublish);
             
         return View(result.Dream);
