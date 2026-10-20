@@ -200,7 +200,30 @@ public class DreamService(
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync();
 
-        return dreams.Select(d => mapper.ToViewModel(d)!).ToList();
+        // Get when and who deleted it
+        var deletedDreamIds = dreams.Select(d => d.ID).ToList();
+        var deletionEntries = await context.AuditLog
+            .Where(entry => entry.EntityType == "Dream" &&
+                            entry.Action == "Deleted" &&
+                            entry.CloudID == cloudNameService.CloudID &&
+                            deletedDreamIds.Contains(entry.EntityID))
+            .OrderByDescending(entry => entry.CreatedAt)
+            .ToListAsync();
+        // A dream can be restored and deleted again, so report its most recent deletion event.
+        var latestDeletionByDream = deletionEntries
+            .GroupBy(entry => entry.EntityID)
+            .ToDictionary(group => group.Key, group => group.First());
+
+        return dreams.Select(d =>
+        {
+            var viewModel = mapper.ToViewModel(d)!;
+            if (latestDeletionByDream.TryGetValue(d.ID, out var deletion))
+            {
+                viewModel.DeletedAt = deletion.CreatedAt;
+                viewModel.DeletedBy = deletion.UserName;
+            }
+            return viewModel;
+        }).ToList();
     }
 
     public async Task<DreamServiceResult> GetDeletedDream(int id)

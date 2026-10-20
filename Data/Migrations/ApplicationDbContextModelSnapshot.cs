@@ -17,6 +17,53 @@ namespace Borderland.Dreams.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
 
+            modelBuilder.Entity("Borderland.Dreams.Models.AuditLogEntry", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Changes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CloudID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EntityID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserID")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("CloudID", "CreatedAt");
+
+                    b.HasIndex("EntityType", "EntityID", "Action");
+
+                    b.ToTable("AuditLog");
+                });
+
             modelBuilder.Entity("Borderland.Dreams.Models.BudgetItem", b =>
                 {
                     b.Property<int>("ID")

@@ -196,11 +196,16 @@ public class FundingRoundSchedulerService(
         return cloud.TotalFundsAvailable >= totalAllocation;
     }
 
-    private static Task<int> ActivateReadyDreamsAsync(ApplicationDbContext context, int cloudId)
+    private static async Task<int> ActivateReadyDreamsAsync(ApplicationDbContext context, int cloudId)
     {
-        return context.Dream
+        var dreams = await context.Dream
             .Where(dream => dream.CloudID == cloudId && dream.Status == DreamStatus.ReadyForFunding)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(dream => dream.Status, DreamStatus.Active));
+            .ToListAsync();
+
+        foreach (var dream in dreams)
+            dream.Status = DreamStatus.Active;
+
+        return dreams.Count;
     }
 
     private static void SetWalletBalances(IEnumerable<Wallet> wallets, decimal allocationPerUser)

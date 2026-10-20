@@ -69,6 +69,7 @@ builder.Services.AddScoped<IDreamService, DreamService>();
 builder.Services.AddScoped<IDreamFundingService, DreamFundingService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICloudService, CloudService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IFundingRoundService, FundingRoundService>();
 builder.Services.AddScoped<TestDataService>();

@@ -18,6 +18,8 @@ else
                 <th>Dream</th>
                 <th>Dreamers</th>
                 <th>Created</th>
+                <th>Deleted</th>
+                <th>Deleted by</th>
                 <th>Status</th>
                 <th></th>
             </tr>
@@ -29,6 +31,8 @@ else
                     <td>@dream.Name</td>
                     <td>@string.Join(", ", dream.Dreamers.Select(d => d.Name))</td>
                     <td>@Html.DisplayFor(_ => dream.CreatedAt)</td>
+                    <td>@(dream.DeletedAt?.ToLocalTime().ToString() ?? "Unknown")</td>
+                    <td>@(dream.DeletedBy ?? "Unknown")</td>
                     <td>@dream.Status</td>
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@dream.ID"
