@@ -36,14 +36,40 @@ public class FundingRoundService(
     public async Task<FundingRoundViewModel> BuildCreateViewModel()
     {
         var userCount = await userService.Count();
+        var defaultStartDate = await GetDefaultStartDate();
 
         return new FundingRoundViewModel
         {
             CloudID = cloudNameResolver.CloudID,
-            StartDate = appTime.Now.Date.AddDays(1).StartOfDay(),
-            EndDate = appTime.Now.Date.AddDays(3).EndOfDay(),
+            StartDate = defaultStartDate,
+            EndDate = defaultStartDate.Date.AddDays(2).EndOfDay(),
             UsersInCloudCount = userCount
         };
+    }
+
+    /// <summary>
+    /// Gets the default funding round start date, moving it past any active dreaming deadlines.
+    /// </summary>
+    private async Task<DateTime> GetDefaultStartDate()
+    {
+        var cloud = await context.Cloud.SingleOrDefaultAsync(cloud => cloud.ID == cloudNameResolver.CloudID);
+        // Start tomorrow unless a dreaming deadline requires a later start time.
+        var defaultStartDate = appTime.Now.Date.AddDays(1).StartOfDay();
+        var latestDreamingDeadline = new DateTime?[]
+        {
+            cloud?.DreamCreatePeriodEnd,
+            cloud?.DreamEditDeadline
+        }.Max();
+
+        if (latestDreamingDeadline.HasValue)
+        {
+            var nextAllowedStartUtc = GetNextMinuteAfter(latestDreamingDeadline.Value);
+            var deadlineStartDate = appTime.ToLocal(nextAllowedStartUtc);
+            if (deadlineStartDate > defaultStartDate)
+                defaultStartDate = deadlineStartDate;
+        }
+
+        return defaultStartDate;
     }
 
     public async Task<FundingRoundServiceResult> Create(FundingRoundViewModel viewModel)
@@ -58,11 +84,16 @@ public class FundingRoundService(
                 });
         }
 
+        var cloud = await context.Cloud
+            .SingleOrDefaultAsync(cloud => cloud.ID == cloudNameResolver.CloudID);
+        if (cloud == null)
+            return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
+
         var existingRounds = await context.FundingRound
             .Where(fr => fr.CloudID == cloudNameResolver.CloudID)
             .ToListAsync();
 
-        var errors = ValidateDates(viewModel, existingRounds);
+        var errors = ValidateDates(viewModel, existingRounds, cloud);
         if (errors.Count > 0)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
 
@@ -125,7 +156,12 @@ public class FundingRoundService(
         }
         else
         {
-            var errors = ValidateDates(viewModel, existingRounds);
+            var cloud = await context.Cloud
+                .SingleOrDefaultAsync(cloud => cloud.ID == roundToUpdate.CloudID);
+            if (cloud == null)
+                return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
+
+            var errors = ValidateDates(viewModel, existingRounds, cloud);
             if (errors.Count > 0)
                 return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
 
@@ -240,10 +276,12 @@ public class FundingRoundService(
 
     private Dictionary<string, List<string>> ValidateDates(
         FundingRoundViewModel viewModel,
-        List<FundingRound> existingRounds)
+        List<FundingRound> existingRounds,
+        Cloud cloud)
     {
         var errors = new Dictionary<string, List<string>>();
         var now = appTime.Now;
+        var startDateUtc = appTime.ToUtc(viewModel.StartDate);
 
         if (existingRounds.Any(fr => viewModel.StartDate <= fr.EndDate && viewModel.EndDate >= fr.StartDate))
             AddError(errors, "", "Funding round dates cannot overlap with existing rounds.");
@@ -257,7 +295,25 @@ public class FundingRoundService(
         if (viewModel.StartDate < now)
             AddError(errors, "StartDate", "Start date cannot be in the past.");
 
+        if ((cloud.DreamCreatePeriodEnd.HasValue && startDateUtc <= cloud.DreamCreatePeriodEnd.Value) ||
+            (cloud.DreamEditDeadline.HasValue && startDateUtc <= cloud.DreamEditDeadline.Value))
+        {
+            AddError(errors, "StartDate",
+                "Funding round cannot start until after the dreaming period and edit deadline have ended.");
+        }
+
         return errors;
+    }
+    
+    /// <summary>
+    /// Returns the next minute boundary after the specified date and time,
+    /// discarding seconds and fractional seconds.
+    /// If the time is already on a minute boundary, advances to the next minute.
+    /// </summary>
+    private static DateTime GetNextMinuteAfter(DateTime dateTime)
+    {
+        var ticksToNextMinute = TimeSpan.TicksPerMinute - dateTime.Ticks % TimeSpan.TicksPerMinute;
+        return new DateTime(dateTime.Ticks + ticksToNextMinute, dateTime.Kind);
     }
 
     private static void AddError(Dictionary<string, List<string>> errors, string key, string message)
