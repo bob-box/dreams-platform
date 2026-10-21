@@ -13,13 +13,14 @@ public class CloudFundsViewComponent(
     ApplicationDbContext context,
     ICloudNameResolver cloudNameResolver,
     IFundingRoundService fundingRoundService,
+    ICloudService cloudService,
     UserManager<User> userManager) : ViewComponent
 {
 
     public async Task<IViewComponentResult> InvokeAsync()
     {
         // Calculate totals for the current cloud
-        var cloud = await context.Cloud.FindAsync(cloudNameResolver.CloudID);
+        var cloud = await cloudService.GetById(cloudNameResolver.CloudID);
         if (cloud == null)
         {
             return View(new CloudFundsViewModel());

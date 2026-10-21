@@ -151,7 +151,7 @@ public class DreamService(
         dreamToUpdate.Name = viewModel.Name;
         dreamToUpdate.Description = viewModel.Description;
         // Removed dreamers show up as null because Html.BeginCollectionItem adds hidden fields that are picked up as an empty item when deleting. 
-        dreamToUpdate.Dreamers = mapper.ToModels(viewModel.Dreamers.Where(x => x != null).ToList()); 
+        dreamToUpdate.Dreamers = mapper.ToModels(viewModel.Dreamers.Where(x => x != null).ToList());
         dreamToUpdate.BudgetItems = mapper.ToModels(viewModel.BudgetItems);
         dreamToUpdate.Tags = await context.Tag
             .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)
@@ -169,17 +169,15 @@ public class DreamService(
 
         var dream = mapper.ToViewModel(dreamFromDb)!;
         var authorizationFailure = await AuthorizeAsync(dream, Operations.Delete);
-        if (authorizationFailure != null)
-            return authorizationFailure;
-
-        return new DreamServiceResult(DreamServiceStatus.Success, dream);
+        
+        return authorizationFailure ?? new DreamServiceResult(DreamServiceStatus.Success, dream);
     }
 
     public async Task<DreamServiceResult> Delete(int id)
     {
         var dream = await context.Dream
-        .Include(d => d.Dreamers).ThenInclude(d => d.User)
-        .SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
+            .Include(d => d.Dreamers).ThenInclude(d => d.User)
+            .SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
 
         if (dream == null)
             return new DreamServiceResult(DreamServiceStatus.NotFound);
@@ -274,11 +272,8 @@ public class DreamService(
             return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
         var activeFundingRound = await fundingRoundService.GetActiveRound(cloudNameService.CloudID);
-        if (activeFundingRound == null)
-            dream.Status = DreamStatus.ReadyForFunding;
-        else 
-            dream.Status = DreamStatus.Active;
-    
+        dream.Status = activeFundingRound == null ? DreamStatus.ReadyForFunding : DreamStatus.Active;
+
         await context.SaveChangesAsync();
         return new DreamServiceResult(DreamServiceStatus.Success);
     }

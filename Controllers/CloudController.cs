@@ -67,7 +67,7 @@ public class CloudController(
         if (result.Status == JoinCloudStatus.UserNotFound)
             return Challenge();
 
-        return RedirectToAction("Index", "Dream");
+        return RedirectToAction("Index");
     }
 
     [AllowAnonymous]

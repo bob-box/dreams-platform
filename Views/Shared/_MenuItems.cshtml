@@ -40,34 +40,35 @@
                     <li class="nav-item ms-sm-auto dropdown">
                         <a class="nav-link text-dark dropdown-toggle" data-bs-toggle="dropdown" href="#">Admin Control Panel</a>
                         <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="AuditLog" asp-action="Index" asp-route-cloudSlug="">Audit log</a>
-                            </li>
                             @if (isWithinACloud)
                             {
+                                  <h6 class="dropdown-header">Cloud stuff</h6>
                                 <li>
-                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Cloud" asp-action="Edit" asp-route-id="@cloudNameResolver.CloudID">Edit
-                                        Cloud</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Users</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Tag" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Tags</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="FundingRound" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Funding Rounds</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="DeletedDreams" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Deleted Dreams</a>
-                                    </li>
-                                        <li><hr class="dropdown-divider"></li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Cloud" asp-action="Edit" asp-route-id="@cloudNameResolver.CloudID">Edit Cloud</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Users</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Tag" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Tags</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="FundingRound" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Funding Rounds</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="DeletedDreams" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Deleted Dreams</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
                                 }
+                            <h6 class="dropdown-header">General stuff</h6>
                             <li>
                                 <a class="dropdown-item" asp-area="" asp-controller="Hangfire" asp-action="" asp-route-cloudSlug="">Hangfire scheduler</a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-controller="Home" asp-action="Logs" asp-route-cloudSlug="">Logs</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-area="Admin" asp-controller="AuditLog" asp-action="Index" asp-route-cloudSlug="">Audit log</a>
                             </li>
                             @if (env.IsDevelopment())
                             {

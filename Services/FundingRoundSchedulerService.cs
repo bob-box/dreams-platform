@@ -20,7 +20,7 @@ public class FundingRoundSchedulerService(
 
         // Schedule allocation job at start date
         var startJobId = BackgroundJob.Schedule(
-            () => AllocateFundsToWallets(fundingRound.ID),
+            () => ProcessFundingRoundStart(fundingRound.ID),
             fundingRound.StartDate);
 
         // Schedule end job at end date
@@ -57,7 +57,7 @@ public class FundingRoundSchedulerService(
 
     [DisableConcurrentExecution(300)] // Prevent overlapping executions for the same funding round
     [AutomaticRetry(Attempts = 3)]
-    public async Task AllocateFundsToWallets(int fundingRoundId)
+    public async Task ProcessFundingRoundStart(int fundingRoundId)
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
