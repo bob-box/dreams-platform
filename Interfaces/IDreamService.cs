@@ -28,6 +28,10 @@ public interface IDreamService
     Task<DreamServiceResult> Update(DreamViewModel viewModel);
     Task<DreamServiceResult> GetForDelete(int id);
     Task<DreamServiceResult> Delete(int id);
+    /// <summary>Loads a dream for cancellation after verifying admin or dreamer authorization.</summary>
+    Task<DreamServiceResult> GetForCancel(int id);
+    /// <summary>Marks an authorized dream as canceled without refunding any funds.</summary>
+    Task<DreamServiceResult> Cancel(int id);
     Task<IReadOnlyList<DreamViewModel>> GetDeletedDreams();
     Task<DreamServiceResult> GetDeletedDream(int id);
     Task<DreamServiceResult> RestoreDeletedDream(int id);

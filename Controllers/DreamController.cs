@@ -204,6 +204,34 @@ public class DreamController(
         return RedirectToAction("Index", "Cloud");
     }
 
+    // GET: Dream/Cancel/5
+    public async Task<IActionResult> Cancel(int? id)
+    {
+        if (id == null)
+            return NotFound();
+
+        var result = await dreamService.GetForCancel(id.Value);
+        if (result.Status == DreamServiceStatus.NotFound) return NotFound();
+        if (result.Status == DreamServiceStatus.NotAllowed) return Forbid();
+
+        return View(result.Dream);
+    }
+
+    // POST: Dream/Cancel/5
+    [HttpPost, ActionName("Cancel")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelConfirmed(int id)
+    {
+        var result = await dreamService.Cancel(id);
+        return result.Status switch
+        {
+            DreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id }),
+            DreamServiceStatus.NotFound => NotFound(),
+            DreamServiceStatus.NotAllowed => Forbid(),
+            _ => BadRequest("Unable to cancel dream.")
+        };
+    }
+
     // POST: Dream/Publish/5
     [HttpPost]
     [ValidateAntiForgeryToken]

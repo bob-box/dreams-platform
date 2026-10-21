@@ -28,7 +28,9 @@ public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager
             Constants.READ,
             Constants.UPDATE,
             Constants.DELETE,
-            Constants.EDIT_DREAMER
+            Constants.EDIT_DREAMER,
+            Constants.PUBLISH,
+            Constants.CANCEL
         };
 
         // If not asking for the allowed operations, return.

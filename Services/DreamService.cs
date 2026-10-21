@@ -191,6 +191,45 @@ public class DreamService(
         return new DreamServiceResult(DreamServiceStatus.Success);
     }
 
+    /// <summary>
+    /// Loads a dream for confirmation after verifying that the current user is an admin or one of its dreamers.
+    /// </summary>
+    public async Task<DreamServiceResult> GetForCancel(int id)
+    {
+        var dream = await GetFullQuery(asNoTracking: true)
+            .SingleOrDefaultAsync(d => d.ID == id);
+        if (dream == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        if (dream.Status == DreamStatus.Canceled)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        var dreamViewModel = mapper.ToViewModel(dream)!;
+        var authorizationFailure = await AuthorizeAsync(dreamViewModel, Operations.Cancel);
+        return authorizationFailure ?? new DreamServiceResult(
+            DreamServiceStatus.Success,
+            dreamViewModel);
+    }
+
+    public async Task<DreamServiceResult> Cancel(int id)
+    {
+        var dream = await GetFullQuery()
+            .SingleOrDefaultAsync(d => d.ID == id);
+        if (dream == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        if (dream.Status == DreamStatus.Canceled)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        var authorizationFailure = await AuthorizeAsync(mapper.ToViewModel(dream)!, Operations.Cancel);
+        if (authorizationFailure != null)
+            return authorizationFailure;
+
+        dream.Status = DreamStatus.Canceled;
+        await context.SaveChangesAsync();
+        return new DreamServiceResult(DreamServiceStatus.Success);
+    }
+
     public async Task<IReadOnlyList<DreamViewModel>> GetDeletedDreams()
     {
         var dreams = await GetFullQuery(asNoTracking: true, includeDeleted: true)

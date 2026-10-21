@@ -35,6 +35,11 @@
                     <button type="submit" class="btn btn-warning">Unhide (make draft)</button>
                 </form>
             }
+            @if (Model.Status != DreamStatus.Canceled &&
+                 _authorizationService.AuthorizeAsync(User, Model, Operations.Cancel).Result.Succeeded)
+            {
+                <a class="btn btn-danger" asp-action="Cancel" asp-route-id="@Model.ID">Cancel dream</a>
+            }
             @if (_authorizationService.AuthorizeAsync(User, Model, Operations.Delete).Result.Succeeded)
             {
                 <a class="btn btn-danger" asp-action="Delete" asp-route-id="@Model.ID">Delete</a>
