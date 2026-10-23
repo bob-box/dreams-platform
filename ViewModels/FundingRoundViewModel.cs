@@ -17,6 +17,9 @@ public class FundingRoundViewModel
     [DataType(DataType.DateTime)]
     public DateTime EndDate { get; set; }
 
+    [Display(Name = "Last funding round")]
+    public bool IsLastRound { get; set; }
+
     [Range(0, 100, ErrorMessage = "Percentage must be between 0 and 100")]
     public decimal MaxPercentagePerDream { get; set; } = 100;
 

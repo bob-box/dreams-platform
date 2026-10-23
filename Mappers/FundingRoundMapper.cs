@@ -15,6 +15,7 @@ public class FundingRoundMapper(IMapperFacade mapper, IAppTime appTime)
             Title = model.Title,
             StartDate = appTime.ToLocal(model.StartDate),
             EndDate = appTime.ToLocal(model.EndDate),
+            IsLastRound = model.IsLastRound,
             MaxPercentagePerDream = model.MaxPercentagePerDream,
             AllocationPerUser = model.AllocationPerUser,
             TotalFundsAllocated = model.TotalFundsAllocated
@@ -30,6 +31,7 @@ public class FundingRoundMapper(IMapperFacade mapper, IAppTime appTime)
             Title = vm.Title,
             StartDate = appTime.ToUtc(vm.StartDate),
             EndDate = appTime.ToUtc(vm.EndDate),
+            IsLastRound = vm.IsLastRound,
             MaxPercentagePerDream = vm.MaxPercentagePerDream,
             AllocationPerUser = vm.AllocationPerUser
         };

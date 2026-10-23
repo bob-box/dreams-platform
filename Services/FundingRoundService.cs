@@ -94,8 +94,15 @@ public class FundingRoundService(
             .ToListAsync();
 
         var errors = ValidateDates(viewModel, existingRounds, cloud);
+        AddErrors(errors, ValidateLastRoundSetting(viewModel, existingRounds));
         if (errors.Count > 0)
             return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
+
+        if (viewModel.IsLastRound)
+        {
+            foreach (var existingRound in existingRounds.Where(round => round.IsLastRound))
+                existingRound.IsLastRound = false;
+        }
 
         var fundingRound = mapper.ToModel(viewModel);
         context.Add(fundingRound);
@@ -140,6 +147,7 @@ public class FundingRoundService(
         if (IsActive(roundToUpdate))
         {
             var errors = ValidateActiveRoundUpdate(viewModel, roundToUpdate, existingRounds);
+            AddErrors(errors, ValidateLastRoundSetting(viewModel, existingRounds));
             if (errors.Count > 0)
             {
                 viewModel.Title = roundToUpdate.Title;
@@ -153,6 +161,7 @@ public class FundingRoundService(
             // since changing the start date or allocation would have immediate effects on users.
             roundToUpdate.EndDate = viewModel.EndDate;
             roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
+            roundToUpdate.IsLastRound = viewModel.IsLastRound;
         }
         else
         {
@@ -162,20 +171,27 @@ public class FundingRoundService(
                 return new FundingRoundServiceResult(FundingRoundServiceStatus.NotFound);
 
             var errors = ValidateDates(viewModel, existingRounds, cloud);
+            AddErrors(errors, ValidateLastRoundSetting(viewModel, existingRounds));
             if (errors.Count > 0)
                 return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
 
             roundToUpdate.Title = viewModel.Title;
             roundToUpdate.StartDate = viewModel.StartDate;
             roundToUpdate.EndDate = viewModel.EndDate;
+            roundToUpdate.IsLastRound = viewModel.IsLastRound;
             roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
             roundToUpdate.AllocationPerUser = viewModel.AllocationPerUser;
         }
 
-        schedulerService.ScheduleFundingRoundJobs(roundToUpdate);
+        if (roundToUpdate.IsLastRound)
+        {
+            foreach (var existingRound in existingRounds.Where(round => round.IsLastRound))
+                existingRound.IsLastRound = false;
+        }
 
         try
         {
+            schedulerService.ScheduleFundingRoundJobs(roundToUpdate);
             await context.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
@@ -265,10 +281,12 @@ public class FundingRoundService(
         List<FundingRound> existingRounds)
     {
         var errors = new Dictionary<string, List<string>>();
+        var endDateUtc = appTime.ToUtc(viewModel.EndDate);
+        var startDateUtc = roundToUpdate.StartDate;
 
         if (viewModel.EndDate <= appTime.Now)
             AddError(errors, "EndDate", "End date must be in the future.");
-        else if (existingRounds.Any(fr => fr.StartDate <= viewModel.EndDate && fr.EndDate >= roundToUpdate.StartDate))
+        else if (existingRounds.Any(fr => fr.StartDate <= endDateUtc && fr.EndDate >= startDateUtc))
             AddError(errors, "", "Funding round dates cannot overlap with existing rounds.");
 
         return errors;
@@ -282,8 +300,9 @@ public class FundingRoundService(
         var errors = new Dictionary<string, List<string>>();
         var now = appTime.Now;
         var startDateUtc = appTime.ToUtc(viewModel.StartDate);
+        var endDateUtc = appTime.ToUtc(viewModel.EndDate);
 
-        if (existingRounds.Any(fr => viewModel.StartDate <= fr.EndDate && viewModel.EndDate >= fr.StartDate))
+        if (existingRounds.Any(fr => startDateUtc <= fr.EndDate && endDateUtc >= fr.StartDate))
             AddError(errors, "", "Funding round dates cannot overlap with existing rounds.");
 
         if (viewModel.EndDate <= viewModel.StartDate)
@@ -303,6 +322,42 @@ public class FundingRoundService(
         }
 
         return errors;
+    }
+
+    private Dictionary<string, List<string>> ValidateLastRoundSetting(
+        FundingRoundViewModel viewModel,
+        List<FundingRound> otherRounds)
+    {
+        var errors = new Dictionary<string, List<string>>();
+        var endDateUtc = appTime.ToUtc(viewModel.EndDate);
+        var lastRound = otherRounds.SingleOrDefault(round => round.IsLastRound);
+
+        if (viewModel.IsLastRound &&
+            otherRounds.Any(round => round.EndDate > endDateUtc))
+        {
+            AddError(errors, nameof(viewModel.IsLastRound),
+                "A funding round cannot be marked as last while another round ends after it.");
+        }
+        else if (!viewModel.IsLastRound &&
+                 lastRound != null &&
+                 endDateUtc > lastRound.EndDate)
+        {
+            AddError(errors, nameof(viewModel.EndDate),
+                "A funding round cannot extend beyond the last funding round.");
+        }
+
+        return errors;
+    }
+
+    private static void AddErrors(
+        Dictionary<string, List<string>> errors,
+        Dictionary<string, List<string>> additionalErrors)
+    {
+        foreach (var (key, messages) in additionalErrors)
+        {
+            foreach (var message in messages)
+                AddError(errors, key, message);
+        }
     }
     
     /// <summary>

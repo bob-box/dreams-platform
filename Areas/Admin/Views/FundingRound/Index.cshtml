@@ -28,6 +28,9 @@
                 @Html.DisplayNameFor(model => model.EndDate)
             </th>
             <th>
+                @Html.DisplayNameFor(model => model.IsLastRound)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.AllocationPerUser)
             </th>
             <th>
@@ -50,6 +53,12 @@
             </td>
             <td>
                 @item.EndDate
+            </td>
+            <td>
+                @if (item.IsLastRound)
+                {
+                    <span class="badge bg-primary">Last</span>
+                }
             </td>
             <td>
                 @item.AllocationPerUser.ToString("C")

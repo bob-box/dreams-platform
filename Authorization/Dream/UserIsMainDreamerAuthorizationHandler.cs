@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Identity;
+using Borderland.Dreams.Enums;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 

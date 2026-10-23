@@ -136,6 +136,20 @@ public class FundingRoundSchedulerService(
         var totalSpent = await GetTotalSpentAsync(context, fundingRound.ID);
         UpdateFundingRoundEndTotals(fundingRound, cloud, totalSpent);
 
+        if (fundingRound.IsLastRound)
+        {
+            var finalizedDreamCounts = await FinalizeActiveDreamsAsync(context, cloud.ID);
+            logger.LogInformation(
+                "Last funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): finalized dreams — {CanceledDreamCount} canceled, {PartiallyFundedDreamCount} partially funded, {FullyFundedDreamCount} fully funded",
+                fundingRound.Title,
+                fundingRound.ID,
+                cloud.Name,
+                cloud.ID,
+                finalizedDreamCounts.Canceled,
+                finalizedDreamCounts.PartiallyFunded,
+                finalizedDreamCounts.FullyFunded);
+        }
+
         await context.SaveChangesAsync();
         // Summary log at the end is useful for financial auditing
         logger.LogInformation(
@@ -242,6 +256,50 @@ public class FundingRoundSchedulerService(
         return context.Fund
             .Where(fund => fund.FundingRoundID == fundingRoundId)
             .SumAsync(fund => fund.Amount);
+    }
+
+    /// <summary>
+    /// Finalizes active dreams after the last round based on their total funding and minimum requested budget.
+    /// </summary>
+    private static async Task<(int Canceled, int PartiallyFunded, int FullyFunded)> FinalizeActiveDreamsAsync(
+        ApplicationDbContext context,
+        int cloudId)
+    {
+        var activeDreams = await context.Dream
+            .Include(dream => dream.BudgetItems)
+            .Include(dream => dream.Funds)
+            .Where(dream => dream.CloudID == cloudId && dream.Status == DreamStatus.Active)
+            .ToListAsync();
+
+        var canceledCount = 0;
+        var partiallyFundedCount = 0;
+        var fullyFundedCount = 0;
+
+        foreach (var dream in activeDreams)
+        {
+            var totalFunded = dream.Funds.Sum(fund => fund.Amount);
+            var minimumGoal = dream.BudgetItems
+                .Where(item => item.Type == BudgetItemType.Requesting)
+                .Sum(item => item.MinAmount);
+
+            if (totalFunded <= 0)
+            {
+                dream.Status = DreamStatus.Canceled;
+                canceledCount++;
+            }
+            else if (totalFunded >= minimumGoal)
+            {
+                dream.Status = DreamStatus.FullyFunded;
+                fullyFundedCount++;
+            }
+            else
+            {
+                dream.Status = DreamStatus.PartiallyFunded;
+                partiallyFundedCount++;
+            }
+        }
+
+        return (canceledCount, partiallyFundedCount, fullyFundedCount);
     }
 
     private void UpdateFundingRoundEndTotals(FundingRound fundingRound, Cloud cloud, decimal totalSpent)

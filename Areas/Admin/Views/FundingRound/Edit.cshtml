@@ -50,6 +50,11 @@
                 <input asp-for="EndDate" class="form-control" type="datetime-local" />
                 <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
+            <div class="form-group form-check">
+                <input asp-for="IsLastRound" class="form-check-input" />
+                <label asp-for="IsLastRound" class="form-check-label"></label>
+                <small class="form-text text-muted d-block">When this round ends, remaining active dreams will be finalized.</small>
+            </div>
             <div class="form-group">
                 <label asp-for="MaxPercentagePerDream" class="control-label"></label>
                 <input asp-for="MaxPercentagePerDream" class="form-control" data-val="false" />

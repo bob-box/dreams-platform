@@ -334,6 +334,9 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<string>("EndJobId")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsLastRound")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("MaxPercentagePerDream")
                         .HasColumnType("TEXT");
 
