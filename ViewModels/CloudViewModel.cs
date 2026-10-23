@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Borderland.Dreams.Extensions;
@@ -5,7 +6,7 @@ using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.ViewModels;
 
-public class CloudViewModel
+public class CloudViewModel : IValidatableObject
 {
     public int ID { get; set; }
     public required string Name { get; set; }
@@ -38,6 +39,21 @@ public class CloudViewModel
 
     public List<DreamViewModel>? Dreams { get; set; } = [];
     public List<FundingRoundViewModel>? FundingRounds { get; set; } = [];
+
+    /// <summary>
+    /// Validates that the dream edit deadline does not precede the end of the dream creation period.
+    /// </summary>
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DreamCreatePeriodEnd.HasValue &&
+            DreamEditDeadline.HasValue &&
+            DreamEditDeadline.Value < DreamCreatePeriodEnd.Value)
+        {
+            yield return new ValidationResult(
+                "The dream edit deadline cannot be before the dream period end.",
+                [nameof(DreamEditDeadline)]);
+        }
+    }
 
     public bool IsDreamingPeriodActive(IAppTime appTime)
     {
