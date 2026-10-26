@@ -13,6 +13,10 @@ public class FundingRoundSchedulerService(
     IAppTime appTime
     )
 {
+    /// <summary>
+    /// Replaces the funding round's existing Hangfire jobs with jobs scheduled for its current dates.
+    /// </summary>
+    /// <param name="fundingRound">The round whose start and end jobs should be scheduled.</param>
     public void ScheduleFundingRoundJobs(FundingRound fundingRound)
     {
         // Cancel existing jobs if any
@@ -37,21 +41,51 @@ public class FundingRoundSchedulerService(
             fundingRound.Title, fundingRound.ID, fundingRound.CloudID, startJobId, fundingRound.StartDate, endJobId, fundingRound.EndDate);
     }
 
+    /// <summary>
+    /// Cancels the scheduled start and end jobs recorded on a funding round.
+    /// </summary>
+    /// <param name="fundingRound">The round containing the Hangfire job IDs.</param>
     public void CancelFundingRoundJobs(FundingRound fundingRound)
     {
-        if (!string.IsNullOrEmpty(fundingRound.StartJobId))
+        CancelFundingRoundJobs(
+            fundingRound.StartJobId,
+            fundingRound.EndJobId,
+            fundingRound.ID,
+            fundingRound.Title,
+            fundingRound.CloudID);
+    }
+
+    /// <summary>
+    /// Cancels scheduled jobs by their IDs when the funding-round record has already been deleted.
+    /// </summary>
+    /// <param name="startJobId">The scheduled allocation job ID, if any.</param>
+    /// <param name="endJobId">The scheduled end-processing job ID, if any.</param>
+    /// <param name="fundingRoundId">The ID used to identify the round in logs.</param>
+    public void CancelFundingRoundJobs(string? startJobId, string? endJobId, int fundingRoundId)
+    {
+        CancelFundingRoundJobs(startJobId, endJobId, fundingRoundId, null, null);
+    }
+
+    private void CancelFundingRoundJobs(
+        string? startJobId,
+        string? endJobId,
+        int fundingRoundId,
+        string? fundingRoundTitle,
+        int? cloudId)
+    {
+        if (!string.IsNullOrEmpty(startJobId))
         {
             logger.LogInformation(
                 "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): cancelling allocation job {JobId}",
-                fundingRound.Title, fundingRound.ID, fundingRound.CloudID, fundingRound.StartJobId);
-            BackgroundJob.Delete(fundingRound.StartJobId);
+                fundingRoundTitle, fundingRoundId, cloudId, startJobId);
+            BackgroundJob.Delete(startJobId);
         }
-        if (!string.IsNullOrEmpty(fundingRound.EndJobId))
+        if (!string.IsNullOrEmpty(endJobId))
         {
             logger.LogInformation(
                 "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): cancelling end job {JobId}",
-                fundingRound.Title, fundingRound.ID, fundingRound.CloudID, fundingRound.EndJobId);
-            BackgroundJob.Delete(fundingRound.EndJobId);
+                fundingRoundTitle, fundingRoundId, cloudId, endJobId);
+            BackgroundJob.Delete(endJobId);
         }
     }
 
@@ -66,6 +100,15 @@ public class FundingRoundSchedulerService(
         if (fundingRound == null)
         {
             logger.LogWarning("Funding round ID {FundingRoundId} was not found; skipping allocation", fundingRoundId);
+            return;
+        }
+
+        if (fundingRound.StartDate > appTime.UtcNow)
+        {
+            logger.LogInformation(
+                "Funding round ID {FundingRoundId} now starts at {StartDate}; skipping an outdated allocation job",
+                fundingRoundId,
+                fundingRound.StartDate);
             return;
         }
 
@@ -113,6 +156,15 @@ public class FundingRoundSchedulerService(
         if (fundingRound == null)
         {
             logger.LogWarning("Funding round ID {FundingRoundId} was not found; skipping end processing", fundingRoundId);
+            return;
+        }
+
+        if (fundingRound.EndDate > appTime.UtcNow)
+        {
+            logger.LogInformation(
+                "Funding round ID {FundingRoundId} now ends at {EndDate}; skipping an outdated end job",
+                fundingRoundId,
+                fundingRound.EndDate);
             return;
         }
 

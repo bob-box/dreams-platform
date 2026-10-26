@@ -17,7 +17,7 @@ else
     @if (User.IsInRole(Constants.AdminRole))
     {
         <a asp-controller="Dream" asp-action="Create" class="btn btn-primary">Create New Dream</a>
-        <text>(Dreaming period has ended, but still enabled for admins)</text>
+        <text>(Dreaming period isn't active, but admins can see the button anyway)</text>
     }
 }
 </p>

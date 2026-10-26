@@ -12,7 +12,6 @@ public class FundingRoundService(
     ApplicationDbContext context,
     IUserService userService,
     ICloudNameResolver cloudNameResolver,
-    FundingRoundSchedulerService schedulerService,
     IAppTime appTime,
     IMapperFacade mapper
     ) : IFundingRoundService
@@ -105,11 +104,16 @@ public class FundingRoundService(
         }
 
         var fundingRound = mapper.ToModel(viewModel);
-        context.Add(fundingRound);
-        await context.SaveChangesAsync();
+        using (var transaction = await context.Database.BeginTransactionAsync())
+        {
+            context.Add(fundingRound);
 
-        schedulerService.ScheduleFundingRoundJobs(fundingRound);
-        await context.SaveChangesAsync();
+            // We do need 2 calls to SaveChanges. The first gives the funding round its ID so we can enqueue it and save again.
+            await context.SaveChangesAsync();
+            FundingRoundOutboxDispatcher.EnqueueSynchronize(context, fundingRound.ID, appTime.UtcNow);
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         return new FundingRoundServiceResult(FundingRoundServiceStatus.Success);
     }
@@ -189,9 +193,10 @@ public class FundingRoundService(
                 existingRound.IsLastRound = false;
         }
 
+        FundingRoundOutboxDispatcher.EnqueueSynchronize(context, roundToUpdate.ID, appTime.UtcNow);
+
         try
         {
-            schedulerService.ScheduleFundingRoundJobs(roundToUpdate);
             await context.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
@@ -224,7 +229,7 @@ public class FundingRoundService(
                 Message: "Cannot delete a funding round that is active or has already passed.");
         }
 
-        schedulerService.CancelFundingRoundJobs(fundingRound);
+        FundingRoundOutboxDispatcher.EnqueueCancel(context, fundingRound, appTime.UtcNow);
         context.FundingRound.Remove(fundingRound);
         await context.SaveChangesAsync();
 
@@ -359,7 +364,7 @@ public class FundingRoundService(
                 AddError(errors, key, message);
         }
     }
-    
+
     /// <summary>
     /// Returns the next minute boundary after the specified date and time,
     /// discarding seconds and fractional seconds.

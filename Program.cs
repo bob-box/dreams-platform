@@ -75,6 +75,7 @@ builder.Services.AddScoped<IFundingRoundService, FundingRoundService>();
 builder.Services.AddScoped<TestDataService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
+builder.Services.AddScoped<FundingRoundOutboxDispatcher>();
 builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();
 builder.Services.AddSingleton<ICloudCache, CloudCache>();
 
@@ -157,6 +158,13 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = [new HangfireDashboardAuthorizationFilter()]
 });
+
+// Using the outbox pattern for reliable messaging.
+// This creates a job that checks the outbox every minute for actions to do.
+RecurringJob.AddOrUpdate<FundingRoundOutboxDispatcher>(
+    "funding-round-outbox-dispatcher",
+    dispatcher => dispatcher.DispatchPendingAsync(),
+    Cron.Minutely);
 
 app.MapControllerRoute(
     name: "areas-within-a-cloud", // For example editing a cloud or its funding rounds

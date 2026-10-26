@@ -16,7 +16,6 @@ public sealed class TestDataService(
     ApplicationDbContext context,
     UserManager<User> userManager,
     RoleManager<IdentityRole> roleManager,
-    FundingRoundSchedulerService fundingRoundScheduler,
     IAppTime appTime)
 {
     private static readonly string[] UserNames =
@@ -45,7 +44,7 @@ public sealed class TestDataService(
         await EnsureMemberRoleAsync();
 
         var runId = Guid.NewGuid().ToString("N")[..8];
-        var now = appTime.UtcNow;
+        var now = appTime.UtcNow.AddSeconds(-appTime.UtcNow.Second); // to get to 00 seconds
         var cloudName = $"Playground {runId}";
         var cloud = new Cloud
         {
@@ -115,16 +114,16 @@ public sealed class TestDataService(
             EndDate = firstRound.EndDate
                 .AddMinutes(settings.BreakBetweenFundingRoundsInMinutes + settings.SecondFundingRoundLengthInMinutes),
             AllocationPerUser = settings.AllocationPerUser,
-            MaxPercentagePerDream = 50m
+            MaxPercentagePerDream = 50m,
+            IsLastRound = true
         };
         context.FundingRound.AddRange(firstRound, secondRound);
 
         await context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        fundingRoundScheduler.ScheduleFundingRoundJobs(firstRound);
-        fundingRoundScheduler.ScheduleFundingRoundJobs(secondRound);
+        FundingRoundOutboxDispatcher.EnqueueSynchronize(context, firstRound.ID, now);
+        FundingRoundOutboxDispatcher.EnqueueSynchronize(context, secondRound.ID, now);
         await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return new TestDataRunViewModel
         {
@@ -199,17 +198,17 @@ public sealed class TestDataService(
                 CloudID = cloudId,
                 Name = $"{cloudName} Art Studio",
                 Description = "A welcoming space for workshops, painting, and making.",
-                Status = DreamStatus.Active,
+                Status = DreamStatus.ReadyForFunding,
                 Tags = [tags[1], tags[0]],
                 Dreamers = [MainDreamer(users[2]), CoDreamer(users[3])],
-                BudgetItems = [Request("Work tables", 700m, 1100m), Existing("Art supplies", 150m)]
+                BudgetItems = [Request("Stuff", 100m, 200m), Existing("Art supplies", 150m)]
             },
             new Dream
             {
                 CloudID = cloudId,
                 Name = $"{cloudName} Bike Workshop",
                 Description = "Tools and a safe work area for community bike repair sessions.",
-                Status = DreamStatus.ReadyForFunding,
+                Status = DreamStatus.Hidden,
                 Tags = [tags[1]],
                 Dreamers = [MainDreamer(users[3])],
                 BudgetItems = [Request("Repair stands", 1000m, 1600m), Existing("Hand tools", 0m)]

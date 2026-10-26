@@ -33,6 +33,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<Tag> Tag { get; set; } = default!;
     public DbSet<CloudInfo> CloudInfo { get; set; } = default!;
     public DbSet<AuditLogEntry> AuditLog { get; set; } = default!;
+    public DbSet<FundingRoundOutboxMessage> FundingRoundOutbox { get; set; } = default!;
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -81,6 +82,8 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasIndex(x => new { x.CloudID, x.CreatedAt });
         modelBuilder.Entity<AuditLogEntry>()
             .HasIndex(x => new { x.EntityType, x.EntityID, x.Action });
+        modelBuilder.Entity<FundingRoundOutboxMessage>()
+            .HasIndex(x => new { x.ProcessedAt, x.FundingRoundID });
 
         base.OnModelCreating(modelBuilder);
     }
