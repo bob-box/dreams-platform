@@ -5,7 +5,7 @@ using Borderland.Dreams.Models;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
-namespace Borderland.Dreams.Services;
+namespace Borderland.Dreams.Scheduling;
 
 public class FundingRoundSchedulerService(
     ILogger<FundingRoundSchedulerService> logger,

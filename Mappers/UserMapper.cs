@@ -12,7 +12,7 @@ public class UserMapper(IMapperFacade mapper, IAppTime appTime)
         {
             Id = model.Id,
             Name = model.Name,
-            Email = model.Email,
+            Email = model.Email ?? string.Empty,
             Wallets = mapper.ToViewModels(model.Wallets),
         };
     }

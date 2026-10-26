@@ -1,6 +1,7 @@
 ﻿@using Microsoft.Identity.Client
-@using Microsoft.AspNetCore.Hosting
-@inject Microsoft.AspNetCore.Hosting.IHostingEnvironment env
+@using Microsoft.Extensions.Hosting;
+
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment env
 @{
     var cloudSlug = cloudNameResolver.CloudSlug;
     var isWithinACloud = !string.IsNullOrWhiteSpace(cloudSlug);
