@@ -1,0 +1,66 @@
+@model Borderland.Dreams.ViewModels.EmailCampaignViewModel
+
+@{
+    ViewData["Title"] = "Create Email Campaign";
+}
+
+<h1>Create email campaign</h1>
+<p class="text-muted">Each email address receives one message, even if connected to multiple selected dreams. The message includes the matching dream names.</p>
+
+<form asp-action="Create" method="post" class="col-lg-8">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Subject" class="form-label"></label>
+        <input asp-for="Subject" class="form-control" />
+        <span asp-validation-for="Subject" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Body" class="form-label"></label>
+        <textarea asp-for="Body" class="form-control" rows="8"></textarea>
+        <span asp-validation-for="Body" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Audience" class="form-label"></label>
+        <select asp-for="Audience" asp-items="Html.GetEnumSelectList<Borderland.Dreams.Enums.EmailCampaignAudience>()" class="form-select"></select>
+    </div>
+    <div class="mb-3" id="status-audience">
+        <label asp-for="DreamStatus" class="form-label"></label>
+        <select asp-for="DreamStatus" asp-items="Html.GetEnumSelectList<Borderland.Dreams.Enums.DreamStatus>()" class="form-select">
+            <option value="">Choose a status</option>
+        </select>
+        <span asp-validation-for="DreamStatus" class="text-danger"></span>
+    </div>
+    <div class="mb-3" id="selected-audience">
+        <label asp-for="SelectedDreamIds" class="form-label"></label>
+        <select asp-for="SelectedDreamIds" class="form-select" multiple size="10">
+            @foreach (var dream in Model.AvailableDreams)
+            {
+                <option value="@dream.ID">@dream.Name (@dream.Status)</option>
+            }
+        </select>
+        <span asp-validation-for="SelectedDreamIds" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ScheduledAt" class="form-label"></label>
+        <input asp-for="ScheduledAt" type="datetime-local" class="form-control" />
+        <span asp-validation-for="ScheduledAt" class="text-danger"></span>
+        <div class="form-text">Leave blank to send immediately. Times use the application timezone.</div>
+    </div>
+    <button type="submit" class="btn btn-primary">Queue campaign</button>
+    <a asp-action="Campaigns" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const audience = document.getElementById("Audience");
+        const selectedAudience = document.getElementById("selected-audience");
+        const statusAudience = document.getElementById("status-audience");
+        function updateAudienceFields() {
+            selectedAudience.hidden = audience.value !== "@((int)Borderland.Dreams.Enums.EmailCampaignAudience.SelectedDreams)";
+            statusAudience.hidden = audience.value !== "@((int)Borderland.Dreams.Enums.EmailCampaignAudience.DreamStatus)";
+        }
+        audience.addEventListener("change", updateAudienceFields);
+        updateAudienceFields();
+    </script>
+}

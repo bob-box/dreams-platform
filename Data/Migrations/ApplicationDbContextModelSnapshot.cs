@@ -114,12 +114,29 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<DateTime?>("DreamEditDeadline")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DreamWelcomeEmailBody")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Welcome to your dream, {DreamName}! You and your co-dreamers can now work together to make it happen.");
+
+                    b.Property<string>("DreamWelcomeEmailSubject")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Welcome to {DreamName}");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("SendDreamWelcomeEmail")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -252,6 +269,86 @@ namespace Borderland.Dreams.Data.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("Dreamer");
+                });
+
+            modelBuilder.Entity("Borderland.Dreams.Models.EmailCampaign", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Audience")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CloudID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DreamStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HangfireJobId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RecipientCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ScheduledAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SelectedDreamIds")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("EmailCampaign");
+                });
+
+            modelBuilder.Entity("Borderland.Dreams.Models.EmailSettings", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BroadcastMessageStream")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FromAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FromName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TransactionalMessageStream")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("EmailSettings");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Expense", b =>

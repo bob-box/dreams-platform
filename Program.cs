@@ -77,6 +77,13 @@ builder.Services.AddScoped<TestDataService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
 builder.Services.AddScoped<FundingRoundOutboxDispatcher>();
+builder.Services.AddScoped<PostmarkEmailSender>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>(services =>
+    services.GetRequiredService<PostmarkEmailSender>());
+builder.Services.AddScoped<IPostmarkEmailService>(services =>
+    services.GetRequiredService<PostmarkEmailSender>());
+builder.Services.AddScoped<EmailCampaignService>();
+builder.Services.AddScoped<IEmailCampaignManagementService, EmailCampaignManagementService>();
 builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();
 builder.Services.AddSingleton<ICloudCache, CloudCache>();
 

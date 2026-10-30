@@ -59,9 +59,12 @@
                                 <li>
                                     <a class="dropdown-item" asp-area="Admin" asp-controller="DeletedDreams" asp-action="Index" asp-route-cloudSlug="@cloudSlug">Manage Deleted Dreams</a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Email" asp-action="Campaigns" asp-route-cloudSlug="@cloudSlug">Email campaigns</a>
+                                </li>
                                 <li><hr class="dropdown-divider"></li>
                                 }
-                            <h6 class="dropdown-header">General stuff</h6>
+                            <h6 class="dropdown-header">Site-wide stuff</h6>
                             <li>
                                 <a class="dropdown-item" asp-area="" asp-controller="Hangfire" asp-action="" asp-route-cloudSlug="">Hangfire scheduler</a>
                             </li>
@@ -71,6 +74,10 @@
                             <li>
                                 <a class="dropdown-item" asp-area="Admin" asp-controller="AuditLog" asp-action="Index" asp-route-cloudSlug="">Audit log</a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" asp-area="Admin" asp-controller="SiteSettings" asp-action="Index" asp-route-cloudSlug="">Site-wide settings</a>
+                            </li>
+                            <h6 class="dropdown-header">Development stuff</h6>
                             @if (env.IsDevelopment())
                             {
                                 <li>

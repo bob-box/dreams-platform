@@ -1,0 +1,46 @@
+@model Borderland.Dreams.ViewModels.SiteSettingsViewModel
+
+@{
+    ViewData["Title"] = "Site-wide Settings";
+}
+
+<h1>Site-wide settings</h1>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+
+<section class="mt-4">
+    <h2>Email</h2>
+    <p class="text-muted">Configure the Postmark sender used for outbound messages.</p>
+    <div class="alert @(Model.Email.IsServerTokenConfigured ? "alert-success" : "alert-warning")">
+        @if (Model.Email.IsServerTokenConfigured)
+        {
+            <span>Postmark server token is configured in environment settings.</span>
+        }
+        else
+        {
+            <span>Set <code>Postmark__ServerToken</code> in the server environment before sending email.</span>
+        }
+        The token is not stored in the database or displayed in this panel.
+    </div>
+    <form asp-action="Index" method="post" class="col-md-6">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="mb-3">
+            <label asp-for="Email.FromAddress" class="form-label"></label>
+            <input asp-for="Email.FromAddress" class="form-control" />
+            <span asp-validation-for="Email.FromAddress" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email.FromName" class="form-label"></label>
+            <input asp-for="Email.FromName" class="form-control" />
+            <span asp-validation-for="Email.FromName" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Save settings</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

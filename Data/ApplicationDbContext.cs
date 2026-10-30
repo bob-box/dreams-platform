@@ -34,6 +34,8 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<CloudInfo> CloudInfo { get; set; } = default!;
     public DbSet<AuditLogEntry> AuditLog { get; set; } = default!;
     public DbSet<FundingRoundOutboxMessage> FundingRoundOutbox { get; set; } = default!;
+    public DbSet<EmailSettings> EmailSettings { get; set; } = default!;
+    public DbSet<EmailCampaign> EmailCampaign { get; set; } = default!;
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,6 +69,16 @@ public class ApplicationDbContext : IdentityDbContext<User>
         modelBuilder.Entity<Cloud>()
             .HasIndex(e => e.Slug)
             .IsUnique();
+
+        modelBuilder.Entity<Cloud>()
+            .Property(cloud => cloud.SendDreamWelcomeEmail)
+            .HasDefaultValue(true);
+        modelBuilder.Entity<Cloud>()
+            .Property(cloud => cloud.DreamWelcomeEmailSubject)
+            .HasDefaultValue("Welcome to {DreamName}");
+        modelBuilder.Entity<Cloud>()
+            .Property(cloud => cloud.DreamWelcomeEmailBody)
+            .HasDefaultValue("Welcome to your dream, {DreamName}! You and your co-dreamers can now work together to make it happen.");
 
         modelBuilder.Entity<CloudInfo>()
             .HasOne(e => e.Cloud)

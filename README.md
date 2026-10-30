@@ -13,6 +13,16 @@ A ***Funding Round*** is a period between two dates where users automatically ge
 
 When a funding round is over, all unspent funds get removed from the wallets and the cloud fund stats gets updated.
 
+## Outbound email
+
+Outbound email is sent through the Postmark REST API. Set the server token as the `Postmark__ServerToken` environment variable; do not put it in source control. Configure the verified sender address/name and transactional/broadcast message streams from **Admin Control Panel → Site-wide settings → Email**.
+
+The admin email campaigns page is available within a cloud and is scoped to that cloud's dreams. It supports immediate or scheduled messages to all dreams, selected dreams, or dreams in a chosen status. Campaigns use Postmark's configured broadcast stream and send at most one message per unique email address in a campaign. Identity account email, including confirmation and password/account messages, uses the transactional stream.
+
+
+Dream creators receive an automatic welcome email after creating a dream. 
+Each cloud can customize and enable or disable its dream welcome email in **Admin Control Panel → Edit Cloud**. Use `{DreamName}` in either field to insert the dream's name.
+
 
 ## Admins
 Admin can

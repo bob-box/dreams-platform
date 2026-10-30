@@ -9,6 +9,7 @@ using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Hangfire;
 
 namespace Borderland.Dreams.Services;
 
@@ -19,7 +20,8 @@ public class DreamService(
     IAuthorizationService authorizationService,
     IMapperFacade mapper,
     IHttpContextAccessor httpContextAccessor,
-    IFundingRoundService fundingRoundService
+    IFundingRoundService fundingRoundService,
+    IBackgroundJobClient backgroundJobs
 ) : IDreamService
 {
     private ClaimsPrincipal CurrentUser => httpContextAccessor.HttpContext?.User
@@ -130,6 +132,7 @@ public class DreamService(
 
         context.Add(dream);
         await context.SaveChangesAsync();
+        backgroundJobs.Enqueue<EmailCampaignService>(service => service.SendDreamWelcomeAsync(dream.ID));
         return dream.ID;
     }
 

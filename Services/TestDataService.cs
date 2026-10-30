@@ -54,7 +54,8 @@ public sealed class TestDataService(
             TotalFundsSpent = 0m,
             DreamCreatePeriodStart = now.AddMinutes(-1),
             DreamCreatePeriodEnd = now.AddDays(30),
-            DreamEditDeadline = now.AddDays(31)
+            DreamEditDeadline = now.AddDays(31),
+            SendDreamWelcomeEmail = false
         };
 
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);

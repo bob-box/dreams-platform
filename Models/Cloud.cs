@@ -42,6 +42,11 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
     [DataType(DataType.DateTime)]
     public DateTime? DreamEditDeadline { get; set; }
 
+    public bool SendDreamWelcomeEmail { get; set; } = true;
+    public string DreamWelcomeEmailSubject { get; set; } = "Welcome to {DreamName}";
+    public string DreamWelcomeEmailBody { get; set; } =
+        "Welcome to your dream, {DreamName}! You and your co-dreamers can now work together to make it happen.";
+
     // Navigation properties
     public ICollection<Dream>? Dreams { get; set; }
     public ICollection<FundingRound>? FundingRounds { get; set; }

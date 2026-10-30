@@ -19,6 +19,9 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
             DreamCreatePeriodStart = appTime.ToLocal(model.DreamCreatePeriodStart),
             DreamCreatePeriodEnd = appTime.ToLocal(model.DreamCreatePeriodEnd),
             DreamEditDeadline = appTime.ToLocal(model.DreamEditDeadline),
+            SendDreamWelcomeEmail = model.SendDreamWelcomeEmail,
+            DreamWelcomeEmailSubject = model.DreamWelcomeEmailSubject,
+            DreamWelcomeEmailBody = model.DreamWelcomeEmailBody,
             Dreams = mapper.ToViewModels(model.Dreams),
             FundingRounds = mapper.ToViewModels(model.FundingRounds)
         };
@@ -36,6 +39,9 @@ public class CloudMapper(IMapperFacade mapper, IAppTime appTime)
             DreamCreatePeriodStart = appTime.ToUtc(vm.DreamCreatePeriodStart),
             DreamCreatePeriodEnd = appTime.ToUtc(vm.DreamCreatePeriodEnd),
             DreamEditDeadline = appTime.ToUtc(vm.DreamEditDeadline),
+            SendDreamWelcomeEmail = vm.SendDreamWelcomeEmail,
+            DreamWelcomeEmailSubject = vm.DreamWelcomeEmailSubject,
+            DreamWelcomeEmailBody = vm.DreamWelcomeEmailBody,
             Dreams = mapper.ToModels(vm.Dreams),
             FundingRounds  = mapper.ToModels(vm.FundingRounds)
         };
