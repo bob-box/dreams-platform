@@ -11,15 +11,18 @@ public class ApplicationDbContext : IdentityDbContext<User>
 {
     private readonly IAppTime _appTime;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    internal IServiceProvider ApplicationServiceProvider { get; }
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
         IAppTime appTime,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IServiceProvider applicationServiceProvider)
         : base(options)
     {
         _appTime = appTime;
         _httpContextAccessor = httpContextAccessor;
+        ApplicationServiceProvider = applicationServiceProvider;
         ValidateCreatedAtInterfaces();
     }
 

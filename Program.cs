@@ -31,7 +31,17 @@ builder.Services.AddHangfire(configuration => configuration
     .UseSQLiteStorage());
     
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    options.UseSqlite(connectionString);
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options
+            .UseSeeding((context, _) => DataSeeder.Seed((ApplicationDbContext)context))
+            .UseAsyncSeeding((context, _, _) =>
+                DataSeeder.SeedAsync(((ApplicationDbContext)context).ApplicationServiceProvider));
+    }
+});
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
@@ -128,12 +138,16 @@ if (app.Environment.IsDevelopment())
     // Add development middleware that lets you apply pending EF Core migrations through the browser’s Database Error Page.
     // It does not run migrations automatically when the app starts; it provides a way to trigger them after a migration-related database error.
     app.UseMigrationsEndPoint();
-    using (var scope = app.Services.CreateScope())
+    try
     {
+        using var scope = app.Services.CreateScope();
         var services = scope.ServiceProvider;
-        var dbContext = services.GetService<ApplicationDbContext>() ?? throw new Exception("Failed to get ApplicationDbContext from service provider.");
-        await dbContext.Database.EnsureCreatedAsync();
-        await DataSeeder.SeedAsync(services);
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Database initialization failed.");
     }
 }
 else

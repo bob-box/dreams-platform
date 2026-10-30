@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Borderland.Dreams-54d677d7-9a03-4405-8e11-f359350cfed8</UserSecretsId>
@@ -14,24 +14,35 @@
 
   <ItemGroup>
     <PackageReference Include="BeginCollectionItemCore" Version="1.1.0" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
     <PackageReference Include="Hangfire.Storage.SQLite" Version="0.4.3" />
-    <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.19" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
+    <PackageReference Include="HtmlSanitizer" Version="9.2.1039" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.14">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
+    <!-- 
+    Microsoft.EntityFrameworkCore.SqlServer (v10.0.14) and Microsoft.VisualStudio.Web.CodeGeneration.Design (v10.0.2)
+    indirectly used System.Security.Cryptography.Pkcs (v9.0.11) which had a high severity vunerability.
+    Sod to directly reference a higher version number, we use this version instead. 
+    -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.22" />
+    <!--
+    Same with these two below
+    -->
+    <PackageReference Include="NuGet.Protocol" Version="6.12.5" />
+    <PackageReference Include="NuGet.Packaging" Version="6.12.5" />
   </ItemGroup>
 
 </Project>
