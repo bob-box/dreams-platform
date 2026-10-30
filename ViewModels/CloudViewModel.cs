@@ -43,13 +43,12 @@ public class CloudViewModel : IValidatableObject
     [Required]
     [StringLength(200)]
     [Display(Name = "Welcome email subject")]
-    public string DreamWelcomeEmailSubject { get; set; } = "Welcome to {DreamName}";
+    public string? DreamWelcomeEmailSubject { get; set; }
 
     [Required]
     [StringLength(10000)]
     [Display(Name = "Welcome email message")]
-    public string DreamWelcomeEmailBody { get; set; } =
-        "Welcome to your dream, {DreamName}! You and your co-dreamers can now work together to make it happen.";
+    public string? DreamWelcomeEmailBody { get; set; }
 
     public List<DreamViewModel>? Dreams { get; set; } = [];
     public List<FundingRoundViewModel>? FundingRounds { get; set; } = [];

@@ -76,13 +76,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
         modelBuilder.Entity<Cloud>()
             .Property(cloud => cloud.SendDreamWelcomeEmail)
             .HasDefaultValue(true);
-        modelBuilder.Entity<Cloud>()
-            .Property(cloud => cloud.DreamWelcomeEmailSubject)
-            .HasDefaultValue("Welcome to {DreamName}");
-        modelBuilder.Entity<Cloud>()
-            .Property(cloud => cloud.DreamWelcomeEmailBody)
-            .HasDefaultValue("Welcome to your dream, {DreamName}! You and your co-dreamers can now work together to make it happen.");
-
+            
         modelBuilder.Entity<CloudInfo>()
             .HasOne(e => e.Cloud)
             .WithOne(e => e.Info)

@@ -14,15 +14,13 @@ namespace Borderland.Dreams.Data.Migrations
                 name: "DreamWelcomeEmailBody",
                 table: "Cloud",
                 type: "TEXT",
-                nullable: false,
-                defaultValue: "Welcome to your dream, {DreamName}! You and your co-dreamers can now work together to make it happen.");
+                nullable: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "DreamWelcomeEmailSubject",
                 table: "Cloud",
                 type: "TEXT",
-                nullable: false,
-                defaultValue: "Welcome to {DreamName}");
+                nullable: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "SendDreamWelcomeEmail",

@@ -117,14 +117,12 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<string>("DreamWelcomeEmailBody")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValue("Welcome to your dream, {DreamName}! You and your co-dreamers can now work together to make it happen.");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DreamWelcomeEmailSubject")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValue("Welcome to {DreamName}");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
