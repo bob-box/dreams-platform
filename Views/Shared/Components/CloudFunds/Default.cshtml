@@ -9,21 +9,23 @@
                     @if (Model.DreamingPeriodStart.HasValue)
                     {
                         var cssClass = Model.DreamingPeriodStart < appTime.Now ? "text-decoration-line-through" : "";
-                        <li class="striketrough list-group-item @cssClass">
+                        <li class="list-group-item @cssClass">
                             @Model.DreamingPeriodStart
                             <span class="badge bg-success">Start</span>
                         </li>
                     }
                     @if (Model.DreamingPeriodEnd.HasValue)
                     {
-                        <li class="list-group-item">
+                        var cssClass = Model.DreamingPeriodEnd < appTime.Now ? "text-decoration-line-through" : "";
+                        <li class="list-group-item @cssClass">
                             @Model.DreamingPeriodEnd
                             <span class="badge bg-success">End</span>
                         </li>
                     }
                     @if (Model.DreamEditDeadline.HasValue)
                     {
-                        <li class="list-group-item">
+                        var cssClass = Model.DreamEditDeadline < appTime.Now ? "text-decoration-line-through" : "";
+                        <li class="list-group-item @cssClass">
                             @Model.DreamEditDeadline.Value
                             <span class="badge bg-success">Edit deadline</span>
                         </li>

@@ -259,7 +259,7 @@ public class DreamService(
             var viewModel = mapper.ToViewModel(d)!;
             if (latestDeletionByDream.TryGetValue(d.ID, out var deletion))
             {
-                viewModel.DeletedAt = deletion.CreatedAt;
+                viewModel.DeletedAt = deletion.CreatedAt.ToLocalTime();
                 viewModel.DeletedBy = deletion.UserName;
             }
             return viewModel;

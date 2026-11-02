@@ -11,7 +11,7 @@ public class CloudViewModel : IValidatableObject
     public int ID { get; set; }
     public required string Name { get; set; }
     public string Slug { get; set; } = "";
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; }
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
@@ -24,17 +24,17 @@ public class CloudViewModel : IValidatableObject
 
     [DataType(DataType.DateTime)]
     [Display(Name="Dreaming Period Start", Description = "The period during which new dreams can be created. After this period ends, no new dreams can be created, but existing dreams can still be edited until the edit deadline. If not set, dream creation is open indefinitely.")]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     public DateTime? DreamCreatePeriodStart { get; set; }
     
     [DataType(DataType.DateTime)]
     [Display(Name="Dream Period End")]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     public DateTime? DreamCreatePeriodEnd { get; set; }
     
     [DataType(DataType.DateTime)]
     [Display(Name="Dream Edit Deadline")]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     public DateTime? DreamEditDeadline { get; set; }
 
     [Display(Name = "Send dream welcome email")]

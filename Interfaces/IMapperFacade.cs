@@ -17,6 +17,7 @@ public interface IMapperFacade
     FundViewModel ToViewModel(Fund model);
     ExpenseViewModel ToViewModel(Expense model);
     DreamerViewModel ToViewModel(Dreamer model);
+    AuditLogItemViewModel ToViewModel(AuditLogEntry model, string cloudName);
     #endregion
 
     #region ToViewModels

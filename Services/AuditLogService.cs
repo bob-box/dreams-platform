@@ -1,13 +1,11 @@
-using System.Text.Json;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Interfaces;
-using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Borderland.Dreams.Services;
 
-public class AuditLogService(ApplicationDbContext context) : IAuditLogService
+public class AuditLogService(ApplicationDbContext context, IMapperFacade mapper) : IAuditLogService
 {
     private const int MaxResults = 500;
 
@@ -81,38 +79,9 @@ public class AuditLogService(ApplicationDbContext context) : IAuditLogService
             From = from,
             To = to,
             Clouds = clouds,
-            Entries = entries.Select(row => new AuditLogItemViewModel
-            {
-                CreatedAt = row.Entry.CreatedAt,
-                CloudID = row.Entry.CloudID,
-                CloudName = row.CloudName,
-                EntityType = row.Entry.EntityType,
-                EntityID = row.Entry.EntityID,
-                EntityName = row.Entry.EntityName,
-                Action = row.Entry.Action,
-                UserName = row.Entry.UserName,
-                Changes = ReadChanges(row.Entry.Changes)
-            }).ToList()
+            Entries = entries
+                .Select(row => mapper.ToViewModel(row.Entry, row.CloudName))
+                .ToList()
         };
-    }
-
-    private static IReadOnlyList<AuditLogChangeViewModel> ReadChanges(string json)
-    {
-        using var document = JsonDocument.Parse(json);
-        return document.RootElement.EnumerateObject()
-            .Select(property => new AuditLogChangeViewModel(
-                property.Name,
-                GetString(property.Value, "OldValue"),
-                GetString(property.Value, "NewValue")))
-            .ToList();
-    }
-
-    private static string? GetString(JsonElement element, string propertyName)
-    {
-        if (!element.TryGetProperty(propertyName, out var value) ||
-            value.ValueKind == JsonValueKind.Null)
-            return null;
-
-        return value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString();
     }
 }

@@ -12,7 +12,7 @@ public class FundViewModel
     [Range(0, double.MaxValue, ErrorMessage = "Please enter a valid non-negative amount")]
     [DataType(DataType.Currency)]
     public decimal Amount { get; set; }
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     public DateTime CreatedAt { get; set; }
 
     public UserViewModel User { get; set; }

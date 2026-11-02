@@ -39,7 +39,7 @@ Admin can
 
 ### Prerequisites
 
-- [.NET 8.0](https://dotnet.microsoft.com/download)
+- [.NET 10](https://dotnet.microsoft.com/download)
 
 ### Build and Run
 

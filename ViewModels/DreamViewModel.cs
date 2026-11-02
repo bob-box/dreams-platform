@@ -12,6 +12,8 @@ public class DreamViewModel : IValidatableObject
     [DataType(DataType.DateTime)]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     public DateTime CreatedAt { get; set; }
+    [DataType(DataType.DateTime)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     public DateTime? DeletedAt { get; set; }
     public string? DeletedBy { get; set; }
     public DreamStatus Status { get; set; } = DreamStatus.Draft;

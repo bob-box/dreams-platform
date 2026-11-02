@@ -141,14 +141,14 @@ public sealed class TestDataService(
                 new TestDataFundingRoundViewModel
                 {
                     Title = firstRound.Title,
-                    StartUtc = firstRound.StartDate,
-                    EndUtc = firstRound.EndDate
+                    StartDate = firstRound.StartDate.ToLocalTime(),
+                    EndDate = firstRound.EndDate.ToLocalTime()
                 },
                 new TestDataFundingRoundViewModel
                 {
                     Title = secondRound.Title,
-                    StartUtc = secondRound.StartDate,
-                    EndUtc = secondRound.EndDate
+                    StartDate = secondRound.StartDate.ToLocalTime(),
+                    EndDate = secondRound.EndDate.ToLocalTime()
                 }
             ],
             Accounts = users.Select(user => new TestDataAccountViewModel

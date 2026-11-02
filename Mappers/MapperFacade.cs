@@ -19,6 +19,7 @@ public class MapperFacade : IMapperFacade
     private readonly FundMapper _fundMapper;
     private readonly ExpenseMapper _expenseMapper;
     private readonly DreamerMapper _dreamerMapper;
+    private readonly AuditLogMapper _auditLogMapper;
 
     public MapperFacade(IAppTime appTime)
     {
@@ -33,6 +34,7 @@ public class MapperFacade : IMapperFacade
         _fundMapper = new FundMapper(this, appTime);
         _expenseMapper = new ExpenseMapper(this, appTime);
         _dreamerMapper = new DreamerMapper(this, appTime);
+        _auditLogMapper = new AuditLogMapper(this, appTime);
     }
 
     #region ToViewModel
@@ -47,6 +49,8 @@ public class MapperFacade : IMapperFacade
     public FundViewModel ToViewModel(Fund model) => _fundMapper.ToViewModel(model);
     public ExpenseViewModel ToViewModel(Expense model) => _expenseMapper.ToViewModel(model);
     public DreamerViewModel ToViewModel(Dreamer model) => _dreamerMapper.ToViewModel(model);
+    public AuditLogItemViewModel ToViewModel(AuditLogEntry model, string cloudName) =>
+        _auditLogMapper.ToViewModel(model, cloudName);
     #endregion ToViewModel
 
     #region ToViewModels

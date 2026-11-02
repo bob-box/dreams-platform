@@ -9,11 +9,11 @@ public class FundingRoundViewModel
     public int CloudID { get; set; }
     public string Title { get; set; }
 
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
     public DateTime StartDate { get; set; }
 
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
     public DateTime EndDate { get; set; }
 

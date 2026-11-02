@@ -10,7 +10,7 @@ public class BudgetItemViewModel : IValidatableObject
     public BudgetItemType Type { get; set; }
     public int DreamID { get; set; }
 
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; }
 

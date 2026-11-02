@@ -76,7 +76,7 @@ else
                 @foreach (var entry in Model.Entries)
                 {
                     <tr>
-                        <td>@entry.CreatedAt.ToLocalTime().ToString()</td>
+                        <td>@entry.CreatedAt</td>
                         <td>@entry.UserName</td>
                         <td>@entry.CloudName</td>
                         <td>@entry.EntityType: @entry.EntityName</td>
