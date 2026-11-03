@@ -20,5 +20,5 @@ public class EmailSettingsViewModel
     [Display(Name = "Broadcast message stream")]
     public string BroadcastMessageStream { get; set; } = "broadcast";
 
-    public bool IsServerTokenConfigured { get; set; }
+    public bool IsApiKeyConfigured { get; set; }
 }

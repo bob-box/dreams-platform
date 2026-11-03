@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Areas.Identity.Pages.Account
 {
@@ -21,9 +22,9 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account
     public class ResendEmailConfirmationModel : PageModel
     {
         private readonly UserManager<User> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly IResendEmailService _emailSender;
 
-        public ResendEmailConfirmationModel(UserManager<User> userManager, IEmailSender emailSender)
+        public ResendEmailConfirmationModel(UserManager<User> userManager, IResendEmailService emailSender)
         {
             _userManager = userManager;
             _emailSender = emailSender;
@@ -80,7 +81,8 @@ namespace Borderland.Dreams.Areas.Identity.Pages.Account
             await _emailSender.SendEmailAsync(
                 Input.Email,
                 "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.",
+                "login-confirm-email-resend");
 
             ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
             return Page();

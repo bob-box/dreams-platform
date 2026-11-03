@@ -23,8 +23,8 @@ public class SiteSettingsController(IEmailCampaignManagementService emailManagem
     {
         if (!ModelState.IsValid)
         {
-            model.Email.IsServerTokenConfigured =
-                (await emailManagementService.GetSettingsAsync()).IsServerTokenConfigured;
+            model.Email.IsApiKeyConfigured =
+                (await emailManagementService.GetSettingsAsync()).IsApiKeyConfigured;
             return View(model);
         }
 

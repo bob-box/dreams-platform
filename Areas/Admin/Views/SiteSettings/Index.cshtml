@@ -13,15 +13,15 @@
 
 <section class="mt-4">
     <h2>Email</h2>
-    <p class="text-muted">Configure the Postmark sender used for outbound messages.</p>
-    <div class="alert @(Model.Email.IsServerTokenConfigured ? "alert-success" : "alert-warning")">
-        @if (Model.Email.IsServerTokenConfigured)
+    <p class="text-muted">Configure the Resend sender used for outbound messages.</p>
+    <div class="alert @(Model.Email.IsApiKeyConfigured ? "alert-success" : "alert-warning")">
+        @if (Model.Email.IsApiKeyConfigured)
         {
-            <span>Postmark server token is configured in environment settings.</span>
+            <span>Resend API key is configured in environment settings.</span>
         }
         else
         {
-            <span>Set <code>Postmark__ServerToken</code> in the server environment before sending email.</span>
+            <span>Set <code>Resend__ApiKey</code> in the server environment before sending email.</span>
         }
         The token is not stored in the database or displayed in this panel.
     </div>

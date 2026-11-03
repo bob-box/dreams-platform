@@ -16,6 +16,7 @@ using Hangfire;
 using Hangfire.Storage.SQLite;
 using Microsoft.Extensions.Options;
 using Ganss.Xss;
+using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
+builder.Services.AddResend(options =>
+    options.ApiToken = builder.Configuration["Resend:ApiKey"] ?? string.Empty);
 builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
 builder.Services.AddHttpContextAccessor();
@@ -87,11 +90,9 @@ builder.Services.AddScoped<TestDataService>();
 builder.Services.AddScoped<ICloudNameResolver, CloudNameResolver>();
 builder.Services.AddScoped<FundingRoundSchedulerService>();
 builder.Services.AddScoped<FundingRoundOutboxDispatcher>();
-builder.Services.AddScoped<PostmarkEmailSender>();
-builder.Services.AddScoped<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>(services =>
-    services.GetRequiredService<PostmarkEmailSender>());
-builder.Services.AddScoped<IPostmarkEmailService>(services =>
-    services.GetRequiredService<PostmarkEmailSender>());
+builder.Services.AddScoped<ResendEmailSender>();
+builder.Services.AddScoped<IResendEmailService>(services =>
+    services.GetRequiredService<ResendEmailSender>());
 builder.Services.AddScoped<EmailCampaignService>();
 builder.Services.AddScoped<IEmailCampaignManagementService, EmailCampaignManagementService>();
 builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();

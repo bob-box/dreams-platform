@@ -3,7 +3,6 @@ using System.Text.Json;
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Enums;
 using Borderland.Dreams.Interfaces;
-using Borderland.Dreams.Models;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,11 +10,15 @@ namespace Borderland.Dreams.Services;
 
 public class EmailCampaignService(
     ApplicationDbContext context,
-    IPostmarkEmailService emailService,
+    IResendEmailService emailService,
     IAppTime appTime,
     ILogger<EmailCampaignService> logger
 )
 {
+    /// <summary>
+    /// Sends the configured welcome message to the creators of a dream.
+    /// </summary>
+    /// <param name="dreamId">The dream whose creators should receive the message.</param>
     [AutomaticRetry(Attempts = 0)]
     public async Task SendDreamWelcomeAsync(int dreamId)
     {
@@ -35,7 +38,7 @@ public class EmailCampaignService(
             .Select(dreamer => dreamer.User.Email)
             .Where(address => !string.IsNullOrWhiteSpace(address))
             .Select(address => address!.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Distinct(StringComparer.OrdinalIgnoreCase) // distinct may not be needed?
             .ToArray();
 
         if (addresses.Length == 0)
@@ -43,14 +46,19 @@ public class EmailCampaignService(
 
         var subject = dream.Cloud.DreamWelcomeEmailSubject.Replace("{DreamName}", dream.Name, StringComparison.Ordinal);
         var body = dream.Cloud.DreamWelcomeEmailBody.Replace("{DreamName}", dream.Name, StringComparison.Ordinal);
-        await emailService.SendBatchAsync(
+        await emailService.SendEmailInBatchesAsync(
             addresses.Select(address => new OutboundEmail(address, subject, body)).ToArray(),
-            isBroadcast: false);
+            "dream-welcome");
     }
 
+    /// <summary>
+    /// Sends a campaign to the dream creators selected by its audience settings.
+    /// </summary>
+    /// <param name="campaignId">The campaign to send.</param>
     [AutomaticRetry(Attempts = 0)]
     public async Task SendCampaignAsync(int campaignId)
     {
+        // Claim the campaign atomically so concurrent Hangfire executions cannot send it twice.
         var claimed = await context.EmailCampaign
             .Where(item => item.ID == campaignId && item.Status == EmailCampaignStatus.Scheduled)
             .ExecuteUpdateAsync(updates => updates
@@ -72,6 +80,7 @@ public class EmailCampaignService(
                 .ThenInclude(dreamer => dreamer.User)
                 .AsQueryable();
 
+            // Apply the stored audience criteria within the campaign's cloud.
             dreamsQuery = campaign.Audience switch
             {
                 EmailCampaignAudience.AllDreams =>
@@ -88,6 +97,7 @@ public class EmailCampaignService(
             };
 
             var dreams = await dreamsQuery.ToListAsync();
+            // Deduplicate recipients across dreams while retaining each recipient's related dream names.
             var recipientDreams = dreams
                 .SelectMany(dream => dream.Dreamers
                     .Where(dreamer => !string.IsNullOrWhiteSpace(dreamer.User.Email))
@@ -112,7 +122,7 @@ public class EmailCampaignService(
                 return new OutboundEmail(group.First().Email, campaign.Subject, body.ToString());
             }).ToArray();
 
-            await emailService.SendBatchAsync(emails, isBroadcast: true);
+            await emailService.SendEmailInBatchesAsync(emails, "on-demand");
             campaign.Status = EmailCampaignStatus.Sent;
             campaign.SentAtUtc = appTime.UtcNow;
             campaign.RecipientCount = emails.Length;
@@ -120,6 +130,7 @@ public class EmailCampaignService(
         }
         catch (Exception exception)
         {
+            // Persist the failure for the campaign history, then rethrow so Hangfire records the job failure.
             campaign.Status = EmailCampaignStatus.Failed;
             campaign.Error = exception.Message;
             await context.SaveChangesAsync();

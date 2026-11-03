@@ -28,7 +28,7 @@ public class EmailCampaignManagementService(
         {
             FromAddress = settings.FromAddress,
             FromName = settings.FromName,
-            IsServerTokenConfigured = !string.IsNullOrWhiteSpace(configuration["Postmark:ServerToken"])
+            IsApiKeyConfigured = !string.IsNullOrWhiteSpace(configuration["Resend:ApiKey"])
         };
     }
 
