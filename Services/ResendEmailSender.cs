@@ -27,7 +27,7 @@ public class ResendEmailSender(
     /// <summary>
     /// Sends many emails through Resend's Email Batch API.
     /// </summary>
-    /// <param name="emails">The campaign messages to send.</param>
+    /// <param name="emails">The messages to send.</param>
     /// <param name="tag">Tag to categorize the email</param>
     public async Task SendEmailInBatchesAsync(IReadOnlyCollection<OutboundEmail> emails, string? tag = null)
     {

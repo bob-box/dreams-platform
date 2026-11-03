@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Borderland.Dreams.Services;
 
-public class EmailCampaignService(
+public class EmailSendingService(
     ApplicationDbContext context,
     IResendEmailService emailService,
     IAppTime appTime,
-    ILogger<EmailCampaignService> logger
+    ILogger<EmailSendingService> logger
 )
 {
     /// <summary>
@@ -52,48 +52,48 @@ public class EmailCampaignService(
     }
 
     /// <summary>
-    /// Sends a campaign to the dream creators selected by its audience settings.
+    /// Sends a message to the dream creators selected by its audience settings.
     /// </summary>
-    /// <param name="campaignId">The campaign to send.</param>
+    /// <param name="emailId">The email message to send.</param>
     [AutomaticRetry(Attempts = 0)]
-    public async Task SendCampaignAsync(int campaignId)
+    public async Task SendEmailAsync(int emailId)
     {
-        // Claim the campaign atomically so concurrent Hangfire executions cannot send it twice.
-        var claimed = await context.EmailCampaign
-            .Where(item => item.ID == campaignId && item.Status == EmailCampaignStatus.Scheduled)
+        // Claim the update atomically so concurrent Hangfire executions cannot send it twice.
+        var claimed = await context.Email
+            .Where(item => item.ID == emailId && item.Status == EmailStatus.Scheduled)
             .ExecuteUpdateAsync(updates => updates
-                .SetProperty(item => item.Status, EmailCampaignStatus.Sending)
+                .SetProperty(item => item.Status, EmailStatus.Sending)
                 .SetProperty(item => item.Error, (string?)null));
         if (claimed == 0)
             return;
 
-        var campaign = await context.EmailCampaign.SingleOrDefaultAsync(item => item.ID == campaignId)
-            ?? throw new KeyNotFoundException($"Email campaign {campaignId} was not found.");
+        var update = await context.Email.SingleOrDefaultAsync(item => item.ID == emailId)
+            ?? throw new KeyNotFoundException($"Email update {emailId} was not found.");
 
         try
         {
-            var dreamIds = JsonSerializer.Deserialize<List<int>>(campaign.SelectedDreamIds)
-                ?? throw new InvalidOperationException("The selected dream list for this campaign is invalid.");
+            var dreamIds = JsonSerializer.Deserialize<List<int>>(update.SelectedDreamIds)
+                ?? throw new InvalidOperationException("The selected dream list for this update is invalid.");
             var dreamsQuery = context.Dream
                 .AsNoTracking()
                 .Include(dream => dream.Dreamers)
                 .ThenInclude(dreamer => dreamer.User)
                 .AsQueryable();
 
-            // Apply the stored audience criteria within the campaign's cloud.
-            dreamsQuery = campaign.Audience switch
+            // Apply the stored audience criteria within the update's cloud.
+            dreamsQuery = update.Audience switch
             {
-                EmailCampaignAudience.AllDreams =>
-                    dreamsQuery.Where(dream => dream.CloudID == campaign.CloudID),
-                EmailCampaignAudience.SelectedDreams =>
+                EmailAudience.AllDreams =>
+                    dreamsQuery.Where(dream => dream.CloudID == update.CloudID),
+                EmailAudience.SelectedDreams =>
                     dreamsQuery.Where(dream =>
-                        dream.CloudID == campaign.CloudID &&
+                        dream.CloudID == update.CloudID &&
                         dreamIds.Contains(dream.ID)),
-                EmailCampaignAudience.DreamStatus when campaign.DreamStatus.HasValue =>
+                EmailAudience.DreamStatus when update.DreamStatus.HasValue =>
                     dreamsQuery.Where(dream =>
-                        dream.CloudID == campaign.CloudID &&
-                        dream.Status == campaign.DreamStatus.Value),
-                _ => throw new InvalidOperationException("The campaign audience is invalid.")
+                        dream.CloudID == update.CloudID &&
+                        dream.Status == update.DreamStatus.Value),
+                _ => throw new InvalidOperationException("The update audience is invalid.")
             };
 
             var dreams = await dreamsQuery.ToListAsync();
@@ -111,7 +111,7 @@ public class EmailCampaignService(
             var emails = recipientDreams.Select(group =>
             {
                 var matchingDreams = group.Select(item => item.Dream).DistinctBy(dream => dream.ID).ToArray();
-                var body = new StringBuilder(campaign.Body.TrimEnd());
+                var body = new StringBuilder(update.Body.TrimEnd());
                 if (matchingDreams.Length > 0)
                 {
                     body.AppendLine().AppendLine().AppendLine("Related dreams:");
@@ -119,22 +119,22 @@ public class EmailCampaignService(
                         body.Append("- ").AppendLine(dream.Name);
                 }
 
-                return new OutboundEmail(group.First().Email, campaign.Subject, body.ToString());
+                return new OutboundEmail(group.First().Email, update.Subject, body.ToString());
             }).ToArray();
 
             await emailService.SendEmailInBatchesAsync(emails, "on-demand");
-            campaign.Status = EmailCampaignStatus.Sent;
-            campaign.SentAtUtc = appTime.UtcNow;
-            campaign.RecipientCount = emails.Length;
+            update.Status = EmailStatus.Sent;
+            update.SentAtUtc = appTime.UtcNow;
+            update.RecipientCount = emails.Length;
             await context.SaveChangesAsync();
         }
         catch (Exception exception)
         {
-            // Persist the failure for the campaign history, then rethrow so Hangfire records the job failure.
-            campaign.Status = EmailCampaignStatus.Failed;
-            campaign.Error = exception.Message;
+            // Persist the failure for the update history, then rethrow so Hangfire records the job failure.
+            update.Status = EmailStatus.Failed;
+            update.Error = exception.Message;
             await context.SaveChangesAsync();
-            logger.LogError(exception, "Sending email campaign {CampaignId} failed.", campaignId);
+            logger.LogError(exception, "Sending email update {EmailId} failed.", emailId);
             throw;
         }
     }

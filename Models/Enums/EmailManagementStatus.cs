@@ -1,6 +1,6 @@
 namespace Borderland.Dreams.Enums;
 
-public enum EmailCampaignManagementStatus
+public enum EmailManagementStatus
 {
     Success,
     NotFound,

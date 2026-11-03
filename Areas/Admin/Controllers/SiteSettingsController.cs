@@ -8,7 +8,7 @@ namespace Borderland.Dreams.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
-public class SiteSettingsController(IEmailCampaignManagementService emailManagementService) : Controller
+public class SiteSettingsController(IEmailManagementService emailManagementService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index() =>

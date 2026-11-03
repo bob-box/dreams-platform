@@ -20,7 +20,7 @@ public class MapperFacade : IMapperFacade
     private readonly ExpenseMapper _expenseMapper;
     private readonly DreamerMapper _dreamerMapper;
     private readonly AuditLogMapper _auditLogMapper;
-    private readonly EmailCampaignMapper _emailCampaignMapper;
+    private readonly EmailMapper _emailMapper;
 
     public MapperFacade(IAppTime appTime)
     {
@@ -36,7 +36,7 @@ public class MapperFacade : IMapperFacade
         _expenseMapper = new ExpenseMapper(this, appTime);
         _dreamerMapper = new DreamerMapper(this, appTime);
         _auditLogMapper = new AuditLogMapper(this, appTime);
-        _emailCampaignMapper = new EmailCampaignMapper(appTime);
+        _emailMapper = new EmailMapper(appTime);
     }
 
     #region ToViewModel
@@ -53,8 +53,8 @@ public class MapperFacade : IMapperFacade
     public DreamerViewModel ToViewModel(Dreamer model) => _dreamerMapper.ToViewModel(model);
     public AuditLogItemViewModel ToViewModel(AuditLogEntry model, string cloudName) =>
         _auditLogMapper.ToViewModel(model, cloudName);
-    public EmailCampaignListItemViewModel ToViewModel(EmailCampaign model) =>
-        _emailCampaignMapper.ToViewModel(model);
+    public EmailListItemViewModel ToViewModel(Email model) =>
+        _emailMapper.ToViewModel(model);
     #endregion ToViewModel
 
     #region ToViewModels
@@ -69,7 +69,7 @@ public class MapperFacade : IMapperFacade
     public List<CloudViewModel> ToViewModels(ICollection<Cloud> models) => models?.Select(ToViewModel).ToList() ?? [];
     public List<UserViewModel> ToViewModels(ICollection<User> models) => models?.Select(ToViewModel).ToList() ?? [];
     public List<WalletViewModel> ToViewModels(ICollection<Wallet> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<EmailCampaignListItemViewModel> ToViewModels(ICollection<EmailCampaign> models) =>
+    public List<EmailListItemViewModel> ToViewModels(ICollection<Email> models) =>
         models?.Select(ToViewModel).ToList() ?? [];
     #endregion ToViewModels
 

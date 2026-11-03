@@ -15,7 +15,7 @@ namespace Borderland.Dreams.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
             modelBuilder.Entity("Borderland.Dreams.Models.AuditLogEntry", b =>
                 {
@@ -116,12 +116,10 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.Property<string>("DreamWelcomeEmailBody")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DreamWelcomeEmailSubject")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDeleted")
@@ -269,7 +267,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.ToTable("Dreamer");
                 });
 
-            modelBuilder.Entity("Borderland.Dreams.Models.EmailCampaign", b =>
+            modelBuilder.Entity("Borderland.Dreams.Models.Email", b =>
                 {
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
@@ -319,7 +317,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("EmailCampaign");
+                    b.ToTable("Email");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.EmailSettings", b =>

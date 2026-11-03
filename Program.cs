@@ -93,8 +93,8 @@ builder.Services.AddScoped<FundingRoundOutboxDispatcher>();
 builder.Services.AddScoped<ResendEmailSender>();
 builder.Services.AddScoped<IResendEmailService>(services =>
     services.GetRequiredService<ResendEmailSender>());
-builder.Services.AddScoped<EmailCampaignService>();
-builder.Services.AddScoped<IEmailCampaignManagementService, EmailCampaignManagementService>();
+builder.Services.AddScoped<EmailSendingService>();
+builder.Services.AddScoped<IEmailManagementService, EmailManagementService>();
 builder.Services.AddScoped<IMembershipCheckService, MembershipCheckService>();
 builder.Services.AddSingleton<ICloudCache, CloudCache>();
 

@@ -4,11 +4,11 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class EmailCampaignMapper(IAppTime appTime)
+public class EmailMapper(IAppTime appTime)
 {
-    public EmailCampaignListItemViewModel ToViewModel(EmailCampaign model)
+    public EmailListItemViewModel ToViewModel(Email model)
     {
-        return new EmailCampaignListItemViewModel
+        return new EmailListItemViewModel
         {
             ID = model.ID,
             Subject = model.Subject,

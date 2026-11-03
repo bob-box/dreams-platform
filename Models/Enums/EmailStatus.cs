@@ -1,6 +1,6 @@
 namespace Borderland.Dreams.Enums;
 
-public enum EmailCampaignStatus
+public enum EmailStatus
 {
     Scheduled,
     Sending,

@@ -38,7 +38,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<AuditLogEntry> AuditLog { get; set; } = default!;
     public DbSet<FundingRoundOutboxMessage> FundingRoundOutbox { get; set; } = default!;
     public DbSet<EmailSettings> EmailSettings { get; set; } = default!;
-    public DbSet<EmailCampaign> EmailCampaign { get; set; } = default!;
+    public DbSet<Email> Email { get; set; } = default!;
 
     protected override async void OnModelCreating(ModelBuilder modelBuilder)
     {

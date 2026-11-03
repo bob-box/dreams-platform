@@ -17,7 +17,7 @@ When a funding round is over, all unspent funds get removed from the wallets and
 
 Outbound email is sent through Resend. Set the API key as the `Resend__ApiKey` environment variable; do not put it in source control. Configure the verified sender address/name from **Admin Control Panel → Site-wide settings → Email**.
 
-The admin email campaigns page is available within a cloud and is scoped to that cloud's dreams. It supports immediate or scheduled messages to all dreams, selected dreams, or dreams in a chosen status. Campaigns send at most one message per unique email address but are of Resend email type "Transactional email" and are sent in batches. Personalized and/or event-driven communication, for example confirmation and password/account messages are of Resend email type "Transactional email".
+The send email page is available for admins within a cloud and is scoped to that cloud's dreams. It supports immediate or scheduled messages to all dreams, selected dreams, or dreams in a chosen status. At most one message per unique email address, they are of Resend email type "Transactional email" and are sent in batches. Personalized and/or event-driven communication, for example confirmation and password/account messages are also of Resend email type "Transactional email".
 
 
 Dream creators receive an automatic welcome email after creating a dream. 

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Borderland.Dreams.Enums;
 
-public enum EmailCampaignAudience
+public enum EmailAudience
 {
     [Display(Name = "All dreams")] 
     AllDreams,

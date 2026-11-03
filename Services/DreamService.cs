@@ -132,7 +132,7 @@ public class DreamService(
 
         context.Add(dream);
         await context.SaveChangesAsync();
-        backgroundJobs.Enqueue<EmailCampaignService>(service => service.SendDreamWelcomeAsync(dream.ID));
+        backgroundJobs.Enqueue<EmailSendingService>(service => service.SendDreamWelcomeAsync(dream.ID));
         return dream.ID;
     }
 

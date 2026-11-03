@@ -1,0 +1,67 @@
+@model IEnumerable<Borderland.Dreams.ViewModels.EmailListItemViewModel>
+
+@{
+    ViewData["Title"] = "Emails";
+}
+
+<h1>Emails</h1>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create email</a>
+</p>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No emails have been created.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Audience</th>
+                <th>Status</th>
+                <th>Scheduled</th>
+                <th>Sent</th>
+                <th>Recipients</th>
+                <th>Error</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var update in Model)
+        {
+            <tr>
+                <td>@update.Subject</td>
+                <td>@update.Audience.GetDisplayName() @if (update.DreamStatus.HasValue) { <span>(@update.DreamStatus)</span> }</td>
+                <td>@update.Status</td>
+                <td>@(update.ScheduledAt.HasValue ? update.ScheduledAt.Value : "Now")</td>
+                <td>@update.SentAt</td>
+                <td>@update.RecipientCount</td>
+                <td>@update.Error</td>
+                <td class="text-end">
+                    @if (update.Status == Borderland.Dreams.Enums.EmailStatus.Scheduled &&
+                         update.ScheduledAt > appTime.Now)
+                    {
+                        <a asp-action="Edit" asp-route-id="@update.ID" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <form asp-action="Cancel" asp-route-id="@update.ID" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Cancel this scheduled email?');">Cancel</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

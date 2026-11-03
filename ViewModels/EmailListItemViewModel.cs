@@ -3,13 +3,13 @@ using Borderland.Dreams.Enums;
 
 namespace Borderland.Dreams.ViewModels;
 
-public class EmailCampaignListItemViewModel
+public class EmailListItemViewModel
 {
     public int ID { get; set; }
     public string Subject { get; set; } = string.Empty;
-    public EmailCampaignAudience Audience { get; set; }
+    public EmailAudience Audience { get; set; }
     public DreamStatus? DreamStatus { get; set; }
-    public EmailCampaignStatus Status { get; set; }
+    public EmailStatus Status { get; set; }
 
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}")]
     public DateTime? ScheduledAt { get; set; }

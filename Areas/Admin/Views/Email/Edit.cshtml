@@ -1,14 +1,14 @@
-@model Borderland.Dreams.ViewModels.EmailCampaignViewModel
+@model Borderland.Dreams.ViewModels.EmailViewModel
 @inject Microsoft.Extensions.Options.IOptions<Borderland.Dreams.Utils.TimeOptions> TimeOptions
 
 @{
-    ViewData["Title"] = "Edit Email Campaign";
+    ViewData["Title"] = "Edit Email";
 }
 
-<h1>Edit scheduled email campaign</h1>
+<h1>Edit scheduled email</h1>
 <p class="text-muted">Each email address receives one message, even if connected to multiple selected dreams. The message includes the matching dream names.</p>
 
-<form asp-action="Edit" asp-route-id="@ViewBag.CampaignId" method="post" class="col-lg-8">
+<form asp-action="Edit" asp-route-id="@ViewBag.EmailId" method="post" class="col-lg-8">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="mb-3">
         <label asp-for="Subject" class="form-label"></label>
@@ -22,7 +22,7 @@
     </div>
     <div class="mb-3">
         <label asp-for="Audience" class="form-label"></label>
-        <select asp-for="Audience" asp-items="Html.GetEnumSelectList<Borderland.Dreams.Enums.EmailCampaignAudience>()" class="form-select"></select>
+        <select asp-for="Audience" asp-items="Html.GetEnumSelectList<Borderland.Dreams.Enums.EmailAudience>()" class="form-select"></select>
     </div>
     <div class="mb-3" id="status-audience">
         <label asp-for="DreamStatus" class="form-label"></label>
@@ -48,7 +48,7 @@
         <div class="form-text">Choose a future time. Timezone @TimeOptions.Value.TimeZoneId</div>
     </div>
     <button type="submit" class="btn btn-primary">Save changes</button>
-    <a asp-action="Campaigns" class="btn btn-secondary">Cancel</a>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>
 
 @section Scripts {
@@ -58,8 +58,8 @@
         const selectedAudience = document.getElementById("selected-audience");
         const statusAudience = document.getElementById("status-audience");
         function updateAudienceFields() {
-            selectedAudience.hidden = audience.value !== "@((int)Borderland.Dreams.Enums.EmailCampaignAudience.SelectedDreams)";
-            statusAudience.hidden = audience.value !== "@((int)Borderland.Dreams.Enums.EmailCampaignAudience.DreamStatus)";
+            selectedAudience.hidden = audience.value !== "@((int)Borderland.Dreams.Enums.EmailAudience.SelectedDreams)";
+            statusAudience.hidden = audience.value !== "@((int)Borderland.Dreams.Enums.EmailAudience.DreamStatus)";
         }
         audience.addEventListener("change", updateAudienceFields);
         updateAudienceFields();

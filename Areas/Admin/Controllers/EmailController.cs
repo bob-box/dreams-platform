@@ -11,17 +11,17 @@ namespace Borderland.Dreams.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize(Roles = Constants.AdminRole)]
 public class EmailController(
-    IEmailCampaignManagementService emailManagementService,
+    IEmailManagementService emailManagementService,
     ICloudNameResolver cloudNameResolver
 ) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Campaigns()
+    public async Task<IActionResult> Index()
     {
         if (!HasCloudContext())
             return NotFound();
 
-        return View(await emailManagementService.GetCampaignsAsync());
+        return View(await emailManagementService.GetEmailsAsync());
     }
 
     [HttpGet]
@@ -35,34 +35,34 @@ public class EmailController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(EmailCampaignViewModel model)
+    public async Task<IActionResult> Create(EmailViewModel model)
     {
         if (!HasCloudContext())
             return NotFound();
 
         if (!ModelState.IsValid)
         {
-            await emailManagementService.PopulateCampaignOptionsAsync(model);
+            await emailManagementService.PopulateEmailOptionsAsync(model);
             return View(model);
         }
 
-        var result = await emailManagementService.CreateCampaignAsync(model);
-        if (result.Status == EmailCampaignManagementStatus.ValidationError)
+        var result = await emailManagementService.CreateEmailAsync(model);
+        if (result.Status == EmailManagementStatus.ValidationError)
         {
             AddErrorsToModelState(result.Errors);
             return View(result.ViewModel ?? model);
         }
-        if (result.Status == EmailCampaignManagementStatus.Error)
+        if (result.Status == EmailManagementStatus.Error)
         {
-            ModelState.AddModelError(string.Empty, result.Message ?? "The email campaign could not be queued.");
-            await emailManagementService.PopulateCampaignOptionsAsync(model);
+            ModelState.AddModelError(string.Empty, result.Message ?? "The email could not be queued.");
+            await emailManagementService.PopulateEmailOptionsAsync(model);
             return View(model);
         }
 
         TempData["Success"] = model.ScheduledAt.HasValue
-            ? "Email campaign scheduled."
-            : "Email campaign queued for sending.";
-        return RedirectToAction(nameof(Campaigns), new { cloudSlug = cloudNameResolver.CloudSlug });
+            ? "Email scheduled."
+            : "Email queued for sending.";
+        return RedirectToAction(nameof(Index), new { cloudSlug = cloudNameResolver.CloudSlug });
     }
 
     [HttpGet]
@@ -72,48 +72,48 @@ public class EmailController(
             return NotFound();
 
         var result = await emailManagementService.GetForEditAsync(id);
-        if (result.Status == EmailCampaignManagementStatus.NotFound)
+        if (result.Status == EmailManagementStatus.NotFound)
             return NotFound();
-        if (result.Status == EmailCampaignManagementStatus.Conflict)
+        if (result.Status == EmailManagementStatus.Conflict)
             return Conflict(result.Message);
 
-        ViewBag.CampaignId = id;
+        ViewBag.EmailId = id;
         return View(result.ViewModel);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, EmailCampaignViewModel model)
+    public async Task<IActionResult> Edit(int id, EmailViewModel model)
     {
         if (!HasCloudContext())
             return NotFound();
 
         if (!ModelState.IsValid)
         {
-            ViewBag.CampaignId = id;
-            await emailManagementService.PopulateCampaignOptionsAsync(model);
+            ViewBag.EmailId = id;
+            await emailManagementService.PopulateEmailOptionsAsync(model);
             return View(model);
         }
 
-        var result = await emailManagementService.UpdateCampaignAsync(id, model);
-        if (result.Status == EmailCampaignManagementStatus.NotFound)
+        var result = await emailManagementService.UpdateEmailAsync(id, model);
+        if (result.Status == EmailManagementStatus.NotFound)
             return NotFound();
-        if (result.Status == EmailCampaignManagementStatus.Conflict)
+        if (result.Status == EmailManagementStatus.Conflict)
             return Conflict(result.Message);
-        if (result.Status == EmailCampaignManagementStatus.ValidationError)
+        if (result.Status == EmailManagementStatus.ValidationError)
         {
             AddErrorsToModelState(result.Errors);
-            ViewBag.CampaignId = id;
+            ViewBag.EmailId = id;
             return View(result.ViewModel ?? model);
         }
-        if (result.Status == EmailCampaignManagementStatus.Error)
+        if (result.Status == EmailManagementStatus.Error)
         {
             TempData["Error"] = result.Message;
-            return RedirectToAction(nameof(Campaigns), new { cloudSlug = cloudNameResolver.CloudSlug });
+            return RedirectToAction(nameof(Index), new { cloudSlug = cloudNameResolver.CloudSlug });
         }
 
-        TempData["Success"] = "Email campaign updated.";
-        return RedirectToAction(nameof(Campaigns), new { cloudSlug = cloudNameResolver.CloudSlug });
+        TempData["Success"] = "Email updated.";
+        return RedirectToAction(nameof(Index), new { cloudSlug = cloudNameResolver.CloudSlug });
     }
 
     [HttpPost]
@@ -123,16 +123,16 @@ public class EmailController(
         if (!HasCloudContext())
             return NotFound();
 
-        var result = await emailManagementService.CancelCampaignAsync(id);
-        if (result.Status == EmailCampaignManagementStatus.NotFound)
+        var result = await emailManagementService.CancelEmailAsync(id);
+        if (result.Status == EmailManagementStatus.NotFound)
             return NotFound();
 
-        if (result.Status == EmailCampaignManagementStatus.Conflict)
+        if (result.Status == EmailManagementStatus.Conflict)
             TempData["Error"] = result.Message;
         else
-            TempData["Success"] = "Email campaign cancelled.";
+            TempData["Success"] = "Email cancelled.";
 
-        return RedirectToAction(nameof(Campaigns), new { cloudSlug = cloudNameResolver.CloudSlug });
+        return RedirectToAction(nameof(Index), new { cloudSlug = cloudNameResolver.CloudSlug });
     }
 
     private bool HasCloudContext() => cloudNameResolver.CloudID > 0;
