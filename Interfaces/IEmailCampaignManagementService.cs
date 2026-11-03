@@ -14,7 +14,7 @@ public interface IEmailCampaignManagementService
 {
     Task<EmailSettingsViewModel> GetSettingsAsync();
     Task SaveSettingsAsync(EmailSettingsViewModel model);
-    Task<List<EmailCampaign>> GetCampaignsAsync();
+    Task<List<EmailCampaignListItemViewModel>> GetCampaignsAsync();
     Task<EmailCampaignViewModel> BuildCreateViewModelAsync();
     Task<EmailCampaignManagementResult> CreateCampaignAsync(EmailCampaignViewModel model);
     Task<EmailCampaignManagementResult> GetForEditAsync(int id);

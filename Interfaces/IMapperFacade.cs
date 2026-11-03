@@ -18,6 +18,7 @@ public interface IMapperFacade
     ExpenseViewModel ToViewModel(Expense model);
     DreamerViewModel ToViewModel(Dreamer model);
     AuditLogItemViewModel ToViewModel(AuditLogEntry model, string cloudName);
+    EmailCampaignListItemViewModel ToViewModel(EmailCampaign model);
     #endregion
 
     #region ToViewModels
@@ -32,6 +33,7 @@ public interface IMapperFacade
     List<FundViewModel> ToViewModels(ICollection<Fund> models);
     List<ExpenseViewModel> ToViewModels(ICollection<Expense> models);
     List<DreamerViewModel> ToViewModels(ICollection<Dreamer> models);
+    List<EmailCampaignListItemViewModel> ToViewModels(ICollection<EmailCampaign> models);
     #endregion
 
     #region ToModel

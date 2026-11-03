@@ -21,7 +21,7 @@ public class EmailCampaignViewModel
     [Display(Name = "Dream status")]
     public DreamStatus? DreamStatus { get; set; }
 
-    [Display(Name = "Send at (app timezone)")]
+    [Display(Name = "Send at")]
     public DateTime? ScheduledAt { get; set; }
 
     [Display(Name = "Selected dreams")]

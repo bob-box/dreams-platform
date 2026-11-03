@@ -1,4 +1,4 @@
-@model IEnumerable<Borderland.Dreams.Models.EmailCampaign>
+@model IEnumerable<Borderland.Dreams.ViewModels.EmailCampaignListItemViewModel>
 
 @{
     ViewData["Title"] = "Email Campaigns";
@@ -43,15 +43,15 @@ else
         {
             <tr>
                 <td>@campaign.Subject</td>
-                <td>@campaign.Audience @if (campaign.DreamStatus.HasValue) { <span>(@campaign.DreamStatus)</span> }</td>
+                <td>@campaign.Audience.GetDisplayName() @if (campaign.DreamStatus.HasValue) { <span>(@campaign.DreamStatus)</span> }</td>
                 <td>@campaign.Status</td>
-                <td>@(campaign.ScheduledAtUtc?.ToString("u") ?? "Now")</td>
-                <td>@campaign.SentAtUtc?.ToString("u")</td>
+                <td>@(campaign.ScheduledAt.HasValue ? campaign.ScheduledAt.Value : "Now")</td>
+                <td>@campaign.SentAt</td>
                 <td>@campaign.RecipientCount</td>
                 <td>@campaign.Error</td>
                 <td class="text-end">
                     @if (campaign.Status == Borderland.Dreams.Enums.EmailCampaignStatus.Scheduled &&
-                         campaign.ScheduledAtUtc > appTime.UtcNow)
+                         campaign.ScheduledAt > appTime.Now)
                     {
                         <a asp-action="Edit" asp-route-id="@campaign.ID" class="btn btn-sm btn-outline-primary">Edit</a>
                         <form asp-action="Cancel" asp-route-id="@campaign.ID" method="post" class="d-inline">

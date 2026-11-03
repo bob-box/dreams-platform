@@ -1,11 +1,15 @@
 @model Borderland.Dreams.ViewModels.EmailCampaignViewModel
+@inject Microsoft.Extensions.Options.IOptions<Borderland.Dreams.Utils.TimeOptions> TimeOptions
 
 @{
     ViewData["Title"] = "Create Email Campaign";
 }
 
 <h1>Create email campaign</h1>
-<p class="text-muted">Each email address receives one message, even if connected to multiple selected dreams. The message includes the matching dream names.</p>
+<p class="text-muted">
+    Each email address receives one message, even if connected to multiple selected dreams. <br />
+    The message includes the users dream names.
+    </p>
 
 <form asp-action="Create" method="post" class="col-lg-8">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -44,7 +48,7 @@
         <label asp-for="ScheduledAt" class="form-label"></label>
         <input asp-for="ScheduledAt" type="datetime-local" class="form-control" />
         <span asp-validation-for="ScheduledAt" class="text-danger"></span>
-        <div class="form-text">Leave blank to send immediately. Times use the application timezone.</div>
+        <div class="form-text">Leave blank to send immediately. Timezone @TimeOptions.Value.TimeZoneId</div>
     </div>
     <button type="submit" class="btn btn-primary">Queue campaign</button>
     <a asp-action="Campaigns" class="btn btn-secondary">Cancel</a>

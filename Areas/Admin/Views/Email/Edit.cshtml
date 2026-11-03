@@ -1,4 +1,5 @@
 @model Borderland.Dreams.ViewModels.EmailCampaignViewModel
+@inject Microsoft.Extensions.Options.IOptions<Borderland.Dreams.Utils.TimeOptions> TimeOptions
 
 @{
     ViewData["Title"] = "Edit Email Campaign";
@@ -44,7 +45,7 @@
         <label asp-for="ScheduledAt" class="form-label"></label>
         <input asp-for="ScheduledAt" type="datetime-local" class="form-control" />
         <span asp-validation-for="ScheduledAt" class="text-danger"></span>
-        <div class="form-text">Times use the application timezone. Choose a future time.</div>
+        <div class="form-text">Choose a future time. Timezone @TimeOptions.Value.TimeZoneId</div>
     </div>
     <button type="submit" class="btn btn-primary">Save changes</button>
     <a asp-action="Campaigns" class="btn btn-secondary">Cancel</a>

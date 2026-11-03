@@ -13,6 +13,7 @@ namespace Borderland.Dreams.Services;
 public class EmailCampaignManagementService(
     ApplicationDbContext context,
     IConfiguration configuration,
+    IMapperFacade mapper,
     IAppTime appTime,
     ICloudNameResolver cloudNameResolver,
     IBackgroundJobClient backgroundJobs,
@@ -46,14 +47,15 @@ public class EmailCampaignManagementService(
         await context.SaveChangesAsync();
     }
 
-    public async Task<List<EmailCampaign>> GetCampaignsAsync()
+    public async Task<List<EmailCampaignListItemViewModel>> GetCampaignsAsync()
     {
         EnsureCloudContext();
-        return await context.EmailCampaign
+        var campaigns = await context.EmailCampaign
             .Where(campaign => campaign.CloudID == cloudNameResolver.CloudID)
             .OrderByDescending(campaign => campaign.CreatedAtUtc)
             .Take(100)
             .ToListAsync();
+        return mapper.ToViewModels(campaigns);
     }
 
     public async Task<EmailCampaignViewModel> BuildCreateViewModelAsync()
