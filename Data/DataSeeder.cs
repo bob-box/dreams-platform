@@ -249,10 +249,8 @@ public static class DataSeeder
             context.FundingRound.Add(fundingRound);
             await context.SaveChangesAsync();
 
-            FundingRoundOutboxDispatcher.EnqueueSynchronize(
-                context,
-                fundingRound.ID,
-                _appTime.UtcNow);
+            var schedulerService = serviceProvider.GetRequiredService<FundingRoundSchedulerService>();
+            schedulerService.ScheduleFundingRoundJobs(fundingRound);
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
 

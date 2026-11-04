@@ -46,6 +46,7 @@ public class EmailSendingService(
 
         var subject = dream.Cloud.DreamWelcomeEmailSubject.Replace("{DreamName}", dream.Name, StringComparison.Ordinal);
         var body = dream.Cloud.DreamWelcomeEmailBody.Replace("{DreamName}", dream.Name, StringComparison.Ordinal);
+        // Since a dream can have multiple dreamers we send a message to all of them.
         await emailService.SendEmailInBatchesAsync(
             addresses.Select(address => new OutboundEmail(address, subject, body)).ToArray(),
             "dream-welcome");

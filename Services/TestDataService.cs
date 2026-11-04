@@ -15,6 +15,7 @@ public sealed class TestDataService(
     ApplicationDbContext context,
     UserManager<User> userManager,
     RoleManager<IdentityRole> roleManager,
+    FundingRoundSchedulerService schedulerService,
     IAppTime appTime)
 {
     private static readonly string[] UserNames =
@@ -120,8 +121,8 @@ public sealed class TestDataService(
         context.FundingRound.AddRange(firstRound, secondRound);
 
         await context.SaveChangesAsync(cancellationToken);
-        FundingRoundOutboxDispatcher.EnqueueSynchronize(context, firstRound.ID, now);
-        FundingRoundOutboxDispatcher.EnqueueSynchronize(context, secondRound.ID, now);
+        schedulerService.ScheduleFundingRoundJobs(firstRound);
+        schedulerService.ScheduleFundingRoundJobs(secondRound);
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 

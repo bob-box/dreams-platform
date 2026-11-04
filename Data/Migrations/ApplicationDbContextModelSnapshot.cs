@@ -456,36 +456,6 @@ namespace Borderland.Dreams.Data.Migrations
                     b.ToTable("FundingRound");
                 });
 
-            modelBuilder.Entity("Borderland.Dreams.Models.FundingRoundOutboxMessage", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("EnqueuedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("FundingRoundID")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("ProcessedAt", "FundingRoundID");
-
-                    b.ToTable("FundingRoundOutbox");
-                });
-
             modelBuilder.Entity("Borderland.Dreams.Models.Tag", b =>
                 {
                     b.Property<int>("ID")

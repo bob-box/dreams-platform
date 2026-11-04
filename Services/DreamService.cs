@@ -20,7 +20,7 @@ public class DreamService(
     IAuthorizationService authorizationService,
     IMapperFacade mapper,
     IHttpContextAccessor httpContextAccessor,
-    IFundingRoundService fundingRoundService,
+    IAppTime appTime,
     IBackgroundJobClient backgroundJobs
 ) : IDreamService
 {
@@ -172,7 +172,7 @@ public class DreamService(
 
         var dream = mapper.ToViewModel(dreamFromDb)!;
         var authorizationFailure = await AuthorizeAsync(dream, Operations.Delete);
-        
+
         return authorizationFailure ?? new DreamServiceResult(DreamServiceStatus.Success, dream);
     }
 
@@ -296,6 +296,10 @@ public class DreamService(
         return new DreamServiceResult(DreamServiceStatus.Success);
     }
 
+    /// <summary>
+    /// Moves a dream from Draft to ReadyForFunding for dreamers, or from Draft to ReadyForFunding/Active for admins.
+    /// </summary>
+    /// <param name="id">Dream id to be published.</param>
     public async Task<DreamServiceResult> Publish(int id)
     {
         var dream = await GetFullQuery()
@@ -309,15 +313,28 @@ public class DreamService(
         if (!authorizationResult.Succeeded)
             return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
-        // Only allow publishing if the dream is in Draft status
-        if (dream.Status != DreamStatus.Draft)
-            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+        // Dreamers can only put their dreams in ready state. Funding rounds or admins need to put them in active.
+        if (!CurrentUser.IsInRole(Constants.AdminRole))
+        {
+            var cloud = await context.Cloud
+                .SingleOrDefaultAsync(c => c.ID == cloudNameService.CloudID);
+            if (cloud == null)
+                return new DreamServiceResult(DreamServiceStatus.NotFound);
 
-        var activeFundingRound = await fundingRoundService.GetActiveRound(cloudNameService.CloudID);
-        dream.Status = activeFundingRound == null ? DreamStatus.ReadyForFunding : DreamStatus.Active;
+            var isAfterDreamEditDeadlinePeriod = cloud.DreamEditDeadline.HasValue && appTime.Now > cloud.DreamEditDeadline.Value;
+            if (isAfterDreamEditDeadlinePeriod)
+                return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
-        await context.SaveChangesAsync();
-        return new DreamServiceResult(DreamServiceStatus.Success);
+            dream.Status = DreamStatus.ReadyForFunding;
+            await context.SaveChangesAsync();
+            return new DreamServiceResult(DreamServiceStatus.Success);
+        }
+        else
+        {
+            dream.Status = DreamStatus.Active;
+            await context.SaveChangesAsync();
+            return new DreamServiceResult(DreamServiceStatus.Success);
+        }
     }
 
     public async Task<DreamServiceResult> SetDreamStatusTo(int id, DreamStatus dreamStatus)

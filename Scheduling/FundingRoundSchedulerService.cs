@@ -103,14 +103,14 @@ public class FundingRoundSchedulerService(
             return;
         }
 
-        if (fundingRound.StartDate > appTime.UtcNow)
-        {
-            logger.LogInformation(
-                "Funding round ID {FundingRoundId} now starts at {StartDate}; skipping an outdated allocation job",
-                fundingRoundId,
-                fundingRound.StartDate);
-            return;
-        }
+        // if (fundingRound.StartDate > appTime.UtcNow)
+        // {
+        //     logger.LogInformation(
+        //         "Funding round ID {FundingRoundId} now starts at {StartDate}; skipping an outdated allocation job",
+        //         fundingRoundId,
+        //         fundingRound.StartDate);
+        //     return;
+        // }
 
         var cloud = fundingRound.Cloud;
         logger.LogInformation(
@@ -159,14 +159,14 @@ public class FundingRoundSchedulerService(
             return;
         }
 
-        if (fundingRound.EndDate > appTime.UtcNow)
-        {
-            logger.LogInformation(
-                "Funding round ID {FundingRoundId} now ends at {EndDate}; skipping an outdated end job",
-                fundingRoundId,
-                fundingRound.EndDate);
-            return;
-        }
+        // if (fundingRound.EndDate > appTime.UtcNow)
+        // {
+        //     logger.LogInformation(
+        //         "Funding round ID {FundingRoundId} now ends at {EndDate}; skipping an outdated end job",
+        //         fundingRoundId,
+        //         fundingRound.EndDate);
+        //     return;
+        // }
 
         var cloud = await context.Cloud.FindAsync(fundingRound.CloudID);
         if (cloud == null)

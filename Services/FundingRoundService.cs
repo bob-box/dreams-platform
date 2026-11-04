@@ -9,10 +9,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Borderland.Dreams.Services;
 
+/// <summary>
+/// Coordinates the lifecycle of funding rounds for a cloud.
+/// This service exists so the application can manage the windows during which users can receive or spend
+/// funding, enforce date and eligibility rules in one place, and keep the related outbox synchronization
+/// messages in sync with the database state.
+/// </summary>
 public class FundingRoundService(
     ApplicationDbContext context,
     IUserService userService,
     ICloudNameResolver cloudNameResolver,
+    FundingRoundSchedulerService schedulerService,
     IAppTime appTime,
     IMapperFacade mapper
     ) : IFundingRoundService
@@ -23,6 +30,10 @@ public class FundingRoundService(
         Delete
     }
 
+    /// <summary>
+    /// Returns all funding rounds for the active cloud in chronological order.
+    /// </summary>
+    /// <returns>A list of funding round view models used by the admin screens.</returns>
     public async Task<List<FundingRoundViewModel>> GetAll()
     {
         var fundingRounds = await context.FundingRound
@@ -33,6 +44,10 @@ public class FundingRoundService(
         return mapper.ToViewModels(fundingRounds);
     }
 
+    /// <summary>
+    /// Builds the create form defaults for a new funding round.
+    /// </summary>
+    /// <returns>A pre-populated view model that reflects the current cloud state and recommended dates.</returns>
     public async Task<FundingRoundViewModel> BuildCreateViewModel()
     {
         var userCount = await userService.Count();
@@ -72,6 +87,11 @@ public class FundingRoundService(
         return defaultStartDate;
     }
 
+    /// <summary>
+    /// Creates a new funding round after validating date overlap, cloud context, and last-round rules.
+    /// </summary>
+    /// <param name="viewModel">The funding round values to persist.</param>
+    /// <returns>A result describing whether the round was created successfully and any validation issues.</returns>
     public async Task<FundingRoundServiceResult> Create(FundingRoundViewModel viewModel)
     {
         if (viewModel.CloudID != cloudNameResolver.CloudID)
@@ -109,9 +129,9 @@ public class FundingRoundService(
         {
             context.Add(fundingRound);
 
-            // We do need 2 calls to SaveChanges. The first gives the funding round its ID so we can enqueue it and save again.
+            // Save once to get the ID, then schedule the jobs and persist the job IDs to the round.
             await context.SaveChangesAsync();
-            FundingRoundOutboxDispatcher.EnqueueSynchronize(context, fundingRound.ID, appTime.UtcNow);
+            schedulerService.ScheduleFundingRoundJobs(fundingRound);
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
         }
@@ -119,11 +139,21 @@ public class FundingRoundService(
         return new FundingRoundServiceResult(FundingRoundServiceStatus.Success);
     }
 
+    /// <summary>
+    /// Loads a single funding round for editing while preventing updates to rounds that have already ended.
+    /// </summary>
+    /// <param name="id">The funding round identifier.</param>
+    /// <returns>The corresponding view model or an error result when the round cannot be edited.</returns>
     public async Task<FundingRoundServiceResult> GetForEdit(int id)
     {
         return await LoadFundingRound(id, FundingRoundLoadMode.Edit);
     }
 
+    /// <summary>
+    /// Updates an existing funding round while preserving the integrity rules for active and future rounds.
+    /// </summary>
+    /// <param name="viewModel">The updated funding round values.</param>
+    /// <returns>A result indicating success, validation errors, or a missing round.</returns>
     public async Task<FundingRoundServiceResult> Update(FundingRoundViewModel viewModel)
     {
         if (viewModel.CloudID != cloudNameResolver.CloudID)
@@ -194,7 +224,7 @@ public class FundingRoundService(
                 existingRound.IsLastRound = false;
         }
 
-        FundingRoundOutboxDispatcher.EnqueueSynchronize(context, roundToUpdate.ID, appTime.UtcNow);
+        schedulerService.ScheduleFundingRoundJobs(roundToUpdate);
 
         try
         {
@@ -210,11 +240,21 @@ public class FundingRoundService(
         return new FundingRoundServiceResult(FundingRoundServiceStatus.Success);
     }
 
+    /// <summary>
+    /// Loads a single funding round for deletion checks and confirmation screens.
+    /// </summary>
+    /// <param name="id">The funding round identifier.</param>
+    /// <returns>A result containing the round to delete or a guarded error if it is no longer deletable.</returns>
     public async Task<FundingRoundServiceResult> GetForDelete(int id)
     {
         return await LoadFundingRound(id, FundingRoundLoadMode.Delete);
     }
 
+    /// <summary>
+    /// Removes a funding round after ensuring it is not active or already passed.
+    /// </summary>
+    /// <param name="id">The funding round identifier.</param>
+    /// <returns>A result indicating whether the deletion succeeded.</returns>
     public async Task<FundingRoundServiceResult> Delete(int id)
     {
         var fundingRound = await context.FundingRound
@@ -230,13 +270,18 @@ public class FundingRoundService(
                 Message: "Cannot delete a funding round that is active or has already passed.");
         }
 
-        FundingRoundOutboxDispatcher.EnqueueCancel(context, fundingRound, appTime.UtcNow);
+        schedulerService.CancelFundingRoundJobs(fundingRound);
         context.FundingRound.Remove(fundingRound);
         await context.SaveChangesAsync();
 
         return new FundingRoundServiceResult(FundingRoundServiceStatus.Success);
     }
 
+    /// <summary>
+    /// Finds the currently active funding round for a cloud, if one exists.
+    /// </summary>
+    /// <param name="cloudId">The cloud identifier.</param>
+    /// <returns>The active round view model, or null when no round is currently running.</returns>
     public async Task<FundingRoundViewModel?> GetActiveRound(int cloudId)
     {
         var now = appTime.UtcNow;
@@ -247,6 +292,11 @@ public class FundingRoundService(
         return mapper.ToViewModel(activeRound);
     }
 
+    /// <summary>
+    /// Determines whether a cloud has any funding round that has started, regardless of whether it is still active.
+    /// </summary>
+    /// <param name="cloudId">The cloud identifier.</param>
+    /// <returns>True when the cloud has an active or past funding round timeline.</returns>
     public async Task<bool> HasActiveOrPassedFundingRound(int cloudId)
     {
         var now = appTime.UtcNow;

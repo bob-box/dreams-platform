@@ -234,6 +234,7 @@ public class DreamController(
 
     // POST: Dream/Publish/5
     [HttpPost]
+    [Authorize(Roles = Constants.AdminRole)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Publish(int id)
     {
