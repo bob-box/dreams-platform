@@ -22,7 +22,8 @@ public class DreamService(
     IHttpContextAccessor httpContextAccessor,
     IFundingRoundService fundingRoundService,
     IAppTime appTime,
-    IBackgroundJobClient backgroundJobs
+    IBackgroundJobClient backgroundJobs,
+    ICloudService cloudService
 ) : IDreamService
 {
     private ClaimsPrincipal CurrentUser => httpContextAccessor.HttpContext?.User
@@ -237,7 +238,7 @@ public class DreamService(
     {
         var dreams = await GetFullQuery(asNoTracking: true, includeDeleted: true)
             .Where(d => d.IsDeleted)
-            .OrderByDescending(d => d.CreatedAt)
+            .OrderByDescending(d => d.CreatedAtUtc)
             .ToListAsync();
 
         // Get when and who deleted it
@@ -247,7 +248,7 @@ public class DreamService(
                             entry.Action == "Deleted" &&
                             entry.CloudID == cloudNameService.CloudID &&
                             deletedDreamIds.Contains(entry.EntityID))
-            .OrderByDescending(entry => entry.CreatedAt)
+            .OrderByDescending(entry => entry.CreatedAtUtc)
             .ToListAsync();
         // A dream can be restored and deleted again, so report its most recent deletion event.
         var latestDeletionByDream = deletionEntries
@@ -259,7 +260,7 @@ public class DreamService(
             var viewModel = mapper.ToViewModel(d)!;
             if (latestDeletionByDream.TryGetValue(d.ID, out var deletion))
             {
-                viewModel.DeletedAt = deletion.CreatedAt.ToLocalTime();
+                viewModel.DeletedAt = deletion.CreatedAtUtc.ToLocalTime();
                 viewModel.DeletedBy = deletion.UserName;
             }
             return viewModel;
@@ -332,13 +333,11 @@ public class DreamService(
             if (hasStartedFundingRound)
                 return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
-            var cloud = await context.Cloud
-                .SingleOrDefaultAsync(c => c.ID == cloudNameService.CloudID);
+            var cloud = await cloudService.GetById(cloudNameService.CloudID);
             if (cloud == null)
                 return new DreamServiceResult(DreamServiceStatus.NotFound);
 
-            var isAfterDreamEditDeadline = cloud.DreamEditDeadline.HasValue && appTime.Now > cloud.DreamEditDeadline.Value;
-            if (isAfterDreamEditDeadline)
+            if (!cloud.IsBeforeEditDeadline(appTime))
                 return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
             dream.Status = DreamStatus.ReadyForFunding;
@@ -367,13 +366,11 @@ public class DreamService(
         if (!authorizationResult.Succeeded)
             return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
-        var cloud = await context.Cloud
-            .SingleOrDefaultAsync(c => c.ID == cloudNameService.CloudID);
+        var cloud = await cloudService.GetById(cloudNameService.CloudID);
         if (cloud == null)
             return new DreamServiceResult(DreamServiceStatus.NotFound);
         
-        var isAfterDreamEditDeadline = cloud.DreamEditDeadline.HasValue && appTime.UtcNow > cloud.DreamEditDeadline.Value;
-        if (isAfterDreamEditDeadline)
+        if (!cloud.IsBeforeEditDeadline(appTime))
             return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
         dream.Status = DreamStatus.Draft;

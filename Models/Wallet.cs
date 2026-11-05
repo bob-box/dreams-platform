@@ -9,7 +9,7 @@ public class Wallet : IAutoPopulateCreatedAtOnAdd
     public int ID { get; set; }
 
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
 
     public string UserID { get; set; } = null!;
     public int CloudID { get; set; }

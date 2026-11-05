@@ -62,19 +62,19 @@ public class DreamController(
         ViewBag.IsEditAllowed = User.IsInRole(Constants.AdminRole) || cloud.IsBeforeEditDeadline(appTime);
 
         var userId = GetCurrentUserId();
-        var isBeforeDreamEditDeadlineEnd = !cloud.DreamEditDeadline.HasValue || appTime.Now <= cloud.DreamEditDeadline.Value;
+        var isBeforeDreamEditDeadline = cloud.IsBeforeEditDeadline(appTime);
         var isDreamer = result.Dream!.Dreamers.Any(d => d.UserID == userId);
         var hasStartedFundingRound = await fundingRoundService.HasActiveOrPassedFundingRound(cloudNameService.CloudID);
         var isAdmin = User.IsInRole(Constants.AdminRole);
 
         // Keep the button visibility aligned with the service rules; Publish enforces these rules again on POST.
         ViewBag.IsPublishAllowed = result.Dream.Status == DreamStatus.Draft
-            && (isAdmin || (isDreamer && isBeforeDreamEditDeadlineEnd && !hasStartedFundingRound));
+            && (isAdmin || (isDreamer && isBeforeDreamEditDeadline && !hasStartedFundingRound));
         ViewBag.PublishButtonText = isAdmin && hasStartedFundingRound
             ? "Activate"
             : "Ready for funding";
         ViewBag.IsReturnToDraftAllowed = result.Dream.Status == DreamStatus.ReadyForFunding
-            && isBeforeDreamEditDeadlineEnd;
+            && isBeforeDreamEditDeadline;
 
         return View(result.Dream);
     }

@@ -5,7 +5,7 @@ namespace Borderland.Dreams.Models;
 public class AuditLogEntry : IAutoPopulateCreatedAtOnAdd
 {
     public int ID { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
     public int CloudID { get; set; }
     public string EntityType { get; set; } = string.Empty;
     public int EntityID { get; set; }

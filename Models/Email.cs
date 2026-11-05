@@ -1,8 +1,9 @@
 using Borderland.Dreams.Enums;
+using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Models;
 
-public class Email
+public class Email : IAutoPopulateCreatedAtOnAdd
 {
     public int ID { get; set; }
     public int CloudID { get; set; }

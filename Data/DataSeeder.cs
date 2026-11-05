@@ -124,9 +124,9 @@ public static class DataSeeder
                 TotalFundsAvailable = 1000m,
                 TotalFundsRemaining = 1000m,
                 TotalFundsSpent = 0m,
-                DreamCreatePeriodStart = _appTime.UtcNow,
-                DreamCreatePeriodEnd = _appTime.UtcNow.AddDays(7),
-                DreamEditDeadline = _appTime.UtcNow.AddDays(10)
+                DreamCreatePeriodStartUtc = _appTime.UtcNow,
+                DreamCreatePeriodEndUtc = _appTime.UtcNow.AddDays(7),
+                DreamEditDeadlineUtc = _appTime.UtcNow.AddDays(10)
             };
             context.Cloud.Add(cloud);
             await context.SaveChangesAsync();
@@ -240,8 +240,8 @@ public static class DataSeeder
             {
                 CloudID = cloudId,
                 Title = "Test Round",
-                StartDate = _appTime.UtcNow.AddDays(-1),
-                EndDate = _appTime.UtcNow.AddDays(30),
+                StartDateUtc = _appTime.UtcNow.AddDays(-1),
+                EndDateUtc = _appTime.UtcNow.AddDays(30),
                 MaxPercentagePerDream = 10m, // 10% of per-user allocation
                 AllocationPerUser = 100m // each user receives 100 units
             };

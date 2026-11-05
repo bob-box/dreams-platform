@@ -9,7 +9,7 @@ public class Dream : IAutoPopulateCreatedAtOnAdd
     public int ID { get; set; }
 
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
     public required string Name { get; set; }
     public string Description { get; set; } = string.Empty;
     public DreamStatus Status { get; set; } = DreamStatus.Draft;

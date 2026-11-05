@@ -87,7 +87,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .IsUnique();
 
         modelBuilder.Entity<AuditLogEntry>()
-            .HasIndex(x => new { x.CloudID, x.CreatedAt });
+            .HasIndex(x => new { x.CloudID, x.CreatedAtUtc });
         modelBuilder.Entity<AuditLogEntry>()
             .HasIndex(x => new { x.EntityType, x.EntityID, x.Action });
 
@@ -100,7 +100,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
         var violations = entityTypes
             .Where(e => !e.ClrType.IsAssignableTo(typeof(IAutoPopulateCreatedAtOnAdd))
-                     && e.GetProperties().Any(p => p.Name == nameof(IAutoPopulateCreatedAtOnAdd.CreatedAt)));
+                     && e.GetProperties().Any(p => p.Name == nameof(IAutoPopulateCreatedAtOnAdd.CreatedAtUtc)));
 
         if (violations.Any())
         {
@@ -260,7 +260,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
             AuditLog.Add(new AuditLogEntry
             {
-                CreatedAt = _appTime.UtcNow,
+                CreatedAtUtc = _appTime.UtcNow,
                 CloudID = entityType == null ? pending.CloudID : cloudId,
                 EntityType = entityType ?? pending.EntityType,
                 EntityID = entityType == null ? pending.EntityID : entityId,
@@ -377,7 +377,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
         foreach (var entry in entries)
         {
-            entry.Entity.CreatedAt = _appTime.UtcNow;
+            entry.Entity.CreatedAtUtc = _appTime.UtcNow;
         }
 
         // Prevent modification of CreatedAt on existing entities
@@ -387,7 +387,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
         foreach (var entry in modifiedEntries)
         {
-            var property = entry.Property(e => e.CreatedAt);
+            var property = entry.Property(e => e.CreatedAtUtc);
             if (property.IsModified)
             {
                 property.CurrentValue = property.OriginalValue;

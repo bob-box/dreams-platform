@@ -25,12 +25,12 @@ public class FundingRoundSchedulerService(
         // Schedule allocation job at start date
         var startJobId = BackgroundJob.Schedule(
             () => ProcessFundingRoundStart(fundingRound.ID),
-            fundingRound.StartDate);
+            fundingRound.StartDateUtc);
 
         // Schedule end job at end date
         var endJobId = BackgroundJob.Schedule(
             () => ProcessFundingRoundEnd(fundingRound.ID),
-            fundingRound.EndDate);
+            fundingRound.EndDateUtc);
 
         // Update the funding round with job IDs
         fundingRound.StartJobId = startJobId;
@@ -38,7 +38,7 @@ public class FundingRoundSchedulerService(
 
         logger.LogInformation(
             "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): scheduled allocation job {StartJobId} for {StartDate} and end job {EndJobId} for {EndDate}",
-            fundingRound.Title, fundingRound.ID, fundingRound.CloudID, startJobId, fundingRound.StartDate, endJobId, fundingRound.EndDate);
+            fundingRound.Title, fundingRound.ID, fundingRound.CloudID, startJobId, fundingRound.StartDateUtc, endJobId, fundingRound.EndDateUtc);
     }
 
     /// <summary>
@@ -234,11 +234,11 @@ public class FundingRoundSchedulerService(
             return true;
         }
 
-        if (fundingRound.ProcessedDate != null)
+        if (fundingRound.ProcessedDateUtc != null)
         {
             logger.LogWarning(
                 "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): already processed at {ProcessedDate}; skipping allocation",
-                fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDate);
+                fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDateUtc);
             return true;
         }
 
@@ -282,12 +282,12 @@ public class FundingRoundSchedulerService(
 
     private bool ShouldSkipEndProcessing(FundingRound fundingRound, Cloud cloud)
     {
-        if (fundingRound.ProcessedDate == null)
+        if (fundingRound.ProcessedDateUtc == null)
             return false;
 
         logger.LogWarning(
             "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): already processed at {ProcessedDate}; skipping duplicate end processing",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDate);
+            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDateUtc);
         return true;
     }
 
@@ -358,6 +358,6 @@ public class FundingRoundSchedulerService(
     {
         cloud.TotalFundsSpent += totalSpent;
         cloud.TotalFundsRemaining = cloud.TotalFundsAvailable - cloud.TotalFundsSpent;
-        fundingRound.ProcessedDate = appTime.UtcNow;
+        fundingRound.ProcessedDateUtc = appTime.UtcNow;
     }
 }

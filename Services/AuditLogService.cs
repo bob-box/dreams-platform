@@ -35,12 +35,12 @@ public class AuditLogService(ApplicationDbContext context, IMapperFacade mapper)
         if (from.HasValue)
         {
             var fromUtc = DateTime.SpecifyKind(from.Value.Date, DateTimeKind.Utc);
-            query = query.Where(entry => entry.CreatedAt >= fromUtc);
+            query = query.Where(entry => entry.CreatedAtUtc >= fromUtc);
         }
         if (to.HasValue)
         {
             var toUtcExclusive = DateTime.SpecifyKind(to.Value.Date.AddDays(1), DateTimeKind.Utc);
-            query = query.Where(entry => entry.CreatedAt < toUtcExclusive);
+            query = query.Where(entry => entry.CreatedAtUtc < toUtcExclusive);
         }
         if (!string.IsNullOrWhiteSpace(searchText))
         {
@@ -61,7 +61,7 @@ public class AuditLogService(ApplicationDbContext context, IMapperFacade mapper)
 
         // Bound the initial results so the admin page stays responsive for long-lived clouds.
         var entries = await query
-            .OrderByDescending(entry => entry.CreatedAt)
+            .OrderByDescending(entry => entry.CreatedAtUtc)
             .Take(MaxResults)
             .Join(
                 context.Cloud.IgnoreQueryFilters().AsNoTracking(),

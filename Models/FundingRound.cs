@@ -9,14 +9,14 @@ public class FundingRound : IAutoPopulateCreatedAtOnAdd
     public int ID { get; set; }
         
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
 
     public string Title { get; set; } = string.Empty;
     public int CloudID { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public DateTime StartDateUtc { get; set; }
+    public DateTime EndDateUtc { get; set; }
     public bool IsLastRound { get; set; }
-    public DateTime? ProcessedDate { get; set; }
+    public DateTime? ProcessedDateUtc { get; set; }
 
     [Range(0, 100, ErrorMessage = "Percentage must be between 0 and 100")]
     public decimal MaxPercentagePerDream { get; set; } = 100; // Percentage of the per-user allocation that can go to one dream

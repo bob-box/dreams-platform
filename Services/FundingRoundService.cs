@@ -38,7 +38,7 @@ public class FundingRoundService(
     {
         var fundingRounds = await context.FundingRound
             .Where(fr => fr.CloudID == cloudNameResolver.CloudID)
-            .OrderBy(fr => fr.StartDate)
+            .OrderBy(fr => fr.StartDateUtc)
             .ToListAsync();
 
         return mapper.ToViewModels(fundingRounds);
@@ -72,14 +72,13 @@ public class FundingRoundService(
         var defaultStartDate = appTime.Now.Date.AddDays(1).StartOfDay();
         var latestDreamingDeadline = new DateTime?[]
         {
-            cloud?.DreamCreatePeriodEnd,
-            cloud?.DreamEditDeadline
+            cloud?.DreamCreatePeriodEndUtc,
+            cloud?.DreamEditDeadlineUtc
         }.Max();
 
         if (latestDreamingDeadline.HasValue)
         {
-            var nextAllowedStartUtc = GetNextMinuteAfter(latestDreamingDeadline.Value);
-            var deadlineStartDate = appTime.ToLocal(nextAllowedStartUtc);
+            var deadlineStartDate = appTime.ToLocal(GetNextMinuteAfter(latestDreamingDeadline.Value));
             if (deadlineStartDate > defaultStartDate)
                 defaultStartDate = deadlineStartDate;
         }
@@ -186,7 +185,7 @@ public class FundingRoundService(
             if (errors.Count > 0)
             {
                 viewModel.Title = roundToUpdate.Title;
-                viewModel.StartDate = roundToUpdate.StartDate;
+                viewModel.StartDate = roundToUpdate.StartDateUtc;
                 viewModel.AllocationPerUser = roundToUpdate.AllocationPerUser;
 
                 return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
@@ -194,7 +193,7 @@ public class FundingRoundService(
 
             // Only allow changing the end date for an active round
             // since changing the start date or allocation would have immediate effects on users.
-            roundToUpdate.EndDate = viewModel.EndDate;
+            roundToUpdate.EndDateUtc = viewModel.EndDate;
             roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
             roundToUpdate.IsLastRound = viewModel.IsLastRound;
         }
@@ -211,8 +210,8 @@ public class FundingRoundService(
                 return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
 
             roundToUpdate.Title = viewModel.Title;
-            roundToUpdate.StartDate = viewModel.StartDate;
-            roundToUpdate.EndDate = viewModel.EndDate;
+            roundToUpdate.StartDateUtc = viewModel.StartDate;
+            roundToUpdate.EndDateUtc = viewModel.EndDate;
             roundToUpdate.IsLastRound = viewModel.IsLastRound;
             roundToUpdate.MaxPercentagePerDream = viewModel.MaxPercentagePerDream;
             roundToUpdate.AllocationPerUser = viewModel.AllocationPerUser;
@@ -284,10 +283,10 @@ public class FundingRoundService(
     /// <returns>The active round view model, or null when no round is currently running.</returns>
     public async Task<FundingRoundViewModel?> GetActiveRound(int cloudId)
     {
-        var now = appTime.UtcNow;
+        var utcNow = appTime.UtcNow;
         var activeRound = await context.FundingRound
             .SingleOrDefaultAsync(fr => fr.CloudID == cloudId &&
-                                     fr.StartDate <= now && fr.EndDate >= now);
+                                     fr.StartDateUtc <= utcNow && fr.EndDateUtc >= utcNow);
         if (activeRound == null) return null;
         return mapper.ToViewModel(activeRound);
     }
@@ -299,9 +298,9 @@ public class FundingRoundService(
     /// <returns>True when the cloud has an active or past funding round timeline.</returns>
     public async Task<bool> HasActiveOrPassedFundingRound(int cloudId)
     {
-        var now = appTime.UtcNow;
+        var utcNow = appTime.UtcNow;
         return await context.FundingRound
-            .AnyAsync(fr => fr.CloudID == cloudId && fr.StartDate <= now);
+            .AnyAsync(fr => fr.CloudID == cloudId && fr.StartDateUtc <= utcNow);
     }
 
     private async Task<FundingRoundServiceResult> LoadFundingRound(int id, FundingRoundLoadMode mode)
@@ -338,11 +337,11 @@ public class FundingRoundService(
     {
         var errors = new Dictionary<string, List<string>>();
         var endDateUtc = appTime.ToUtc(viewModel.EndDate);
-        var startDateUtc = roundToUpdate.StartDate;
+        var startDateUtc = roundToUpdate.StartDateUtc;
 
         if (viewModel.EndDate <= appTime.Now)
             AddError(errors, "EndDate", "End date must be in the future.");
-        else if (existingRounds.Any(fr => fr.StartDate <= endDateUtc && fr.EndDate >= startDateUtc))
+        else if (existingRounds.Any(fr => fr.StartDateUtc <= endDateUtc && fr.EndDateUtc >= startDateUtc))
             AddError(errors, "", "Funding round dates cannot overlap with existing rounds.");
 
         return errors;
@@ -358,7 +357,7 @@ public class FundingRoundService(
         var startDateUtc = appTime.ToUtc(viewModel.StartDate);
         var endDateUtc = appTime.ToUtc(viewModel.EndDate);
 
-        if (existingRounds.Any(fr => startDateUtc <= fr.EndDate && endDateUtc >= fr.StartDate))
+        if (existingRounds.Any(fr => startDateUtc <= fr.EndDateUtc && endDateUtc >= fr.StartDateUtc))
             AddError(errors, "", "Funding round dates cannot overlap with existing rounds.");
 
         if (viewModel.EndDate <= viewModel.StartDate)
@@ -370,8 +369,8 @@ public class FundingRoundService(
         if (viewModel.StartDate < now)
             AddError(errors, "StartDate", "Start date cannot be in the past.");
 
-        if ((cloud.DreamCreatePeriodEnd.HasValue && startDateUtc <= cloud.DreamCreatePeriodEnd.Value) ||
-            (cloud.DreamEditDeadline.HasValue && startDateUtc <= cloud.DreamEditDeadline.Value))
+        if ((cloud.DreamCreatePeriodEndUtc.HasValue && startDateUtc <= cloud.DreamCreatePeriodEndUtc.Value) ||
+            (cloud.DreamEditDeadlineUtc.HasValue && startDateUtc <= cloud.DreamEditDeadlineUtc.Value))
         {
             AddError(errors, "StartDate",
                 "Funding round cannot start until after the dreaming period and edit deadline have ended.");
@@ -389,14 +388,14 @@ public class FundingRoundService(
         var lastRound = otherRounds.SingleOrDefault(round => round.IsLastRound);
 
         if (viewModel.IsLastRound &&
-            otherRounds.Any(round => round.EndDate > endDateUtc))
+            otherRounds.Any(round => round.EndDateUtc > endDateUtc))
         {
             AddError(errors, nameof(viewModel.IsLastRound),
                 "A funding round cannot be marked as last while another round ends after it.");
         }
         else if (!viewModel.IsLastRound &&
                  lastRound != null &&
-                 endDateUtc > lastRound.EndDate)
+                 endDateUtc > lastRound.EndDateUtc)
         {
             AddError(errors, nameof(viewModel.EndDate),
                 "A funding round cannot extend beyond the last funding round.");
@@ -439,7 +438,7 @@ public class FundingRoundService(
     }
 
     // These 3 methods below exist both on the model and the viewmodel. 
-    private bool IsActive(FundingRound round) => round.StartDate <= appTime.UtcNow && round.EndDate >= appTime.UtcNow;
-    private bool HasPassed(FundingRound round) => round.EndDate < appTime.UtcNow;
+    private bool IsActive(FundingRound round) => round.StartDateUtc <= appTime.UtcNow && round.EndDateUtc >= appTime.UtcNow;
+    private bool HasPassed(FundingRound round) => round.EndDateUtc < appTime.UtcNow;
     private bool IsActiveOrPassed(FundingRound round) => IsActive(round) || HasPassed(round);
 }

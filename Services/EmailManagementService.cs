@@ -106,7 +106,6 @@ public class EmailManagementService(
             DreamStatus = model.Audience == EmailAudience.DreamStatus ? model.DreamStatus : null,
             SelectedDreamIds = SerializeSelectedDreamIds(model),
             ScheduledAtUtc = scheduledAtUtc,
-            CreatedAtUtc = appTime.UtcNow,
             Status = EmailStatus.Scheduled
         };
         context.Email.Add(update);

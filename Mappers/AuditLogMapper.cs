@@ -11,7 +11,7 @@ public class AuditLogMapper(IMapperFacade mapper, IAppTime appTime)
     {
         return new AuditLogItemViewModel
         {
-            CreatedAt = appTime.ToLocal(model.CreatedAt),
+            CreatedAt = appTime.ToLocal(model.CreatedAtUtc),
             CloudID = model.CloudID,
             CloudName = cloudName,
             EntityType = model.EntityType,

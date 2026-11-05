@@ -10,7 +10,7 @@ public class BudgetItem : IAutoPopulateCreatedAtOnAdd
     public int ID { get; set; }
 
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
 
     public string Name { get; set; } = string.Empty;
     public BudgetItemType Type { get; set; }

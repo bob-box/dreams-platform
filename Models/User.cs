@@ -7,7 +7,7 @@ namespace Borderland.Dreams.Models;
 public class User : IdentityUser, IAutoPopulateCreatedAtOnAdd
 {       
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
 
     [PersonalData]
     public string Name { get; set; } = string.Empty;

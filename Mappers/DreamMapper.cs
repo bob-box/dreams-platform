@@ -13,7 +13,7 @@ public class DreamMapper(IMapperFacade mapper, IAppTime appTime)
             ID = model.ID,
             Name = model.Name,
             Description = model.Description,
-            CreatedAt = appTime.ToLocal(model.CreatedAt),
+            CreatedAt = appTime.ToLocal(model.CreatedAtUtc),
             Status = model.Status,
             BudgetItems = mapper.ToViewModels(model.BudgetItems),
             CloudID = model.CloudID,

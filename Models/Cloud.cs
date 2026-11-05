@@ -9,7 +9,7 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
     public int ID { get; set; }
 
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
     
     /// <summary>
     /// Name is a unique index, see ApplicationDbContext.OnModelCreating()
@@ -36,11 +36,11 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
     public bool IsDeleted { get; set; } = false;
     
     [DataType(DataType.DateTime)]
-    public DateTime? DreamCreatePeriodStart { get; set; }
+    public DateTime? DreamCreatePeriodStartUtc { get; set; }
     [DataType(DataType.DateTime)]
-    public DateTime? DreamCreatePeriodEnd { get; set; }
+    public DateTime? DreamCreatePeriodEndUtc { get; set; }
     [DataType(DataType.DateTime)]
-    public DateTime? DreamEditDeadline { get; set; }
+    public DateTime? DreamEditDeadlineUtc { get; set; }
 
     public bool SendDreamWelcomeEmail { get; set; } = true;
     public string DreamWelcomeEmailSubject { get; set; } = "";

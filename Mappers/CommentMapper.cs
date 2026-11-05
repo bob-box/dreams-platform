@@ -14,7 +14,7 @@ public class CommentMapper(IMapperFacade mapper, IAppTime appTime)
             DreamID = model.DreamID,
             UserID = model.UserID,
             Text = model.Text,
-            CreatedAt = appTime.ToLocal(model.CreatedAt)
+            CreatedAt = appTime.ToLocal(model.CreatedAtUtc)
         };
     }
 

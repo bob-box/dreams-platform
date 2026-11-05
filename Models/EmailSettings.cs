@@ -1,6 +1,8 @@
+using Borderland.Dreams.Interfaces;
+
 namespace Borderland.Dreams.Models;
 
-public class EmailSettings
+public class EmailSettings : IAutoPopulateCreatedAtOnAdd
 {
     public int ID { get; set; } = 1;
     public string FromAddress { get; set; } = string.Empty;
@@ -14,4 +16,5 @@ public class EmailSettings
     /// For one-to-many sends (e.g. timeline changes and general info)
     /// </summary>
     public string BroadcastMessageStream { get; set; } = "broadcast";
+    public DateTime CreatedAtUtc { get; set; }
 }

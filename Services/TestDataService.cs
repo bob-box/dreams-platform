@@ -53,9 +53,9 @@ public sealed class TestDataService(
             TotalFundsAvailable = settings.CloudFundsAvailable,
             TotalFundsRemaining = settings.CloudFundsAvailable,
             TotalFundsSpent = 0m,
-            DreamCreatePeriodStart = now.AddMinutes(-1),
-            DreamCreatePeriodEnd = now.AddDays(30),
-            DreamEditDeadline = now.AddDays(31),
+            DreamCreatePeriodStartUtc = now.AddMinutes(-1),
+            DreamCreatePeriodEndUtc = now.AddDays(30),
+            DreamEditDeadlineUtc = now.AddDays(31),
             SendDreamWelcomeEmail = false
         };
 
@@ -102,8 +102,8 @@ public sealed class TestDataService(
         {
             CloudID = cloud.ID,
             Title = $"Playground round 1 {runId}",
-            StartDate = now.AddMinutes(settings.FundingRoundStartInMinutes),
-            EndDate = now.AddMinutes(settings.FundingRoundStartInMinutes + settings.FirstFundingRoundLengthInMinutes),
+            StartDateUtc = now.AddMinutes(settings.FundingRoundStartInMinutes),
+            EndDateUtc = now.AddMinutes(settings.FundingRoundStartInMinutes + settings.FirstFundingRoundLengthInMinutes),
             AllocationPerUser = settings.AllocationPerUser,
             MaxPercentagePerDream = 50m
         };
@@ -111,8 +111,8 @@ public sealed class TestDataService(
         {
             CloudID = cloud.ID,
             Title = $"Playground round 2 {runId}",
-            StartDate = firstRound.EndDate.AddMinutes(settings.BreakBetweenFundingRoundsInMinutes),
-            EndDate = firstRound.EndDate
+            StartDateUtc = firstRound.EndDateUtc.AddMinutes(settings.BreakBetweenFundingRoundsInMinutes),
+            EndDateUtc = firstRound.EndDateUtc
                 .AddMinutes(settings.BreakBetweenFundingRoundsInMinutes + settings.SecondFundingRoundLengthInMinutes),
             AllocationPerUser = settings.AllocationPerUser,
             MaxPercentagePerDream = 50m,
@@ -142,14 +142,14 @@ public sealed class TestDataService(
                 new TestDataFundingRoundViewModel
                 {
                     Title = firstRound.Title,
-                    StartDate = firstRound.StartDate.ToLocalTime(),
-                    EndDate = firstRound.EndDate.ToLocalTime()
+                    StartDate = firstRound.StartDateUtc.ToLocalTime(),
+                    EndDate = firstRound.EndDateUtc.ToLocalTime()
                 },
                 new TestDataFundingRoundViewModel
                 {
                     Title = secondRound.Title,
-                    StartDate = secondRound.StartDate.ToLocalTime(),
-                    EndDate = secondRound.EndDate.ToLocalTime()
+                    StartDate = secondRound.StartDateUtc.ToLocalTime(),
+                    EndDate = secondRound.EndDateUtc.ToLocalTime()
                 }
             ],
             Accounts = users.Select(user => new TestDataAccountViewModel

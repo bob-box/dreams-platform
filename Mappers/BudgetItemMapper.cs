@@ -14,7 +14,7 @@ public class BudgetItemMapper(IMapperFacade mapper, IAppTime appTime)
             Name = model.Name,
             Type = model.Type,
             DreamID = model.DreamID,
-            CreatedAt = appTime.ToLocal(model.CreatedAt),
+            CreatedAt = appTime.ToLocal(model.CreatedAtUtc),
             MinAmount = model.MinAmount,
             MaxAmount = model.MaxAmount,
         };

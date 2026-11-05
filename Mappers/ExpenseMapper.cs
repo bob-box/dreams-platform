@@ -14,7 +14,7 @@ public class ExpenseMapper(IMapperFacade mapper, IAppTime appTime)
             DreamID = model.DreamID,
             Amount = model.Amount,
             Description = model.Description,
-            CreatedAt = appTime.ToLocal(model.CreatedAt)
+            CreatedAt = appTime.ToLocal(model.CreatedAtUtc)
         };
     }
 

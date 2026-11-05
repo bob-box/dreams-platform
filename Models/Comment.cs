@@ -8,7 +8,7 @@ public class Comment : IAutoPopulateCreatedAtOnAdd
     public int ID { get; set; }    
     
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
 
     public int DreamID { get; set; }
     public string Text { get; set; } = string.Empty;

@@ -9,7 +9,7 @@ namespace Borderland.Dreams.Interfaces;
 public interface IAutoPopulateCreatedAtOnAdd
 {
     /// <summary>
-    /// The CreatedAt property will be automatically set to the current UTC time when a new entity is added to the database context.
+    /// The CreatedAtU property will be automatically set to the current UTC time when a new entity is added to the database context.
     /// </summary>
-    DateTime CreatedAt { get; set; }
+    DateTime CreatedAtUtc { get; set; }
 }
