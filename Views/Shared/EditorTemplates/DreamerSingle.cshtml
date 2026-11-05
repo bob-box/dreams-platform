@@ -8,9 +8,9 @@
     var currentUserId = _userManager.GetUserId(User);
 }
 
-@using (Html.BeginCollectionItem("Dreamers"))
-{
-    <tr>
+<tr>
+    @using (Html.BeginCollectionItem("Dreamers"))
+    {
         <input type="hidden" asp-for="ID" />
         <input type="hidden" asp-for="IsMainDreamer" />
         <input type="hidden" asp-for="DreamID" />
@@ -30,5 +30,5 @@
                 <button type="button" title="Remove" class="btn btn-danger btn-sm" onclick="removeDreamer(this)">&#x2715;</button>
             }
         </td>
-    </tr>
-}
+    }
+</tr>

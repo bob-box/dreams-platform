@@ -19,12 +19,13 @@ public class UserIsAdminAuthorizationHandler
             return Task.CompletedTask;
         }
 
-        // Administrators can do anything.
-        if (context.User.IsInRole(Constants.AdminRole))
+        // Administrators can do anything, so continue if not an admin.
+        if (!context.User.IsInRole(Constants.AdminRole))
         {
-            context.Succeed(requirement);
+            return Task.CompletedTask;
         }
 
+        context.Succeed(requirement);
         return Task.CompletedTask;
     }
 }

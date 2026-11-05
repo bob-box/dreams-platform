@@ -39,6 +39,7 @@ public interface IDreamService
     Task<DreamServiceResult> GetQuick(int id);
     Task<DreamServiceResult> GetFull(int id);
     Task<DreamServiceResult> Publish(int id);
+    Task<DreamServiceResult> ReturnToDraft(int id);
     bool DreamExists(int iD, int cloudID);
     Task<bool> CanUserEditDreamers(DreamViewModel dream, ClaimsPrincipal user);
 }

@@ -3,7 +3,8 @@
 @{
     ViewData["Title"] = "Details";
     bool isEditAllowed = (bool)ViewBag.IsEditAllowed;
-    bool isPublishAllowed = ViewBag.IsPublishAllowed;
+    bool isPublishAllowed = ViewBag.IsPublishAllowed ?? false;
+    bool isReturnToDraftAllowed = ViewBag.IsReturnToDraftAllowed ?? false;
 }
 
 <div class="row">
@@ -20,7 +21,13 @@
             @if (isPublishAllowed && _authorizationService.AuthorizeAsync(User, Model, Operations.Publish).Result.Succeeded)
             {
                 <form method="post" asp-action="Publish" asp-route-id="@Model.ID" class="d-inline">
-                    <button type="submit" class="btn btn-success">Publish</button>
+                    <button type="submit" class="btn btn-success">@ViewBag.PublishButtonText</button>
+                </form>
+            }
+            @if (isReturnToDraftAllowed && _authorizationService.AuthorizeAsync(User, Model, Operations.ReturnToDraft).Result.Succeeded)
+            {
+                <form method="post" asp-action="ReturnToDraft" asp-route-id="@Model.ID" class="d-inline">
+                    <button type="submit" class="btn btn-warning">Return to draft</button>
                 </form>
             }
             @if (User.IsInRole(Constants.AdminRole) && Model.Status != DreamStatus.Hidden)

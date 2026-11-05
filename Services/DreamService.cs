@@ -20,6 +20,7 @@ public class DreamService(
     IAuthorizationService authorizationService,
     IMapperFacade mapper,
     IHttpContextAccessor httpContextAccessor,
+    IFundingRoundService fundingRoundService,
     IAppTime appTime,
     IBackgroundJobClient backgroundJobs
 ) : IDreamService
@@ -153,8 +154,7 @@ public class DreamService(
 
         dreamToUpdate.Name = viewModel.Name;
         dreamToUpdate.Description = viewModel.Description;
-        // Removed dreamers show up as null because Html.BeginCollectionItem adds hidden fields that are picked up as an empty item when deleting. 
-        dreamToUpdate.Dreamers = mapper.ToModels(viewModel.Dreamers.Where(x => x != null).ToList());
+        dreamToUpdate.Dreamers = mapper.ToModels(viewModel.Dreamers);
         dreamToUpdate.BudgetItems = mapper.ToModels(viewModel.BudgetItems);
         dreamToUpdate.Tags = await context.Tag
             .Where(t => viewModel.SelectedTagIds.Contains(t.ID) && t.CloudID == cloudNameService.CloudID)
@@ -297,7 +297,7 @@ public class DreamService(
     }
 
     /// <summary>
-    /// Moves a dream from Draft to ReadyForFunding for dreamers, or from Draft to ReadyForFunding/Active for admins.
+    /// Moves a draft dream to ReadyForFunding for dreamers or admins, or to Active for admins once funding has started.
     /// </summary>
     /// <param name="id">Dream id to be published.</param>
     public async Task<DreamServiceResult> Publish(int id)
@@ -309,32 +309,76 @@ public class DreamService(
             return new DreamServiceResult(DreamServiceStatus.NotFound);
 
         var dreamViewModel = mapper.ToViewModel(dream)!;
-        var authorizationResult = await authorizationService.AuthorizeAsync(CurrentUser, dreamViewModel, Operations.Publish);
-        if (!authorizationResult.Succeeded)
+        var authorizationResult = await authorizationService.AuthorizeAsync(
+            CurrentUser,
+            dreamViewModel,
+            Operations.Publish);
+        if (!authorizationResult.Succeeded || dream.Status != DreamStatus.Draft)
             return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
-        // Dreamers can only put their dreams in ready state. Funding rounds or admins need to put them in active.
-        if (!CurrentUser.IsInRole(Constants.AdminRole))
+        var hasStartedFundingRound = await fundingRoundService.HasActiveOrPassedFundingRound(cloudNameService.CloudID);
+
+        if (CurrentUser.IsInRole(Constants.AdminRole))
         {
+            // Admins may make draft dreams "ready" at any time; once funding has begun, it activates them immediately.
+            dream.Status = hasStartedFundingRound
+                ? DreamStatus.Active
+                : DreamStatus.ReadyForFunding;
+        }
+        else
+        {
+            // Dreamers can only "ready" drafts during the dreaming phase, before any funding round has started. 
+            // After that Admins need to activate them.
+            if (hasStartedFundingRound)
+                return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
             var cloud = await context.Cloud
                 .SingleOrDefaultAsync(c => c.ID == cloudNameService.CloudID);
             if (cloud == null)
                 return new DreamServiceResult(DreamServiceStatus.NotFound);
 
-            var isAfterDreamEditDeadlinePeriod = cloud.DreamEditDeadline.HasValue && appTime.Now > cloud.DreamEditDeadline.Value;
-            if (isAfterDreamEditDeadlinePeriod)
+            var isAfterDreamEditDeadline = cloud.DreamEditDeadline.HasValue && appTime.Now > cloud.DreamEditDeadline.Value;
+            if (isAfterDreamEditDeadline)
                 return new DreamServiceResult(DreamServiceStatus.NotAllowed);
 
             dream.Status = DreamStatus.ReadyForFunding;
-            await context.SaveChangesAsync();
-            return new DreamServiceResult(DreamServiceStatus.Success);
         }
-        else
-        {
-            dream.Status = DreamStatus.Active;
-            await context.SaveChangesAsync();
-            return new DreamServiceResult(DreamServiceStatus.Success);
-        }
+
+        await context.SaveChangesAsync();
+        return new DreamServiceResult(DreamServiceStatus.Success);
+    }
+
+    public async Task<DreamServiceResult> ReturnToDraft(int id)
+    {
+        var dream = await GetFullQuery()
+            .SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
+
+        if (dream == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+
+        if (dream.Status != DreamStatus.ReadyForFunding)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        var dreamViewModel = mapper.ToViewModel(dream)!;
+        var authorizationResult = await authorizationService.AuthorizeAsync(
+            CurrentUser,
+            dreamViewModel,
+            Operations.ReturnToDraft);
+        if (!authorizationResult.Succeeded)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        var cloud = await context.Cloud
+            .SingleOrDefaultAsync(c => c.ID == cloudNameService.CloudID);
+        if (cloud == null)
+            return new DreamServiceResult(DreamServiceStatus.NotFound);
+        
+        var isAfterDreamEditDeadline = cloud.DreamEditDeadline.HasValue && appTime.UtcNow > cloud.DreamEditDeadline.Value;
+        if (isAfterDreamEditDeadline)
+            return new DreamServiceResult(DreamServiceStatus.NotAllowed);
+
+        dream.Status = DreamStatus.Draft;
+        await context.SaveChangesAsync();
+        return new DreamServiceResult(DreamServiceStatus.Success);
     }
 
     public async Task<DreamServiceResult> SetDreamStatusTo(int id, DreamStatus dreamStatus)

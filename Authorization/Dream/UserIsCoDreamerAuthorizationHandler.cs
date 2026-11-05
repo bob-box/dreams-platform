@@ -25,7 +25,9 @@ public class UserIsCoDreamerAuthorizationHandler(UserManager<User> userManager) 
         var allowedOperations = new string[]
         {
             Constants.READ,
-            Constants.UPDATE
+            Constants.UPDATE,
+            Constants.PUBLISH,
+            Constants.RETURN_TO_DRAFT
         };
 
         // If not asking for the allowed operations, return.
@@ -45,6 +47,12 @@ public class UserIsCoDreamerAuthorizationHandler(UserManager<User> userManager) 
         {
             return Task.CompletedTask;
         }
+
+        // Co-dreamers may submit or return their dream to draft; the service enforces state and deadline rules.
+        if ((requirement.Name == Constants.PUBLISH ||
+             requirement.Name == Constants.RETURN_TO_DRAFT) &&
+            !isCoDreamer)
+            return Task.CompletedTask;
 
         // UPDATE is only allowed when the dream is editable.
         if (requirement.Name == Constants.UPDATE &&

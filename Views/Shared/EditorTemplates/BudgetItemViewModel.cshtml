@@ -5,10 +5,9 @@
 @{
     bool hasMaxAmount = Model.MaxAmount != null;
 }
-
-@using (Html.BeginCollectionItem("BudgetItems"))
-{
-    <div class="budget-item-container border rounded p-2 mb-2">
+<div class="budget-item-container border rounded p-2 mb-2">
+    @using (Html.BeginCollectionItem("BudgetItems"))
+    {
         <input type="hidden" asp-for="ID" />
         <input type="hidden" asp-for="DreamID" />
         <div class="row">
@@ -21,9 +20,9 @@
             <label asp-for="MinAmount" class="col-sm-2 col-form-label"></label>
             <div class="col-sm-10">
                 <div class="input-group">
-                    <input asp-for="MinAmount" class="form-control" type="number" placeholder="Minimum Amount" />
+                    <input asp-for="MinAmount" class="form-control" min="0" type="number" placeholder="Minimum Amount" />
                     <span class="input-group-text">-</span>
-                    <input asp-for="MaxAmount" class="form-control" type="number" />
+                    <input asp-for="MaxAmount" class="form-control" min="0" type="number" />
                 </div>
             </div>
         </div>
@@ -36,5 +35,5 @@
                 <button type="button" class="btn btn-danger btn-remove-item ms-auto" onclick="removeBudgetItem(this)">Delete item</button>
             </div>
         </div>
-    </div>
-}
+    }
+</div>

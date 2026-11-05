@@ -10,6 +10,7 @@ namespace Borderland.Dreams.Authorization
         public static readonly string DELETE = "Delete";
         public static readonly string EDIT_DREAMER = "EditDreamers";
         public static readonly string PUBLISH = "Publish";
+        public static readonly string RETURN_TO_DRAFT = "ReturnToDraft";
         public static readonly string CANCEL = "Cancel";
 
         public const string AdminRole = "Admin";

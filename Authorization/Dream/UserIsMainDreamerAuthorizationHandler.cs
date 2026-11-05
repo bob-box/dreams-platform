@@ -31,6 +31,7 @@ public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager
             Constants.DELETE,
             Constants.EDIT_DREAMER,
             Constants.PUBLISH,
+            Constants.RETURN_TO_DRAFT,
             Constants.CANCEL
         };
 
@@ -41,20 +42,18 @@ public class UserIsMainDreamerAuthorizationHandler(UserManager<User> userManager
         }
 
         var currentUserId = userManager.GetUserId(context.User);
-        var isCoDreamer = dream.Dreamers.Any(x =>
-                    !x.IsMainDreamer && x.UserID == currentUserId);
-                    
+        var isMainDreamer = dream.Dreamers.Any(x =>
+            x.IsMainDreamer && x.UserID == currentUserId);
+
         // Anyone can read a public dream; private dreams are only visible to their dreamers.
         if (requirement.Name == Constants.READ &&
-            !dream.Dreamers.Any(x => x.UserID == currentUserId) &&
-            !dream.IsVisibleToPublic())
+            !dream.IsVisibleToPublic() &&
+            !dream.Dreamers.Any(x => x.UserID == currentUserId))
         {
             return Task.CompletedTask;
         }
 
         // All non-read operations are restricted to the main dreamer.
-        var isMainDreamer = dream.Dreamers.Any(x =>
-            x.IsMainDreamer && x.UserID == currentUserId);
         if (requirement.Name != Constants.READ && !isMainDreamer)
         {
             return Task.CompletedTask;

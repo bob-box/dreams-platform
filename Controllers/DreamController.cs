@@ -60,11 +60,22 @@ public class DreamController(
         // Expose whether editing is allowed (based on cloud's DreamEditDeadline) to the view
         var cloud = await cloudService.GetById(cloudNameService.CloudID);
         ViewBag.IsEditAllowed = User.IsInRole(Constants.AdminRole) || cloud.IsBeforeEditDeadline(appTime);
-        
-        var isAllowedToPublish = !await fundingRoundService.HasActiveOrPassedFundingRound(cloudNameService.CloudID);
-        ViewBag.IsPublishAllowed = result.Dream!.Status == DreamStatus.Draft 
-            && (User.IsInRole(Constants.AdminRole) || isAllowedToPublish);
-            
+
+        var userId = GetCurrentUserId();
+        var isBeforeDreamEditDeadlineEnd = !cloud.DreamEditDeadline.HasValue || appTime.Now <= cloud.DreamEditDeadline.Value;
+        var isDreamer = result.Dream!.Dreamers.Any(d => d.UserID == userId);
+        var hasStartedFundingRound = await fundingRoundService.HasActiveOrPassedFundingRound(cloudNameService.CloudID);
+        var isAdmin = User.IsInRole(Constants.AdminRole);
+
+        // Keep the button visibility aligned with the service rules; Publish enforces these rules again on POST.
+        ViewBag.IsPublishAllowed = result.Dream.Status == DreamStatus.Draft
+            && (isAdmin || (isDreamer && isBeforeDreamEditDeadlineEnd && !hasStartedFundingRound));
+        ViewBag.PublishButtonText = isAdmin && hasStartedFundingRound
+            ? "Activate"
+            : "Ready for funding";
+        ViewBag.IsReturnToDraftAllowed = result.Dream.Status == DreamStatus.ReadyForFunding
+            && isBeforeDreamEditDeadlineEnd;
+
         return View(result.Dream);
     }
 
@@ -234,7 +245,6 @@ public class DreamController(
 
     // POST: Dream/Publish/5
     [HttpPost]
-    [Authorize(Roles = Constants.AdminRole)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Publish(int id)
     {
@@ -245,6 +255,20 @@ public class DreamController(
             DreamServiceStatus.NotFound => NotFound(),
             DreamServiceStatus.NotAllowed => Forbid(),
             _ => BadRequest("Unable to publish dream.")
+        };
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReturnToDraft(int id)
+    {
+        var result = await dreamService.ReturnToDraft(id);
+        return result.Status switch
+        {
+            DreamServiceStatus.Success => RedirectToAction(nameof(Details), new { id }),
+            DreamServiceStatus.NotFound => NotFound(),
+            DreamServiceStatus.NotAllowed => Forbid(),
+            _ => BadRequest("Unable to return dream to draft.")
         };
     }
 
@@ -290,12 +314,18 @@ public class DreamController(
             return BadRequest("Invalid data provided.");
         }
 
-        // Check dream stuff
-        var result = await dreamService.GetFull(dreamID);
-        if (result.Status == DreamServiceStatus.NotFound)
-            return NotFound("Dream not found or you do not have access to it.");
-        if (result.Status == DreamServiceStatus.NotAllowed)
-            return new ForbiddenResult("You are not allowed to add dreamers to this dream.");
+        // Check dream stuff if we're EDITING a dream
+        // When CREATING a new dream then DreamID = 0)
+        Func<string, bool> isAlreadyDreamer = _ => false;
+        if (dreamID != 0)
+        {
+            var result = await dreamService.GetFull(dreamID);
+            if (result.Status == DreamServiceStatus.NotFound)
+                return NotFound("Dream not found or you do not have access to it.");
+            if (result.Status == DreamServiceStatus.NotAllowed)
+                return new ForbiddenResult("You are not allowed to add dreamers to this dream.");
+            isAlreadyDreamer = userId => result.Dream!.Dreamers.Any(d => d.UserID == userId);
+        }
 
         // Check user stuff
         var userToAdd = await userManager.FindByEmailAsync(email);
@@ -307,7 +337,7 @@ public class DreamController(
         {
             return BadRequest("This user has not confirmed their email address and cannot be added as a dreamer.");
         }
-        if (result.Dream!.Dreamers.Any(d => d.UserID == userToAdd.Id))
+        if (isAlreadyDreamer(userToAdd.Id))
         {
             return BadRequest("This user is already a dreamer for this dream.");
         }

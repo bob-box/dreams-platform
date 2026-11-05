@@ -108,6 +108,7 @@ builder.Services.AddHangfireServer(options =>
 // Authorization handlers.
 // Services using Entity Framework must be registered for dependency injection using AddScoped.
 // UserIsMainDreamer and UserIsCoDreamer uses ASP.NET Core Identity (UserManager), which is built on Entity Framework Core.
+// Order matters here, first file are checked first
 builder.Services.AddScoped<IAuthorizationHandler, UserIsMainDreamerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, UserIsCoDreamerAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, UserIsAdminAuthorizationHandler>();
