@@ -34,7 +34,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("CloudID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EntityID")
@@ -57,7 +57,7 @@ namespace Borderland.Dreams.Data.Migrations
 
                     b.HasKey("ID");
 
-                    b.HasIndex("CloudID", "CreatedAt");
+                    b.HasIndex("CloudID", "CreatedAtUtc");
 
                     b.HasIndex("EntityType", "EntityID", "Action");
 
@@ -70,7 +70,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DreamID")
@@ -102,16 +102,16 @@ namespace Borderland.Dreams.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("DreamCreatePeriodEnd")
+                    b.Property<DateTime?>("DreamCreatePeriodEndUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("DreamCreatePeriodStart")
+                    b.Property<DateTime?>("DreamCreatePeriodStartUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("DreamEditDeadline")
+                    b.Property<DateTime?>("DreamEditDeadlineUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DreamWelcomeEmailBody")
@@ -172,6 +172,9 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("ID");
 
                     b.HasIndex("CloudID")
@@ -186,7 +189,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DreamID")
@@ -218,7 +221,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("CloudID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
@@ -330,6 +333,9 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FromAddress")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -356,7 +362,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
@@ -382,7 +388,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DreamID")
@@ -418,10 +424,10 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("CloudID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime>("EndDateUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EndJobId")
@@ -433,10 +439,10 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<decimal>("MaxPercentagePerDream")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("ProcessedDate")
+                    b.Property<DateTime?>("ProcessedDateUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("StartDate")
+                    b.Property<DateTime>("StartDateUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("StartJobId")
@@ -465,7 +471,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("CloudID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
@@ -492,7 +498,7 @@ namespace Borderland.Dreams.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
@@ -557,7 +563,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("CloudID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserID")
