@@ -1,4 +1,9 @@
+
 # Borderland Dreams platform
+
+Changes to the main branch will be deployed to the test environment http://bl-dreams.runasp.net/
+
+## What and how it works
 
 ***Clouds*** is a place where ***Dreams*** that belong together are happening.  
 
