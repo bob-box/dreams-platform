@@ -1,0 +1,41 @@
+@page
+@model MyDreamsModel
+@{
+    ViewData["Title"] = "My dreams";
+    ViewData["ActivePage"] = ManageNavPages.MyDreams;
+}
+
+<h3>@ViewData["Title"]</h3>
+
+@if (!Model.Dreams.Any())
+{
+    <p>You are not a dreamer on any dreams yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Dream</th>
+                    <th>Cloud</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var dream in Model.Dreams)
+                {
+                    <tr>
+                        <td>
+                            <a asp-area="" asp-controller="Dream" asp-action="Details" asp-route-cloudSlug="@dream.CloudSlug" asp-route-id="@dream.ID">@dream.Name</a>
+                        </td>
+                        <td>@dream.CloudName</td>
+                        <td>@dream.Status</td>
+                        <td>@dream.CreatedAt</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

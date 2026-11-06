@@ -38,6 +38,7 @@ public interface IDreamService
     Task<DreamServiceResult> SetDreamStatusTo(int id, DreamStatus dreamStatus);
     Task<DreamServiceResult> GetQuick(int id);
     Task<DreamServiceResult> GetFull(int id);
+    Task<IReadOnlyList<MyDreamViewModel>> GetDreamsByUserId(string userId);
     Task<DreamServiceResult> Publish(int id);
     Task<DreamServiceResult> ReturnToDraft(int id);
     bool DreamExists(int iD, int cloudID);

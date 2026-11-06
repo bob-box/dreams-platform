@@ -43,6 +43,34 @@ public class DreamService(
         return new DreamServiceResult(DreamServiceStatus.Success, dream);
     }
 
+    public async Task<IReadOnlyList<MyDreamViewModel>> GetDreamsByUserId(string userId)
+    {
+        var dreams = await context.Dream
+            .AsNoTracking()
+            .Where(dream => dream.Dreamers.Any(dreamer => dreamer.UserID == userId))
+            .OrderBy(dream => dream.CreatedAtUtc)
+            .Select(dream => new
+            {
+                dream.ID,
+                dream.Name,
+                dream.Status,
+                dream.CreatedAtUtc,
+                CloudName = dream.Cloud.Name,
+                CloudSlug = dream.Cloud.Slug
+            })
+            .ToListAsync();
+
+        return dreams.Select(dream => new MyDreamViewModel
+        {
+            ID = dream.ID,
+            Name = dream.Name,
+            Status = dream.Status,
+            CreatedAt = appTime.ToLocal(dream.CreatedAtUtc),
+            CloudName = dream.CloudName,
+            CloudSlug = dream.CloudSlug
+        }).ToList();
+    }
+
     public async Task<DreamServiceResult> GetQuick(int id)
     {
         var dreamFromDb = await context.Dream
