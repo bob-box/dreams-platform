@@ -133,7 +133,7 @@ public class DreamService(
         };
 
         var dreams = await listQuery.ToListAsync();
-        var viewModels = dreams.Select(d => mapper.ToViewModel(d)!).ToList();
+        var dreamsViewModels = dreams.Select(d => mapper.ToViewModel(d)!).ToList();
         var availableTags = await tagService.GetAll();
 
         return new DreamFilterViewModel
@@ -142,7 +142,7 @@ public class DreamService(
             StatusFilter = statusFilter,
             TagFilter = tagFilter,
             SortOrder = sortOrder,
-            Dreams = viewModels,
+            Dreams = dreamsViewModels,
             AvailableTags = availableTags
         };
     }

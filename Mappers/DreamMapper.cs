@@ -1,10 +1,11 @@
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
+using Ganss.Xss;
 
 namespace Borderland.Dreams.Mappers;
 
-public class DreamMapper(IMapperFacade mapper, IAppTime appTime)
+public class DreamMapper(IMapperFacade mapper, IAppTime appTime, HtmlSanitizer htmlSanitizer)
 {
     public DreamViewModel ToViewModel(Dream model)
     {
@@ -12,7 +13,7 @@ public class DreamMapper(IMapperFacade mapper, IAppTime appTime)
         {
             ID = model.ID,
             Name = model.Name,
-            Description = model.Description,
+            Description = htmlSanitizer.Sanitize(model.Description),
             CreatedAt = appTime.ToLocal(model.CreatedAtUtc),
             Status = model.Status,
             BudgetItems = mapper.ToViewModels(model.BudgetItems),
@@ -31,7 +32,7 @@ public class DreamMapper(IMapperFacade mapper, IAppTime appTime)
         {
             ID = vm.ID,
             Name = vm.Name,
-            Description = vm.Description,
+            Description = htmlSanitizer.Sanitize(vm.Description),
             Status = vm.Status,
             BudgetItems = mapper.ToModels(vm.BudgetItems),
             CloudID = vm.CloudID,

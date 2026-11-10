@@ -26,7 +26,7 @@ public class MapperFacade : IMapperFacade
 
     public MapperFacade(IAppTime appTime, HtmlSanitizer htmlSanitizer)
     {
-        _dreamMapper = new DreamMapper(this, appTime);
+        _dreamMapper = new DreamMapper(this, appTime, htmlSanitizer);
         _cloudMapper = new CloudMapper(this, appTime);
         _cloudInfoMapper = new CloudInfoMapper(htmlSanitizer);
         _tagMapper = new TagMapper(this, appTime);

@@ -19,26 +19,12 @@
         </div>
     </div>
     <div class="mb-3">
-        <textarea asp-for="Content" class="form-control" rows="12"></textarea>
+        <textarea asp-for="Content" class="form-control wysi-editor" data-wysi-profile="full" rows="12"></textarea>
         <span asp-validation-for="Content" class="text-danger"></span>
     </div>
 </form>
 
 @section Scripts {
     <script src="~/lib/wysi/wysi.min.js"></script>
-    <script>
-        Wysi({
-            el: '#Content',
-            height: 300,
-            autoGrow: true,
-            autoHide: false,
-            tools: [
-                'format', '|',
-                'bold', 'italic', 'underline', 'strike', '|',
-                'ul', 'ol', '|',
-                'link', 'image', 'hr', 'quote', '|',
-                'removeFormat'
-            ]
-        });
-    </script>
+    <script src="~/js/wysi-config.js" asp-append-version="true"></script>
 }
