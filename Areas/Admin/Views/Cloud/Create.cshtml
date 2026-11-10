@@ -50,6 +50,23 @@
                 <input asp-for="DreamEditDeadline" class="form-control" />
                 <span asp-validation-for="DreamEditDeadline" class="text-danger"></span>
             </div>
+            <hr />
+            <h5>Dream welcome email</h5>
+            <div class="form-check mb-3">
+                <input asp-for="SendDreamWelcomeEmail" class="form-check-input" />
+                <label asp-for="SendDreamWelcomeEmail" class="form-check-label"></label>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="DreamWelcomeEmailSubject" class="control-label"></label>
+                <input asp-for="DreamWelcomeEmailSubject" class="form-control" />
+                <span asp-validation-for="DreamWelcomeEmailSubject" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="DreamWelcomeEmailBody" class="control-label"></label>
+                <textarea asp-for="DreamWelcomeEmailBody" class="form-control" rows="6"></textarea>
+                <span asp-validation-for="DreamWelcomeEmailBody" class="text-danger"></span>
+                <div class="form-text">Use <code>{DreamName}</code> to include the dream's name.</div>
+            </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

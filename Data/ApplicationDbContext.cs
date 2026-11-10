@@ -74,7 +74,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
         modelBuilder.Entity<Cloud>()
             .Property(cloud => cloud.SendDreamWelcomeEmail)
-            .HasDefaultValue(true);
+            .HasDefaultValue(false);
             
         modelBuilder.Entity<CloudInfo>()
             .HasOne(e => e.Cloud)

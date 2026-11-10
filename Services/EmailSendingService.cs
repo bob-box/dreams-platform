@@ -28,10 +28,13 @@ public class EmailSendingService(
             .ThenInclude(dreamer => dreamer.User)
             .Include(dream => dream.Cloud)
             .SingleOrDefaultAsync(dream => dream.ID == dreamId);
+
         if (dream == null)
             throw new KeyNotFoundException($"Dream {dreamId} was not found for its welcome email.");
 
-        if (!dream.Cloud.SendDreamWelcomeEmail)
+        if (dream.Cloud.SendDreamWelcomeEmail is false
+        || string.IsNullOrWhiteSpace(dream.Cloud.DreamWelcomeEmailSubject)
+        || string.IsNullOrWhiteSpace(dream.Cloud.DreamWelcomeEmailBody))
             return;
 
         var addresses = dream.Dreamers

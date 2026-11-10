@@ -132,7 +132,7 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<bool>("SendDreamWelcomeEmail")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Slug")
                         .IsRequired()

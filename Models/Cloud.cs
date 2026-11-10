@@ -42,9 +42,9 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
     [DataType(DataType.DateTime)]
     public DateTime? DreamEditDeadlineUtc { get; set; }
 
-    public bool SendDreamWelcomeEmail { get; set; } = true;
-    public string DreamWelcomeEmailSubject { get; set; } = "";
-    public string DreamWelcomeEmailBody { get; set; } = "";
+    public bool SendDreamWelcomeEmail { get; set; } = false;
+    public string? DreamWelcomeEmailSubject { get; set; }
+    public string? DreamWelcomeEmailBody { get; set; }
 
     // Navigation properties
     public ICollection<Dream>? Dreams { get; set; }

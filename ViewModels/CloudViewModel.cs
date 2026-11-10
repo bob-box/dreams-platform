@@ -38,14 +38,12 @@ public class CloudViewModel : IValidatableObject
     public DateTime? DreamEditDeadline { get; set; }
 
     [Display(Name = "Send dream welcome email")]
-    public bool SendDreamWelcomeEmail { get; set; } = true;
+    public bool SendDreamWelcomeEmail { get; set; } = false;
 
-    [Required]
     [StringLength(200)]
     [Display(Name = "Welcome email subject")]
     public string? DreamWelcomeEmailSubject { get; set; }
 
-    [Required]
     [StringLength(10000)]
     [Display(Name = "Welcome email message")]
     public string? DreamWelcomeEmailBody { get; set; }
