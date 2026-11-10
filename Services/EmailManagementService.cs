@@ -115,7 +115,7 @@ public class EmailManagementService(
         {
             // Persist first so the queued job can reference the generated update ID.
             update.HangfireJobId = scheduledAtUtc.HasValue
-                ? BackgroundJob.Schedule<EmailSendingService>(
+                ? backgroundJobs.Schedule<EmailSendingService>(
                     service => service.SendEmailAsync(update.ID),
                     scheduledAtUtc.Value - appTime.UtcNow)
                 : backgroundJobs.Enqueue<EmailSendingService>(
@@ -213,9 +213,9 @@ public class EmailManagementService(
         try
         {
             if (!string.IsNullOrWhiteSpace(previousJobId))
-                BackgroundJob.Delete(previousJobId);
+                backgroundJobs.Delete(previousJobId);
 
-            replacementJobId = BackgroundJob.Schedule<EmailSendingService>(
+            replacementJobId = backgroundJobs.Schedule<EmailSendingService>(
                 service => service.SendEmailAsync(id),
                 scheduledAtUtc!.Value - appTime.UtcNow);
 
@@ -236,10 +236,10 @@ public class EmailManagementService(
         {
             // Restore the previous delivery time if replacing the job or saving the update fails.
             if (!string.IsNullOrWhiteSpace(replacementJobId))
-                BackgroundJob.Delete(replacementJobId);
+                backgroundJobs.Delete(replacementJobId);
 
             update.Status = EmailStatus.Scheduled;
-            update.HangfireJobId = BackgroundJob.Schedule<EmailSendingService>(
+            update.HangfireJobId = backgroundJobs.Schedule<EmailSendingService>(
                 service => service.SendEmailAsync(id),
                 previousScheduledAtUtc - appTime.UtcNow);
             await context.SaveChangesAsync();
@@ -279,7 +279,7 @@ public class EmailManagementService(
         try
         {
             if (!string.IsNullOrWhiteSpace(update.HangfireJobId))
-                BackgroundJob.Delete(update.HangfireJobId);
+                backgroundJobs.Delete(update.HangfireJobId);
         }
         catch (Exception exception)
         {

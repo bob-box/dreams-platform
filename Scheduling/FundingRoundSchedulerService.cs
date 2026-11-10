@@ -10,7 +10,8 @@ namespace Borderland.Dreams.Scheduling;
 public class FundingRoundSchedulerService(
     ILogger<FundingRoundSchedulerService> logger,
     IServiceProvider serviceProvider,
-    IAppTime appTime
+    IAppTime appTime,
+    IBackgroundJobClient backgroundJobs
     )
 {
     /// <summary>
@@ -23,12 +24,12 @@ public class FundingRoundSchedulerService(
         CancelFundingRoundJobs(fundingRound);
 
         // Schedule allocation job at start date
-        var startJobId = BackgroundJob.Schedule(
+        var startJobId = backgroundJobs.Schedule(
             () => ProcessFundingRoundStart(fundingRound.ID),
             fundingRound.StartDateUtc);
 
         // Schedule end job at end date
-        var endJobId = BackgroundJob.Schedule(
+        var endJobId = backgroundJobs.Schedule(
             () => ProcessFundingRoundEnd(fundingRound.ID),
             fundingRound.EndDateUtc);
 
@@ -78,14 +79,14 @@ public class FundingRoundSchedulerService(
             logger.LogInformation(
                 "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): cancelling allocation job {JobId}",
                 fundingRoundTitle, fundingRoundId, cloudId, startJobId);
-            BackgroundJob.Delete(startJobId);
+            backgroundJobs.Delete(startJobId);
         }
         if (!string.IsNullOrEmpty(endJobId))
         {
             logger.LogInformation(
                 "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): cancelling end job {JobId}",
                 fundingRoundTitle, fundingRoundId, cloudId, endJobId);
-            BackgroundJob.Delete(endJobId);
+            backgroundJobs.Delete(endJobId);
         }
     }
 
