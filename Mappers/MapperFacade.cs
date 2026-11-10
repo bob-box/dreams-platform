@@ -1,6 +1,7 @@
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
+using Ganss.Xss;
 
 namespace Borderland.Dreams.Mappers;
 
@@ -10,6 +11,7 @@ public class MapperFacade : IMapperFacade
 {
     private readonly DreamMapper _dreamMapper;
     private readonly CloudMapper _cloudMapper;
+    private readonly CloudInfoMapper _cloudInfoMapper;
     private readonly TagMapper _tagMapper;
     private readonly UserMapper _userMapper;
     private readonly WalletMapper _walletMapper;
@@ -22,10 +24,11 @@ public class MapperFacade : IMapperFacade
     private readonly AuditLogMapper _auditLogMapper;
     private readonly EmailMapper _emailMapper;
 
-    public MapperFacade(IAppTime appTime)
+    public MapperFacade(IAppTime appTime, HtmlSanitizer htmlSanitizer)
     {
         _dreamMapper = new DreamMapper(this, appTime);
         _cloudMapper = new CloudMapper(this, appTime);
+        _cloudInfoMapper = new CloudInfoMapper(htmlSanitizer);
         _tagMapper = new TagMapper(this, appTime);
         _userMapper = new UserMapper(this, appTime);
         _walletMapper = new WalletMapper(this, appTime);
@@ -42,6 +45,7 @@ public class MapperFacade : IMapperFacade
     #region ToViewModel
     public DreamViewModel ToViewModel(Dream model) => _dreamMapper.ToViewModel(model);
     public CloudViewModel ToViewModel(Cloud model) => _cloudMapper.ToViewModel(model);
+    public CloudInfoViewModel ToViewModel(CloudInfo model) => _cloudInfoMapper.ToViewModel(model);
     public TagViewModel ToViewModel(Tag model) => _tagMapper.ToViewModel(model);
     public UserViewModel ToViewModel(User model) => _userMapper.ToViewModel(model);
     public WalletViewModel ToViewModel(Wallet model) => _walletMapper.ToViewModel(model);
@@ -76,6 +80,7 @@ public class MapperFacade : IMapperFacade
     #region ToModel
     public Dream ToModel(DreamViewModel vm) => _dreamMapper.ToModel(vm);
     public Cloud ToModel(CloudViewModel vm) => _cloudMapper.ToModel(vm);
+    public CloudInfo ToModel(CloudInfoViewModel vm) => _cloudInfoMapper.ToModel(vm);
     public Tag ToModel(TagViewModel vm) => _tagMapper.ToModel(vm);
     // public User ToModel(UserViewModel vm) => _userMapper.ToModel(vm);
     public Wallet ToModel(WalletViewModel vm) => _walletMapper.ToModel(vm);

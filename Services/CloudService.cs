@@ -83,6 +83,36 @@ public class CloudService(
         return mapper.ToViewModel(cloud);
     }
 
+    public async Task<CloudInfoViewModel> GetInfo(int cloudId)
+    {
+        var cloudInfo = await context.CloudInfo
+            .AsNoTracking()
+            .SingleOrDefaultAsync(info => info.CloudID == cloudId);
+
+        return cloudInfo == null
+            ? new CloudInfoViewModel()
+            : mapper.ToViewModel(cloudInfo);
+    }
+
+    public async Task UpdateInfo(int cloudId, CloudInfoViewModel viewModel)
+    {
+        var cloudInfo = await context.CloudInfo
+            .SingleOrDefaultAsync(info => info.CloudID == cloudId);
+        var updatedInfo = mapper.ToModel(viewModel);
+
+        if (cloudInfo == null)
+        {
+            updatedInfo.CloudID = cloudId;
+            context.CloudInfo.Add(updatedInfo);
+        }
+        else
+        {
+            cloudInfo.Content = updatedInfo.Content;
+        }
+
+        await context.SaveChangesAsync();
+    }
+
     public async Task<List<CloudViewModel>> GetAll()
     {
         var clouds = await context.Cloud

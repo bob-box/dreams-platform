@@ -66,6 +66,7 @@ Admin can
 
 ### General info
 * SQLite database
-* Using [Entity Framework (EF) Core Migrations](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli) for database stuff
-* An admin and normal user is created in development mode, see [DataSeeder.cs](Data/DataSeeder.cs)
-* Test data is also seeded to the database in [DataSeeder.cs](Data/DataSeeder.cs)
+* Using [Entity Framework (EF) Migrations](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli) for database stuff
+* An admin and normal user is created in development mode (also some test data), see [DataSeeder.cs](Data/DataSeeder.cs)
+* More test data can be generated in the admin control panel menu
+* Text editor for page info and dream description [Wysi](https://wysi.js.org) is a simple WYSIWYG text editor (What You See Is What You Get)

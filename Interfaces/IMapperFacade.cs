@@ -8,6 +8,7 @@ public interface IMapperFacade
     #region ToViewModel
     DreamViewModel ToViewModel(Dream model);
     CloudViewModel ToViewModel(Cloud model);
+    CloudInfoViewModel ToViewModel(CloudInfo model);
     TagViewModel ToViewModel(Tag model);
     UserViewModel ToViewModel(User model);
     WalletViewModel ToViewModel(Wallet model);
@@ -39,6 +40,7 @@ public interface IMapperFacade
     #region ToModel
     Dream ToModel(DreamViewModel vm);
     Cloud ToModel(CloudViewModel vm);
+    CloudInfo ToModel(CloudInfoViewModel vm);
     Tag ToModel(TagViewModel vm);
     Wallet ToModel(WalletViewModel vm);
     FundingRound ToModel(FundingRoundViewModel vm);

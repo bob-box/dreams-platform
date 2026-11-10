@@ -1,25 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
-using Borderland.Dreams.Data;
 using Borderland.Dreams.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Borderland.Dreams.Interfaces;
-using Ganss.Xss;
 using Borderland.Dreams.Authorization;
 using Borderland.Dreams.ViewModels;
 using Borderland.Dreams.Middleware;
-using Microsoft.EntityFrameworkCore;
 using Borderland.Dreams.Enums;
 
 namespace Borderland.Dreams.Controllers;
 
 public class CloudController(
     UserManager<User> userManager,
-    ApplicationDbContext context,
     ICloudService cloudService,
     IDreamService dreamService,
-    ICloudNameResolver cloudNameResolver,
-    HtmlSanitizer sanitizer
+    ICloudNameResolver cloudNameResolver
 ) : Controller
 {
 
@@ -76,15 +71,8 @@ public class CloudController(
         if (cloudNameResolver.CloudID <= 0)
             return NotFound();
 
-        var cloudInfo = await context.CloudInfo
-            .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.CloudID == cloudNameResolver.CloudID);
-
-        var content = cloudInfo?.Content ?? "";
-        return View(new CloudInfoViewModel
-        {
-            Content = sanitizer.Sanitize(content),
-        });
+        var viewModel = await cloudService.GetInfo(cloudNameResolver.CloudID);
+        return View(viewModel);
     }
 
     [Authorize(Roles = Constants.AdminRole)]
@@ -93,11 +81,7 @@ public class CloudController(
         if (cloudNameResolver.CloudID <= 0)
             return NotFound();
 
-        var cloudInfo = await context.CloudInfo
-            .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.CloudID == cloudNameResolver.CloudID);
-
-        return View(new CloudInfoViewModel { Content = cloudInfo?.Content ?? "" });
+        return View(await cloudService.GetInfo(cloudNameResolver.CloudID));
     }
 
     [HttpPost]
@@ -111,21 +95,7 @@ public class CloudController(
         if (!ModelState.IsValid)
             return View(viewModel);
 
-        var cloudInfo = await context.CloudInfo
-            .SingleOrDefaultAsync(x => x.CloudID == cloudNameResolver.CloudID);
-
-        if (cloudInfo == null)
-        {
-            cloudInfo = new CloudInfo
-            {
-                CloudID = cloudNameResolver.CloudID,
-                Content = ""
-            };
-            context.CloudInfo.Add(cloudInfo);
-        }
-
-        cloudInfo.Content = sanitizer.Sanitize(viewModel.Content);
-        await context.SaveChangesAsync();
+        await cloudService.UpdateInfo(cloudNameResolver.CloudID, viewModel);
 
         return RedirectToAction(nameof(Info));
     }

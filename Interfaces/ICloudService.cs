@@ -26,6 +26,8 @@ public interface ICloudService
     Task<CloudServiceStatus> Delete(int id);
     Task<CloudViewModel> GetById(int id);
     Task<List<CloudViewModel>> GetAll();
+    Task<CloudInfoViewModel> GetInfo(int cloudId);
+    Task UpdateInfo(int cloudId, CloudInfoViewModel viewModel);
     Task<JoinCloudResult> Join(int cloudId, string userId);
     Task<bool> UserHasJoinedCloud(string userId);
     Task<bool> UserHasJoinedCloud(User user);
