@@ -7,7 +7,7 @@ namespace Borderland.Dreams.TagHelpers;
 public class DescriptionTagHelper : TagHelper
 {
     [HtmlAttributeName("asp-for")]
-    public ModelExpression AspFor { get; set; }
+    public ModelExpression AspFor { get; set; } = default!;
 
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {

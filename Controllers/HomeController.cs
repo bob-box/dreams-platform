@@ -9,7 +9,7 @@ using Borderland.Dreams.Utils;
 namespace Borderland.Dreams.Controllers;
 
 public class HomeController(
-    ILogger<HomeController> logger,
+    // ILogger<HomeController> logger,
     ICloudService cloudService,
     InMemoryLogStore logStore
 ) : Controller

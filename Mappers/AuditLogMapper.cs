@@ -5,7 +5,7 @@ using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class AuditLogMapper(IMapperFacade mapper, IAppTime appTime)
+public class AuditLogMapper(IAppTime appTime)
 {
     public AuditLogItemViewModel ToViewModel(AuditLogEntry model, string cloudName)
     {

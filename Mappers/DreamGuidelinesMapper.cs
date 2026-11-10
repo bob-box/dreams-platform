@@ -1,10 +1,9 @@
-using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
 namespace Borderland.Dreams.Mappers;
 
-public class DreamGuidelinesMapper(IMapperFacade mapper, IAppTime appTime)
+public class DreamGuidelinesMapper()
 {
     public DreamGuidelinesViewModel ToViewModel(DreamGuidelines model)
     {

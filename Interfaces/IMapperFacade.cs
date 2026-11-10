@@ -23,18 +23,18 @@ public interface IMapperFacade
     #endregion
 
     #region ToViewModels
-    List<DreamViewModel> ToViewModels(ICollection<Dream> models);
-    List<CloudViewModel> ToViewModels(ICollection<Cloud> models);
-    List<TagViewModel> ToViewModels(ICollection<Tag> models);
-    List<UserViewModel> ToViewModels(ICollection<User> models);
-    List<WalletViewModel> ToViewModels(ICollection<Wallet> models);
-    List<FundingRoundViewModel> ToViewModels(ICollection<FundingRound> models);
-    List<BudgetItemViewModel> ToViewModels(ICollection<BudgetItem> models);
-    List<CommentViewModel> ToViewModels(ICollection<Comment> models);
-    List<FundViewModel> ToViewModels(ICollection<Fund> models);
-    List<ExpenseViewModel> ToViewModels(ICollection<Expense> models);
-    List<DreamerViewModel> ToViewModels(ICollection<Dreamer> models);
-    List<EmailListItemViewModel> ToViewModels(ICollection<Email> models);
+    List<DreamViewModel> ToViewModels(ICollection<Dream>? models);
+    List<CloudViewModel> ToViewModels(ICollection<Cloud>? models);
+    List<TagViewModel> ToViewModels(ICollection<Tag>? models);
+    List<UserViewModel> ToViewModels(ICollection<User>? models);
+    List<WalletViewModel> ToViewModels(ICollection<Wallet>? models);
+    List<FundingRoundViewModel> ToViewModels(ICollection<FundingRound>? models);
+    List<BudgetItemViewModel> ToViewModels(ICollection<BudgetItem>? models);
+    List<CommentViewModel> ToViewModels(ICollection<Comment>? models);
+    List<FundViewModel> ToViewModels(ICollection<Fund>? models);
+    List<ExpenseViewModel> ToViewModels(ICollection<Expense>? models);
+    List<DreamerViewModel> ToViewModels(ICollection<Dreamer>? models);
+    List<EmailListItemViewModel> ToViewModels(ICollection<Email>? models);
     #endregion
 
     #region ToModel
@@ -52,14 +52,14 @@ public interface IMapperFacade
     #endregion
 
     #region ToModels
-    List<Dream> ToModels(ICollection<DreamViewModel> vms);
-    List<Cloud> ToModels(ICollection<CloudViewModel> vms);
-    List<Tag> ToModels(ICollection<TagViewModel> vms);
-    List<FundingRound> ToModels(ICollection<FundingRoundViewModel> vms);
-    List<BudgetItem> ToModels(ICollection<BudgetItemViewModel> vms);
-    List<Comment> ToModels(ICollection<CommentViewModel> vms);
-    List<Fund> ToModels(ICollection<FundViewModel> vms);
-    List<Expense> ToModels(ICollection<ExpenseViewModel> vms);
-    List<Dreamer> ToModels(ICollection<DreamerViewModel> vms);
+    List<Dream> ToModels(ICollection<DreamViewModel>? vms);
+    List<Cloud> ToModels(ICollection<CloudViewModel>? vms);
+    List<Tag> ToModels(ICollection<TagViewModel>? vms);
+    List<FundingRound> ToModels(ICollection<FundingRoundViewModel>? vms);
+    List<BudgetItem> ToModels(ICollection<BudgetItemViewModel>? vms);
+    List<Comment> ToModels(ICollection<CommentViewModel>? vms);
+    List<Fund> ToModels(ICollection<FundViewModel>? vms);
+    List<Expense> ToModels(ICollection<ExpenseViewModel>? vms);
+    List<Dreamer> ToModels(ICollection<DreamerViewModel>? vms);
     #endregion
 }

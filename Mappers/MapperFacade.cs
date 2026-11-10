@@ -29,16 +29,16 @@ public class MapperFacade : IMapperFacade
         _dreamMapper = new DreamMapper(this, appTime, htmlSanitizer);
         _cloudMapper = new CloudMapper(this, appTime);
         _cloudInfoMapper = new CloudInfoMapper(htmlSanitizer);
-        _tagMapper = new TagMapper(this, appTime);
-        _userMapper = new UserMapper(this, appTime);
-        _walletMapper = new WalletMapper(this, appTime);
+        _tagMapper = new TagMapper();
+        _userMapper = new UserMapper(this);
+        _walletMapper = new WalletMapper();
         _fundingRoundMapper = new FundingRoundMapper(this, appTime);
-        _budgetItemMapper = new BudgetItemMapper(this, appTime);
-        _commentMapper = new CommentMapper(this, appTime);
+        _budgetItemMapper = new BudgetItemMapper(appTime);
+        _commentMapper = new CommentMapper(appTime);
         _fundMapper = new FundMapper(this, appTime);
-        _expenseMapper = new ExpenseMapper(this, appTime);
-        _dreamerMapper = new DreamerMapper(this, appTime);
-        _auditLogMapper = new AuditLogMapper(this, appTime);
+        _expenseMapper = new ExpenseMapper(appTime);
+        _dreamerMapper = new DreamerMapper();
+        _auditLogMapper = new AuditLogMapper(appTime);
         _emailMapper = new EmailMapper(appTime);
     }
 
@@ -62,19 +62,18 @@ public class MapperFacade : IMapperFacade
     #endregion ToViewModel
 
     #region ToViewModels
-    public List<DreamViewModel> ToViewModels(ICollection<Dream> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<FundingRoundViewModel> ToViewModels(ICollection<FundingRound> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<BudgetItemViewModel> ToViewModels(ICollection<BudgetItem> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<CommentViewModel> ToViewModels(ICollection<Comment> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<FundViewModel> ToViewModels(ICollection<Fund> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<ExpenseViewModel> ToViewModels(ICollection<Expense> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<DreamerViewModel> ToViewModels(ICollection<Dreamer> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<TagViewModel> ToViewModels(ICollection<Tag> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<CloudViewModel> ToViewModels(ICollection<Cloud> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<UserViewModel> ToViewModels(ICollection<User> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<WalletViewModel> ToViewModels(ICollection<Wallet> models) => models?.Select(ToViewModel).ToList() ?? [];
-    public List<EmailListItemViewModel> ToViewModels(ICollection<Email> models) =>
-        models?.Select(ToViewModel).ToList() ?? [];
+    public List<DreamViewModel> ToViewModels(ICollection<Dream>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<FundingRoundViewModel> ToViewModels(ICollection<FundingRound>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<BudgetItemViewModel> ToViewModels(ICollection<BudgetItem>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<CommentViewModel> ToViewModels(ICollection<Comment>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<FundViewModel> ToViewModels(ICollection<Fund>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<ExpenseViewModel> ToViewModels(ICollection<Expense>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<DreamerViewModel> ToViewModels(ICollection<Dreamer>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<TagViewModel> ToViewModels(ICollection<Tag>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<CloudViewModel> ToViewModels(ICollection<Cloud>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<UserViewModel> ToViewModels(ICollection<User>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<WalletViewModel> ToViewModels(ICollection<Wallet>? models) => models?.Select(ToViewModel).ToList() ?? [];
+    public List<EmailListItemViewModel> ToViewModels(ICollection<Email>? models) => models?.Select(ToViewModel).ToList() ?? [];
     #endregion ToViewModels
 
     #region ToModel
@@ -93,14 +92,14 @@ public class MapperFacade : IMapperFacade
     #endregion ToModel
 
     #region ToModels
-    public List<Dream> ToModels(ICollection<DreamViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<FundingRound> ToModels(ICollection<FundingRoundViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<BudgetItem> ToModels(ICollection<BudgetItemViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<Comment> ToModels(ICollection<CommentViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<Fund> ToModels(ICollection<FundViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<Expense> ToModels(ICollection<ExpenseViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<Dreamer> ToModels(ICollection<DreamerViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<Tag> ToModels(ICollection<TagViewModel> vms) => vms.Select(ToModel).ToList();
-    public List<Cloud> ToModels(ICollection<CloudViewModel> vms) => vms.Select(ToModel).ToList();
+    public List<Dream> ToModels(ICollection<DreamViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<FundingRound> ToModels(ICollection<FundingRoundViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<BudgetItem> ToModels(ICollection<BudgetItemViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<Comment> ToModels(ICollection<CommentViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<Fund> ToModels(ICollection<FundViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<Expense> ToModels(ICollection<ExpenseViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<Dreamer> ToModels(ICollection<DreamerViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<Tag> ToModels(ICollection<TagViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
+    public List<Cloud> ToModels(ICollection<CloudViewModel>? vms) => vms?.Select(ToModel).ToList() ?? [];
     #endregion ToModels
 }
