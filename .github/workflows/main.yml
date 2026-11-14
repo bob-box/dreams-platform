@@ -16,16 +16,16 @@ jobs:
           dotnet-version: 10
           
       - name: Install dependencies
-        run: dotnet restore Borderland.Dreams.csproj
+        run: dotnet restore Borderland.Dreams.Web/Borderland.Dreams.Web.csproj
         
       - name: Build
-        run: dotnet build Borderland.Dreams.csproj --configuration Release --no-restore
+        run: dotnet build Borderland.Dreams.Web/Borderland.Dreams.Web.csproj --configuration Release --no-restore
+      
+      - name: Test with .NET
+        run: dotnet test Borderland.Dreams.Tests/Borderland.Dreams.Tests.csproj --configuration Release
 
       - name: Publish
-        run: dotnet publish Borderland.Dreams.csproj --configuration Release --output ./publish --runtime win-x86 
-        
-      - name: Test with .NET
-        run: dotnet test Borderland.Dreams.csproj
+        run: dotnet publish Borderland.Dreams.Web/Borderland.Dreams.Web.csproj --configuration Release --output ./publish --runtime win-x86
 
       - name: Deploy to MonsterASP.NET via WebDeploy
         uses: rasmusbuchholdt/simply-web-deploy@2.1.0

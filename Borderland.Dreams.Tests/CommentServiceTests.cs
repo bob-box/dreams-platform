@@ -165,9 +165,7 @@ public class CommentServiceTests
                 appTime,
                 new HttpContextAccessor(),
                 new ServiceCollection().BuildServiceProvider());
-            if (migrateLegacyComment)
-                await context.Database.MigrateAsync("20261106083011_AddUtcToDateFieldNames");
-            else if (applyMigrations)
+            if (applyMigrations)
                 await context.Database.MigrateAsync();
             else
                 await context.Database.EnsureCreatedAsync();
@@ -199,10 +197,14 @@ public class CommentServiceTests
 
             if (migrateLegacyComment)
             {
-                var legacyBody = "Legacy comment";
-                await context.Database.ExecuteSqlInterpolatedAsync(
-                    $"INSERT INTO Comment (CreatedAtUtc, DreamID, Text, UserID) VALUES ({appTime.UtcNow}, {dream.ID}, {legacyBody}, {user.Id})");
-                await context.Database.MigrateAsync();
+                context.Comment.Add(new Comment
+                {
+                    DreamID = dream.ID,
+                    AuthorID = user.Id,
+                    Body = "Legacy comment",
+                    CreatedAtUtc = appTime.UtcNow
+                });
+                await context.SaveChangesAsync();
             }
 
             return new TestDatabase(connection, context, appTime, queryCounter, dream.ID, user.Id);
