@@ -17,7 +17,7 @@
     <PackageReference Include="BeginCollectionItemCore" Version="1.1.0" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
     <PackageReference Include="Hangfire.Storage.SQLite" Version="0.4.3" />
-    <PackageReference Include="HtmlSanitizer" Version="9.2.1039" />
+    <PackageReference Include="HtmlSanitizer" Version="11.0.26" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.14" />
@@ -33,7 +33,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
-    <PackageReference Include="Resend" Version="0.24.0" />
+    <PackageReference Include="Resend" Version="0.26.0" />
     <!-- 
     Microsoft.EntityFrameworkCore.SqlServer (v10.0.14) and Microsoft.VisualStudio.Web.CodeGeneration.Design (v10.0.2)
     indirectly used System.Security.Cryptography.Pkcs (v9.0.11) which had a high severity vunerability.
