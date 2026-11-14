@@ -93,3 +93,7 @@ blockquote {
   border-left: 3px solid #ccc;
   line-height: 1.6;
 }
+
+.comment-body {
+  white-space: pre-line;
+}

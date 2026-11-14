@@ -24,6 +24,7 @@ public class EmailSendingService(
     {
         var dream = await context.Dream
             .AsNoTracking()
+            .IgnoreAutoIncludes()
             .Include(dream => dream.Dreamers)
             .ThenInclude(dreamer => dreamer.User)
             .Include(dream => dream.Cloud)
@@ -80,6 +81,7 @@ public class EmailSendingService(
                 ?? throw new InvalidOperationException("The selected dream list for this update is invalid.");
             var dreamsQuery = context.Dream
                 .AsNoTracking()
+                .IgnoreAutoIncludes()
                 .Include(dream => dream.Dreamers)
                 .ThenInclude(dreamer => dreamer.User)
                 .AsQueryable();

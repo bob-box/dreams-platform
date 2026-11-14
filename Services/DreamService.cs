@@ -208,6 +208,7 @@ public class DreamService(
     public async Task<DreamServiceResult> Delete(int id)
     {
         var dream = await context.Dream
+            .IgnoreAutoIncludes()
             .Include(d => d.Dreamers).ThenInclude(d => d.User)
             .SingleOrDefaultAsync(d => d.ID == id && d.CloudID == cloudNameService.CloudID);
 

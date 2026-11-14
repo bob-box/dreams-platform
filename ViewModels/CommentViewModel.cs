@@ -1,14 +1,11 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Borderland.Dreams.ViewModels;
 
 public class CommentViewModel
 {
-    public int ID { get; set; }
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
-    [DataType(DataType.DateTime)]
+    public int Id { get; set; }
+    public int DreamId { get; set; }
+    public string? AuthorId { get; set; }
+    public string AuthorName { get; set; } = "[deleted user]";
+    public string Body { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
-    public int DreamID { get; set; }
-    public string Text { get; set; }
-    public string UserID { get; set; }
 }

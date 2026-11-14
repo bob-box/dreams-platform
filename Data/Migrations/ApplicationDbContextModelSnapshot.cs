@@ -115,11 +115,9 @@ namespace Borderland.Dreams.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DreamWelcomeEmailBody")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DreamWelcomeEmailSubject")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDeleted")
@@ -189,25 +187,25 @@ namespace Borderland.Dreams.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AuthorID")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserID")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.HasKey("ID");
 
-                    b.HasIndex("DreamID");
+                    b.HasIndex("AuthorID");
 
-                    b.HasIndex("UserID");
+                    b.HasIndex("DreamID", "CreatedAtUtc");
 
                     b.ToTable("Comment");
                 });
@@ -749,21 +747,20 @@ namespace Borderland.Dreams.Data.Migrations
 
             modelBuilder.Entity("Borderland.Dreams.Models.Comment", b =>
                 {
+                    b.HasOne("Borderland.Dreams.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorID")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Borderland.Dreams.Models.Dream", "Dream")
                         .WithMany("Comments")
                         .HasForeignKey("DreamID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Borderland.Dreams.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Author");
 
                     b.Navigation("Dream");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dream", b =>

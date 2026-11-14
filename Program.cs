@@ -79,6 +79,7 @@ builder.Services.AddSingleton<IAppTime>(sp =>
 // Application services.
 builder.Services.AddScoped<IMapperFacade, MapperFacade>();
 builder.Services.AddScoped<IDreamService, DreamService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IDreamFundingService, DreamFundingService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICloudService, CloudService>();

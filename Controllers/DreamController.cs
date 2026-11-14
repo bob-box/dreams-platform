@@ -17,6 +17,7 @@ public class DreamController(
     UserManager<User> userManager,
     IDreamService dreamService,
     IDreamFundingService dreamFundingService,
+    ICommentService commentService,
     ICloudService cloudService,
     ITagService tagService,
     IAppTime appTime,
@@ -24,6 +25,9 @@ public class DreamController(
     IFundingRoundService fundingRoundService
 ) : Controller
 {
+    private const string InvalidCommentBodyTempDataKey = "InvalidCommentBody";
+    private const string InvalidCommentErrorTempDataKey = "InvalidCommentError";
+
     // GET: Dream
     [AllowAnonymous]
     public async Task<IActionResult> Index(
@@ -75,8 +79,77 @@ public class DreamController(
             : "Ready for funding";
         ViewBag.IsReturnToDraftAllowed = result.Dream.Status == DreamStatus.ReadyForFunding
             && isBeforeDreamEditDeadline;
+        result.Dream.Comments = (await commentService.GetForDream(result.Dream.ID)).ToList();
+        ViewBag.CanComment = !string.IsNullOrWhiteSpace(userId)
+            && await cloudService.UserHasJoinedCloud(User);
+
+        RestoreCommentForm(result.Dream.ID);
 
         return View(result.Dream);
+    }
+
+    /// <summary>
+    /// Restores comment input and validation errors after an invalid post, or initializes a blank form.
+    /// </summary>
+    private void RestoreCommentForm(int dreamId)
+    {
+        if (TempData.TryGetValue(InvalidCommentBodyTempDataKey, out var savedCommentBody)
+            && savedCommentBody is string body)
+        {
+            ViewBag.CommentForm = new CommentPostViewModel
+            {
+                DreamId = dreamId,
+                Body = body
+            };
+            if (TempData.TryGetValue(InvalidCommentErrorTempDataKey, out var savedCommentError)
+                && savedCommentError is string errorMessage)
+            {
+                ModelState.AddModelError(nameof(CommentPostViewModel.Body), errorMessage);
+            }
+        }
+        else
+        {
+            ViewBag.CommentForm = new CommentPostViewModel { DreamId = dreamId };
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PostComment(int dreamId, [Bind("Body")] CommentPostViewModel input)
+    {
+        var authorId = GetCurrentUserId();
+        var result = await commentService.Post(dreamId, authorId, input.Body);
+        return result.Status switch
+        {
+            CommentServiceStatus.Success => RedirectToComment(dreamId, result.CommentId!.Value),
+            CommentServiceStatus.DreamNotFound => NotFound(),
+            CommentServiceStatus.NotMember => Forbid(),
+            CommentServiceStatus.InvalidBody => ReturnInvalidComment(dreamId, input, result.ErrorMessage!),
+            _ => BadRequest("Unable to post comment.")
+        };
+    }
+
+    /// <summary>
+    /// Redirects to the dream details page, anchored at the newly posted comment.
+    /// </summary>
+    private RedirectResult RedirectToComment(int dreamId, int commentId)
+    {
+        var dreamUrl = Url.Action(nameof(Details), new { id = dreamId })
+            ?? throw new InvalidOperationException("Unable to create the dream URL.");
+        return Redirect($"{dreamUrl}#comment-{commentId}");
+    }
+
+    /// <summary>
+    /// Preserves the invalid comment and its validation message, then redirects back to the dream.
+    /// </summary>
+    private RedirectResult ReturnInvalidComment(int dreamId, CommentPostViewModel input, string errorMessage)
+    {
+        TempData[InvalidCommentBodyTempDataKey] = input.Body?.Trim() ?? string.Empty;
+        TempData[InvalidCommentErrorTempDataKey] = errorMessage;
+
+        var detailsUrl = Url.Action(nameof(Details), new { id = dreamId })
+            ?? throw new InvalidOperationException("Unable to create the dream URL.");
+        return Redirect($"{detailsUrl}#comments");
     }
 
     // GET: Dream/Create
@@ -374,9 +447,6 @@ public class DreamController(
     public async Task<IActionResult> GetFundingModal(int dreamId)
     {
         var userId = GetCurrentUserId();
-        if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest("User not authenticated.");
-
         var result = await dreamFundingService.GetFundingModal(dreamId, userId);
         return result.Status switch
         {
@@ -393,9 +463,6 @@ public class DreamController(
     public async Task<IActionResult> Fund(int dreamId, decimal amount)
     {
         var userId = GetCurrentUserId();
-        if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest("User not authenticated.");
-
         var result = await dreamFundingService.FundDream(dreamId, amount, userId);
         return result.Status switch
         {
@@ -411,18 +478,11 @@ public class DreamController(
     }
 
 
-    private async Task<bool> CurrentUserHasJoinedCloud()
-    {
-        var userId = GetCurrentUserId();
-        return !string.IsNullOrWhiteSpace(userId)
-            && await cloudService.UserHasJoinedCloud(userId);
-    }
-
-    private string? GetCurrentUserId() => userManager.GetUserId(User);
+    private string GetCurrentUserId() => userManager.GetUserId(User) ?? throw new Exception("A userId should always be returned here..");
 
     private async Task<IActionResult?> GetCreateDreamGuardResult()
     {
-        if (!await CurrentUserHasJoinedCloud())
+        if (!await cloudService.UserHasJoinedCloud(User))
             return Problem("You have not joined this cloud yet, so you are not allowed to create a dream here.");
 
         if (!User.IsInRole(Constants.AdminRole) && !await cloudService.IsDreamingPeriodActive(cloudNameService.CloudID))

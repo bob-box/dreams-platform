@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 
@@ -30,6 +31,7 @@ public interface ICloudService
     Task UpdateInfo(int cloudId, CloudInfoViewModel viewModel);
     Task<JoinCloudResult> Join(int cloudId, string userId);
     Task<bool> UserHasJoinedCloud(string userId);
+    Task<bool> UserHasJoinedCloud(ClaimsPrincipal user);
     Task<bool> UserHasJoinedCloud(User user);
     Task<bool> IsDreamingPeriodActive(int cloudID);
 }

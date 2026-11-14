@@ -10,10 +10,11 @@ public class CommentMapper(IAppTime appTime)
     {
         return new CommentViewModel
         {
-            ID = model.ID,
-            DreamID = model.DreamID,
-            UserID = model.UserID,
-            Text = model.Text,
+            Id = model.ID,
+            DreamId = model.DreamID,
+            AuthorId = model.AuthorID,
+            AuthorName = model.Author?.Name ?? "[deleted user]",
+            Body = model.Body,
             CreatedAt = appTime.ToLocal(model.CreatedAtUtc)
         };
     }
@@ -22,10 +23,10 @@ public class CommentMapper(IAppTime appTime)
     {
         return new Comment
         {
-            ID = vm.ID,
-            DreamID = vm.DreamID,
-            UserID = vm.UserID,
-            Text = vm.Text,
+            ID = vm.Id,
+            DreamID = vm.DreamId,
+            AuthorID = vm.AuthorId,
+            Body = vm.Body,
         };
     }
 }

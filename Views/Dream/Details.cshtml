@@ -164,7 +164,18 @@
     </div>
 </div>
 
+<section id="comments" class="mt-4">
+    <h2>Comments</h2>
+    @await Html.PartialAsync("_Comments", Model.Comments)
+    @if (ViewBag.CanComment == true)
+    {
+        var commentForm = ViewBag.CommentForm as CommentPostViewModel ?? new CommentPostViewModel();
+        @await Html.PartialAsync("_CommentForm", commentForm)
+    }
+</section>
+
 @section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         document.getElementById('fundDreamButton')?.addEventListener('click', function () {
             loadFundingModal(@Model.ID);

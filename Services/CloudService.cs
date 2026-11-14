@@ -157,6 +157,14 @@ public class CloudService(
         return await UserHasJoinedCloud(user);
     }
     
+    public async Task<bool> UserHasJoinedCloud(ClaimsPrincipal user)
+    {
+        var cloudId = cloudNameService.CloudID.ToString();
+        return user.HasClaim(c =>
+            c.Type == Constants.JOINED_CLOUD_CLAIM &&
+            c.Value == cloudId);
+    }
+    
     public async Task<bool> UserHasJoinedCloud(User user)
     {
         var userClaims = await userManager.GetClaimsAsync(user);

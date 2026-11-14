@@ -32,7 +32,7 @@ public class MapperFacade : IMapperFacade
         _tagMapper = new TagMapper();
         _userMapper = new UserMapper(this);
         _walletMapper = new WalletMapper();
-        _fundingRoundMapper = new FundingRoundMapper(this, appTime);
+        _fundingRoundMapper = new FundingRoundMapper(appTime);
         _budgetItemMapper = new BudgetItemMapper(appTime);
         _commentMapper = new CommentMapper(appTime);
         _fundMapper = new FundMapper(this, appTime);

@@ -28,6 +28,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
     public DbSet<Cloud> Cloud { get; set; } = default!;
     public DbSet<Dream> Dream { get; set; } = default!;
+    public DbSet<Comment> Comment { get; set; } = default!;
     public DbSet<BudgetItem> BudgetItem { get; set; } = default!;
     public DbSet<Dreamer> Dreamer { get; set; } = default!;
     public DbSet<Wallet> Wallet { get; set; } = default!;
@@ -90,6 +91,17 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasIndex(x => new { x.CloudID, x.CreatedAtUtc });
         modelBuilder.Entity<AuditLogEntry>()
             .HasIndex(x => new { x.EntityType, x.EntityID, x.Action });
+
+        modelBuilder.Entity<Comment>()
+            .Property(comment => comment.Body)
+            .HasMaxLength(1000);
+        modelBuilder.Entity<Comment>()
+            .HasIndex(comment => new { comment.DreamID, comment.CreatedAtUtc });
+        modelBuilder.Entity<Comment>()
+            .HasOne(comment => comment.Author)
+            .WithMany()
+            .HasForeignKey(comment => comment.AuthorID)
+            .OnDelete(DeleteBehavior.SetNull);
 
         base.OnModelCreating(modelBuilder);
     }
