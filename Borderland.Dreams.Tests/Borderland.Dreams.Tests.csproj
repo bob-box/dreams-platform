@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Borderland.Dreams.csproj" />
+    <ProjectReference Include="..\Borderland.Dreams.Web\Borderland.Dreams.Web.csproj" />
   </ItemGroup>
 
 </Project>
