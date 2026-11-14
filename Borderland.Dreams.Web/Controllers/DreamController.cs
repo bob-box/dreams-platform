@@ -117,7 +117,7 @@ public class DreamController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PostComment(int dreamId, [Bind("Body")] CommentPostViewModel input)
     {
-        var authorId = GetCurrentUserId();
+        var authorId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("Not logged in");
         var result = await commentService.Post(dreamId, authorId, input.Body);
         return result.Status switch
         {
@@ -446,7 +446,7 @@ public class DreamController(
     [HttpGet]
     public async Task<IActionResult> GetFundingModal(int dreamId)
     {
-        var userId = GetCurrentUserId();
+        var userId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("Not logged in");
         var result = await dreamFundingService.GetFundingModal(dreamId, userId);
         return result.Status switch
         {
@@ -462,7 +462,7 @@ public class DreamController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Fund(int dreamId, decimal amount)
     {
-        var userId = GetCurrentUserId();
+        var userId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("Not logged in");
         var result = await dreamFundingService.FundDream(dreamId, amount, userId);
         return result.Status switch
         {
@@ -478,7 +478,7 @@ public class DreamController(
     }
 
 
-    private string GetCurrentUserId() => userManager.GetUserId(User) ?? throw new Exception("A userId should always be returned here..");
+    private string? GetCurrentUserId() => userManager.GetUserId(User);
 
     private async Task<IActionResult?> GetCreateDreamGuardResult()
     {
