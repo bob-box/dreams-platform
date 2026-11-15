@@ -29,6 +29,86 @@ public class CommentServiceTests
         Assert.Empty(await database.Context.Comment.ToListAsync());
     }
 
+    [Fact]
+    public async Task ReplyFlattensRepliesUnderTheTopLevelComment()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var topLevel = await service.Post(database.DreamId, database.UserId, "Top level");
+        var firstReply = await service.Reply(
+            database.DreamId,
+            topLevel.CommentId!.Value,
+            database.UserId,
+            "First reply");
+
+        var secondReply = await service.Reply(
+            database.DreamId,
+            firstReply.CommentId!.Value,
+            database.UserId,
+            "Reply to reply");
+        var comments = await database.Context.Comment
+            .OrderBy(comment => comment.ID)
+            .ToListAsync();
+
+        Assert.Equal(CommentServiceStatus.Success, secondReply.Status);
+        Assert.Equal(topLevel.CommentId, comments[0].ID);
+        Assert.Null(comments[0].ParentCommentID);
+        Assert.Equal(topLevel.CommentId, comments[1].ParentCommentID);
+        Assert.Equal(topLevel.CommentId, comments[2].ParentCommentID);
+    }
+
+    [Fact]
+    public async Task ReplyRejectsParentFromAnotherDream()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var otherDream = new Dream
+        {
+            Name = "Other dream",
+            CloudID = await database.Context.Dream
+                .Where(dream => dream.ID == database.DreamId)
+                .Select(dream => dream.CloudID)
+                .SingleAsync()
+        };
+        database.Context.Dream.Add(otherDream);
+        await database.Context.SaveChangesAsync();
+
+        var service = CreateService(database);
+        var parent = await service.Post(database.DreamId, database.UserId, "Parent");
+        var result = await service.Reply(
+            otherDream.ID,
+            parent.CommentId!.Value,
+            database.UserId,
+            "Invalid reply");
+
+        Assert.Equal(CommentServiceStatus.InvalidParent, result.Status);
+        Assert.Equal(1, await database.Context.Comment.CountAsync());
+    }
+
+    [Fact]
+    public async Task ReplyRejectsNonMember()
+    {
+        await using var database = await TestDatabase.Create(isMember: false);
+        var parent = new Comment
+        {
+            DreamID = database.DreamId,
+            AuthorID = database.UserId,
+            Body = "Parent",
+            CreatedAtUtc = database.AppTime.UtcNow
+        };
+        database.Context.Comment.Add(parent);
+        await database.Context.SaveChangesAsync();
+        var service = CreateService(database);
+
+        var result = await service.Reply(
+            database.DreamId,
+            parent.ID,
+            database.UserId,
+            "Reply");
+
+        Assert.Equal(CommentServiceStatus.NotMember, result.Status);
+        Assert.Equal(1, await database.Context.Comment.CountAsync());
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -99,6 +179,30 @@ public class CommentServiceTests
 
         Assert.Equal(1, database.QueryCounter.ReaderQueries);
         Assert.Equal("Member", Assert.Single(comments).AuthorName);
+    }
+
+    [Fact]
+    public async Task GetForDreamGroupsRepliesUnderTheirParentsInOldestFirstOrder()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var firstTopLevel = await service.Post(database.DreamId, database.UserId, "First top-level");
+        database.AppTime.Advance(TimeSpan.FromMinutes(1));
+        var secondTopLevel = await service.Post(database.DreamId, database.UserId, "Second top-level");
+        database.AppTime.Advance(TimeSpan.FromMinutes(1));
+        await service.Reply(database.DreamId, firstTopLevel.CommentId!.Value, database.UserId, "First reply");
+        database.AppTime.Advance(TimeSpan.FromMinutes(1));
+        await service.Reply(database.DreamId, secondTopLevel.CommentId!.Value, database.UserId, "Other parent reply");
+        database.AppTime.Advance(TimeSpan.FromMinutes(1));
+        await service.Reply(database.DreamId, firstTopLevel.CommentId.Value, database.UserId, "Second reply");
+        database.QueryCounter.Reset();
+
+        var comments = await service.GetForDream(database.DreamId);
+
+        Assert.Equal(1, database.QueryCounter.ReaderQueries);
+        Assert.Equal(["First top-level", "Second top-level"], comments.Select(comment => comment.Body));
+        Assert.Equal(["First reply", "Second reply"], comments[0].Replies.Select(reply => reply.Body));
+        Assert.Equal("Other parent reply", Assert.Single(comments[1].Replies).Body);
     }
 
     [Fact]
@@ -219,8 +323,9 @@ public class CommentServiceTests
 
     private sealed class FixedAppTime(DateTime utcNow) : IAppTime
     {
-        public DateTime UtcNow { get; } = utcNow;
+        public DateTime UtcNow { get; private set; } = utcNow;
         public DateTime Now => UtcNow;
+        public void Advance(TimeSpan by) => UtcNow = UtcNow.Add(by);
         public DateTime ToLocal(DateTime utc) => utc;
         public DateTime ToUtc(DateTime local) => local;
         public DateTime? ToLocal(DateTime? utc) => utc;

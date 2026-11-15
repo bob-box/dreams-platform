@@ -27,6 +27,9 @@ public class DreamController(
 {
     private const string InvalidCommentBodyTempDataKey = "InvalidCommentBody";
     private const string InvalidCommentErrorTempDataKey = "InvalidCommentError";
+    private const string InvalidReplyBodyTempDataKey = "InvalidReplyBody";
+    private const string InvalidReplyErrorTempDataKey = "InvalidReplyError";
+    private const string InvalidReplyParentTempDataKey = "InvalidReplyParent";
 
     // GET: Dream
     [AllowAnonymous]
@@ -84,6 +87,7 @@ public class DreamController(
             && await cloudService.UserHasJoinedCloud(User);
 
         RestoreCommentForm(result.Dream.ID);
+        RestoreReplyForm(result.Dream.ID, result.Dream.Comments);
 
         return View(result.Dream);
     }
@@ -93,24 +97,52 @@ public class DreamController(
     /// </summary>
     private void RestoreCommentForm(int dreamId)
     {
+        var commentForm = new CommentPostViewModel { DreamId = dreamId };
         if (TempData.TryGetValue(InvalidCommentBodyTempDataKey, out var savedCommentBody)
             && savedCommentBody is string body)
         {
-            ViewBag.CommentForm = new CommentPostViewModel
-            {
-                DreamId = dreamId,
-                Body = body
-            };
+            commentForm.Body = body;
             if (TempData.TryGetValue(InvalidCommentErrorTempDataKey, out var savedCommentError)
                 && savedCommentError is string errorMessage)
             {
-                ModelState.AddModelError(nameof(CommentPostViewModel.Body), errorMessage);
+                commentForm.ErrorMessage = errorMessage;
             }
         }
-        else
+
+        ViewBag.CommentForm = commentForm;
+    }
+
+    /// <summary>
+    /// Restores a rejected reply form on the comment it targeted.
+    /// </summary>
+    /// <param name="dreamId">The dream whose comments are being rendered.</param>
+    /// <param name="comments">The loaded top-level comments and their replies.</param>
+    private void RestoreReplyForm(int dreamId, IReadOnlyList<CommentViewModel> comments)
+    {
+        if (!TempData.TryGetValue(InvalidReplyBodyTempDataKey, out var savedBody)
+            || savedBody is not string body
+            || !TempData.TryGetValue(InvalidReplyParentTempDataKey, out var savedParentId)
+            || !int.TryParse(savedParentId?.ToString(), out var parentCommentId))
         {
-            ViewBag.CommentForm = new CommentPostViewModel { DreamId = dreamId };
+            return;
         }
+
+        var target = comments
+            .SelectMany(comment => new[] { comment }.Concat(comment.Replies))
+            .FirstOrDefault(comment => comment.Id == parentCommentId);
+        if (target == null)
+            return;
+
+        var errorMessage = TempData.TryGetValue(InvalidReplyErrorTempDataKey, out var savedError)
+            ? savedError as string
+            : null;
+        target.ReplyForm = new CommentPostViewModel
+        {
+            DreamId = dreamId,
+            ParentCommentId = parentCommentId,
+            Body = body,
+            ErrorMessage = errorMessage
+        };
     }
 
     [HttpPost]
@@ -126,6 +158,30 @@ public class DreamController(
             CommentServiceStatus.NotMember => Forbid(),
             CommentServiceStatus.InvalidBody => ReturnInvalidComment(dreamId, input, result.ErrorMessage!),
             _ => BadRequest("Unable to post comment.")
+        };
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReplyToComment(
+        int dreamId,
+        int parentCommentId,
+        [Bind("Body")] CommentPostViewModel input)
+    {
+        var authorId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("Not logged in");
+        var result = await commentService.Reply(dreamId, parentCommentId, authorId, input.Body);
+        return result.Status switch
+        {
+            CommentServiceStatus.Success => RedirectToComment(dreamId, result.CommentId!.Value),
+            CommentServiceStatus.DreamNotFound => NotFound(),
+            CommentServiceStatus.InvalidParent => NotFound(),
+            CommentServiceStatus.NotMember => Forbid(),
+            CommentServiceStatus.InvalidBody => ReturnInvalidReply(
+                dreamId,
+                parentCommentId,
+                input,
+                result.ErrorMessage!),
+            _ => BadRequest("Unable to post reply.")
         };
     }
 
@@ -150,6 +206,24 @@ public class DreamController(
         var detailsUrl = Url.Action(nameof(Details), new { id = dreamId })
             ?? throw new InvalidOperationException("Unable to create the dream URL.");
         return Redirect($"{detailsUrl}#comments");
+    }
+
+    /// <summary>
+    /// Preserves a rejected reply and redirects to the comment form that received it.
+    /// </summary>
+    private RedirectResult ReturnInvalidReply(
+        int dreamId,
+        int parentCommentId,
+        CommentPostViewModel input,
+        string errorMessage)
+    {
+        TempData[InvalidReplyBodyTempDataKey] = input.Body?.Trim() ?? string.Empty;
+        TempData[InvalidReplyErrorTempDataKey] = errorMessage;
+        TempData[InvalidReplyParentTempDataKey] = parentCommentId;
+
+        var detailsUrl = Url.Action(nameof(Details), new { id = dreamId })
+            ?? throw new InvalidOperationException("Unable to create the dream URL.");
+        return Redirect($"{detailsUrl}#comment-{parentCommentId}");
     }
 
     // GET: Dream/Create

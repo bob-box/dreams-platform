@@ -102,6 +102,11 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .WithMany()
             .HasForeignKey(comment => comment.AuthorID)
             .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Comment>()
+            .HasOne(comment => comment.ParentComment)
+            .WithMany(comment => comment.Replies)
+            .HasForeignKey(comment => comment.ParentCommentID)
+            .OnDelete(DeleteBehavior.Restrict);
 
         base.OnModelCreating(modelBuilder);
     }

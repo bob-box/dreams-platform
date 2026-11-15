@@ -8,6 +8,7 @@ public class Comment : IAutoPopulateCreatedAtOnAdd
     public int ID { get; set; }
     public int DreamID { get; set; }
     public string? AuthorID { get; set; }
+    public int? ParentCommentID { get; set; }
 
     public string Body { get; set; } = string.Empty;
 
@@ -16,4 +17,6 @@ public class Comment : IAutoPopulateCreatedAtOnAdd
 
     public Dream Dream { get; set; } = null!;
     public User? Author { get; set; }
+    public Comment? ParentComment { get; set; }
+    public ICollection<Comment> Replies { get; set; } = [];
 }

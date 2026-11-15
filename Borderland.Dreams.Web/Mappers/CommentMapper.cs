@@ -12,6 +12,7 @@ public class CommentMapper(IAppTime appTime)
         {
             Id = model.ID,
             DreamId = model.DreamID,
+            ParentCommentId = model.ParentCommentID,
             AuthorId = model.AuthorID,
             AuthorName = model.Author?.Name ?? "[deleted user]",
             Body = model.Body,
@@ -25,6 +26,7 @@ public class CommentMapper(IAppTime appTime)
         {
             ID = vm.Id,
             DreamID = vm.DreamId,
+            ParentCommentID = vm.ParentCommentId,
             AuthorID = vm.AuthorId,
             Body = vm.Body,
         };

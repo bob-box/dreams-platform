@@ -207,5 +207,20 @@
                 }
             }
         });
+
+        document.querySelectorAll('.reply-toggle').forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                const formContainer = document.getElementById(this.getAttribute('aria-controls'));
+                if (!formContainer) {
+                    return;
+                }
+
+                formContainer.hidden = !formContainer.hidden;
+                this.setAttribute('aria-expanded', String(!formContainer.hidden));
+                if (!formContainer.hidden) {
+                    formContainer.querySelector('textarea[name="Body"]')?.focus();
+                }
+            });
+        });
     </script>
 }

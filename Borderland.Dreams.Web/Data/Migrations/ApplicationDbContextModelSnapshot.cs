@@ -201,9 +201,14 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ParentCommentID")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("ID");
 
                     b.HasIndex("AuthorID");
+
+                    b.HasIndex("ParentCommentID");
 
                     b.HasIndex("DreamID", "CreatedAtUtc");
 
@@ -758,9 +763,16 @@ namespace Borderland.Dreams.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Borderland.Dreams.Models.Comment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Author");
 
                     b.Navigation("Dream");
+
+                    b.Navigation("ParentComment");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dream", b =>
@@ -941,6 +953,11 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Navigation("Info");
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("Borderland.Dreams.Models.Comment", b =>
+                {
+                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("Borderland.Dreams.Models.Dream", b =>

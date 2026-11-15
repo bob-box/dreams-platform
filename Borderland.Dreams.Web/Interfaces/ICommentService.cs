@@ -7,7 +7,8 @@ public enum CommentServiceStatus
     Success,
     DreamNotFound,
     NotMember,
-    InvalidBody
+    InvalidBody,
+    InvalidParent
 }
 
 public record CommentServiceResult(
@@ -19,4 +20,5 @@ public interface ICommentService
 {
     Task<IReadOnlyList<CommentViewModel>> GetForDream(int dreamId);
     Task<CommentServiceResult> Post(int dreamId, string authorId, string? body);
+    Task<CommentServiceResult> Reply(int dreamId, int parentCommentId, string authorId, string? body);
 }

@@ -19,12 +19,44 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
             .Where(comment => comment.DreamID == dreamId)
             .Include(comment => comment.Author)
             .OrderBy(comment => comment.CreatedAtUtc)
+            .ThenBy(comment => comment.ID)
             .ToListAsync();
 
-        return mapper.ToViewModels(comments);
+        var viewModels = mapper.ToViewModels(comments);
+        var viewModelsById = viewModels.ToDictionary(comment => comment.Id);
+        var topLevelComments = new List<CommentViewModel>();
+
+        // Organize comments by threads
+        foreach (var comment in viewModels)
+        {
+            if (comment.ParentCommentId is not int parentCommentId)
+            {
+                topLevelComments.Add(comment);
+                continue;
+            }
+
+            if (viewModelsById.TryGetValue(parentCommentId, out var parent))
+                parent.Replies.Add(comment);
+        }
+
+        return topLevelComments;
     }
 
-    public async Task<CommentServiceResult> Post(int dreamId, string authorId, string? body)
+    public Task<CommentServiceResult> Post(int dreamId, string authorId, string? body) =>
+        Save(dreamId, authorId, body, parentCommentId: null);
+
+    public Task<CommentServiceResult> Reply(
+        int dreamId,
+        int parentCommentId,
+        string authorId,
+        string? body) =>
+        Save(dreamId, authorId, body, parentCommentId);
+
+    private async Task<CommentServiceResult> Save(
+        int dreamId,
+        string authorId,
+        string? body,
+        int? parentCommentId)
     {
         var dream = await context.Dream
             .AsNoTracking()
@@ -59,10 +91,35 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
                 ErrorMessage: "Comments must be 1000 characters or fewer.");
         }
 
+        if (parentCommentId.HasValue)
+        {
+            var parent = await context.Comment
+                .AsNoTracking()
+                .IgnoreAutoIncludes()
+                .Include(comment => comment.ParentComment)
+                .SingleOrDefaultAsync(comment => comment.ID == parentCommentId.Value);
+
+            if (parent == null || parent.DreamID != dreamId)
+                return new CommentServiceResult(CommentServiceStatus.InvalidParent);
+
+            if (parent.ParentCommentID.HasValue)
+            {
+                if (parent.ParentComment == null
+                    || parent.ParentComment.DreamID != dreamId
+                    || parent.ParentComment.ParentCommentID.HasValue)
+                {
+                    return new CommentServiceResult(CommentServiceStatus.InvalidParent);
+                }
+
+                parentCommentId = parent.ParentComment.ID;
+            }
+        }
+
         var comment = new Comment
         {
             DreamID = dreamId,
             AuthorID = authorId,
+            ParentCommentID = parentCommentId,
             Body = trimmedBody,
             CreatedAtUtc = appTime.UtcNow
         };

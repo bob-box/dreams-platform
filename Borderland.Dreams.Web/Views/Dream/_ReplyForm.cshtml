@@ -1,0 +1,25 @@
+@model Borderland.Dreams.ViewModels.CommentPostViewModel
+
+@{
+    var parentCommentId = Model.ParentCommentId
+        ?? throw new InvalidOperationException("A reply form requires a parent comment.");
+    var bodyId = $"reply-body-{parentCommentId}";
+}
+
+<form id="reply-form-@parentCommentId"
+      class="comment-form mt-2"
+      asp-action="ReplyToComment"
+      asp-route-dreamId="@Model.DreamId"
+      asp-route-parentCommentId="@parentCommentId"
+      method="post">
+    @Html.AntiForgeryToken()
+    <div class="mb-2">
+        <textarea asp-for="Body" id="@bodyId" class="form-control" rows="3" maxlength="1000"></textarea>
+        <span asp-validation-for="Body" class="text-danger"></span>
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <span class="text-danger">@Model.ErrorMessage</span>
+        }
+    </div>
+    <button type="submit" class="btn btn-outline-primary btn-sm">Reply</button>
+</form>
