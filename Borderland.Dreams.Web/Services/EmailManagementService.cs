@@ -81,6 +81,38 @@ public class EmailManagementService(
         return model;
     }
 
+    public async Task<DreamWelcomeEmailViewModel> GetDreamWelcomeEmailAsync()
+    {
+        EnsureCloudContext();
+        var cloud = await context.Cloud
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.ID == cloudNameResolver.CloudID)
+            ?? throw new InvalidOperationException("The active cloud could not be found.");
+
+        return new DreamWelcomeEmailViewModel
+        {
+            Enabled = cloud.SendDreamWelcomeEmail,
+            Subject = cloud.DreamWelcomeEmailSubject,
+            Body = cloud.DreamWelcomeEmailBody
+        };
+    }
+
+    public async Task<EmailManagementResult> SaveDreamWelcomeEmailAsync(
+        DreamWelcomeEmailViewModel model)
+    {
+        EnsureCloudContext();
+        var cloud = await context.Cloud.FindAsync(cloudNameResolver.CloudID);
+        if (cloud == null)
+            return new EmailManagementResult(EmailManagementStatus.NotFound);
+
+        cloud.SendDreamWelcomeEmail = model.Enabled;
+        cloud.DreamWelcomeEmailSubject = model.Subject;
+        cloud.DreamWelcomeEmailBody = model.Body;
+        await context.SaveChangesAsync();
+
+        return new EmailManagementResult(EmailManagementStatus.Success);
+    }
+
     /// <summary>
     /// Validates and creates an email update, then queues it for immediate or scheduled delivery.
     /// </summary>
@@ -428,12 +460,12 @@ public class EmailManagementService(
         update.ScheduledAtUtc > appTime.UtcNow;
 
     /// <summary>
-    /// Ensures the current request has an active cloud context.
+    /// Ensures the current request has a cloud context.
     /// </summary>
-    /// <exception cref="InvalidOperationException">No active cloud is selected.</exception>
+    /// <exception cref="InvalidOperationException">No cloud is selected.</exception>
     private void EnsureCloudContext()
     {
         if (cloudNameResolver.CloudID <= 0)
-            throw new InvalidOperationException("Email updates require an active cloud.");
+            throw new InvalidOperationException("This action requires a selected cloud.");
     }
 }

@@ -21,7 +21,7 @@ public class EmailController(
         if (!HasCloudContext())
             return NotFound();
 
-        return View(await emailManagementService.GetEmailsAsync());
+        return View(await BuildIndexViewModelAsync());
     }
 
     [HttpGet]
@@ -31,6 +31,37 @@ public class EmailController(
             return NotFound();
 
         return View(await emailManagementService.BuildCreateViewModelAsync());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveDreamWelcomeEmail(
+        [Bind(Prefix = "DreamWelcomeEmail")] DreamWelcomeEmailViewModel model)
+    {
+        if (!HasCloudContext())
+            return NotFound();
+
+        if (!ModelState.IsValid)
+        {
+            var pageModel = await BuildIndexViewModelAsync();
+            pageModel.DreamWelcomeEmail = model;
+            return View("Index", pageModel);
+        }
+
+        var result = await emailManagementService.SaveDreamWelcomeEmailAsync(model);
+        if (result.Status == EmailManagementStatus.NotFound)
+            return NotFound();
+
+        if (result.Status != EmailManagementStatus.Success)
+        {
+            ModelState.AddModelError(string.Empty, result.Message ?? "The welcome email settings could not be saved.");
+            var pageModel = await BuildIndexViewModelAsync();
+            pageModel.DreamWelcomeEmail = model;
+            return View("Index", pageModel);
+        }
+
+        TempData["Success"] = "Dream welcome email settings saved.";
+        return RedirectToAction(nameof(Index), new { cloudSlug = cloudNameResolver.CloudSlug });
     }
 
     [HttpPost]
@@ -136,6 +167,13 @@ public class EmailController(
     }
 
     private bool HasCloudContext() => cloudNameResolver.CloudID > 0;
+
+    private async Task<EmailIndexViewModel> BuildIndexViewModelAsync() =>
+        new()
+        {
+            Emails = await emailManagementService.GetEmailsAsync(),
+            DreamWelcomeEmail = await emailManagementService.GetDreamWelcomeEmailAsync()
+        };
 
     private void AddErrorsToModelState(Dictionary<string, List<string>>? errors)
     {

@@ -42,6 +42,10 @@ public class CloudService(
         var oldName = cloud.Name;
         // map all fields from viewModel to the tracked entity
         var updated = mapper.ToModel(viewModel);
+        // Since the welcome email stuff is set elsewhere we need to make sure it not accidentally removed during update.
+        updated.SendDreamWelcomeEmail = cloud.SendDreamWelcomeEmail;
+        updated.DreamWelcomeEmailSubject = cloud.DreamWelcomeEmailSubject;
+        updated.DreamWelcomeEmailBody = cloud.DreamWelcomeEmailBody;
         // ensure we keep the tracked entity's key (and any EF tracking info)
         updated.ID = cloud.ID;
         updated.Slug = cloud.Slug;

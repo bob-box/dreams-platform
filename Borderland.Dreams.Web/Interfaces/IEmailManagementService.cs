@@ -16,6 +16,8 @@ public interface IEmailManagementService
     Task SaveSettingsAsync(EmailSettingsViewModel model);
     Task<List<EmailListItemViewModel>> GetEmailsAsync();
     Task<EmailViewModel> BuildCreateViewModelAsync();
+    Task<DreamWelcomeEmailViewModel> GetDreamWelcomeEmailAsync();
+    Task<EmailManagementResult> SaveDreamWelcomeEmailAsync(DreamWelcomeEmailViewModel model);
     Task<EmailManagementResult> CreateEmailAsync(EmailViewModel model);
     Task<EmailManagementResult> GetForEditAsync(int id);
     Task<EmailManagementResult> UpdateEmailAsync(int id, EmailViewModel model);

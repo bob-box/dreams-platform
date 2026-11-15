@@ -10,6 +10,9 @@ public interface ICloudCache
     void Clear();
 }
 
+/// <summary>
+/// Cache the cloud slug, id and name so we dont have to do a database call all the time :)
+/// </summary>
 public class CloudCache : ICloudCache
 {
     private const int MaxEntries = 100;
