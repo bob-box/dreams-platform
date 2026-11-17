@@ -46,12 +46,12 @@
             <h2 class="h5">Funding amounts</h2>
             <div class="mb-3">
                 <label asp-for="AllocationPerUser" class="form-label">Allocation per user</label>
-                <input asp-for="AllocationPerUser" class="form-control" type="number" min="0.01" step="0.01" />
+                <input asp-for="AllocationPerUser" class="form-control" type="number" min="0" step="1" />
                 <span asp-validation-for="AllocationPerUser" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="CloudFundsAvailable" class="form-label">Cloud funds available</label>
-                <input asp-for="CloudFundsAvailable" class="form-control" type="number" min="0.01" step="0.01" />
+                <input asp-for="CloudFundsAvailable" class="form-control" type="number" min="0" step="1" />
                 <span asp-validation-for="CloudFundsAvailable" class="text-danger"></span>
             </div>
         </div>

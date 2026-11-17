@@ -35,8 +35,8 @@ public sealed class TestDataService(
             settings.FirstFundingRoundLengthInMinutes < 1 ||
             settings.BreakBetweenFundingRoundsInMinutes < 1 ||
             settings.SecondFundingRoundLengthInMinutes < 1 ||
-            settings.AllocationPerUser <= 0 ||
-            settings.CloudFundsAvailable <= 0)
+            settings.AllocationPerUser < 0 ||
+            settings.CloudFundsAvailable < 0)
         {
             throw new InvalidOperationException("Test data settings must define two valid funding rounds with a break and positive funding amounts.");
         }
@@ -52,9 +52,9 @@ public sealed class TestDataService(
             Slug = CloudSlugGenerator.Generate(cloudName),
             TotalFundsAvailable = settings.CloudFundsAvailable,
             TotalFundsSpent = 0m,
-            DreamCreatePeriodStartUtc = now.AddMinutes(-1),
-            DreamCreatePeriodEndUtc = now.AddDays(30),
-            DreamEditDeadlineUtc = now.AddDays(31),
+            DreamCreatePeriodStartUtc = now,
+            DreamCreatePeriodEndUtc = now.AddMinutes(1),
+            DreamEditDeadlineUtc = now.AddMinutes(1).AddSeconds(1),
             SendDreamWelcomeEmail = false
         };
 

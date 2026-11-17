@@ -230,6 +230,11 @@ public static class DataSeeder
     public static async Task<int> AddTestFundingRoundAsync(IServiceProvider serviceProvider, int cloudId)
     {
         var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        var existingFundingRound = await context.FundingRound
+            .Where(round => round.CloudID == cloudId)
+            .SingleOrDefaultAsync();
+        if (existingFundingRound != null)
+            return existingFundingRound.ID;
 
         var fundingRound = new FundingRound
         {
@@ -239,14 +244,14 @@ public static class DataSeeder
             MaxPercentagePerDream = 10m, // 10% of per-user allocation
             AllocationPerUser = 100m // each user receives 100 units
         };
-        await using var transaction = await context.Database.BeginTransactionAsync();
+        // await using var transaction = await context.Database.BeginTransactionAsync();
         context.FundingRound.Add(fundingRound);
         await context.SaveChangesAsync();
 
         var schedulerService = serviceProvider.GetRequiredService<FundingRoundSchedulerService>();
         schedulerService.ScheduleFundingRoundJobs(fundingRound);
         await context.SaveChangesAsync();
-        await transaction.CommitAsync();
+        // await transaction.CommitAsync();
 
         return fundingRound.ID;
     }
