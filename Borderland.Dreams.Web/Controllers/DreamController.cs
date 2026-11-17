@@ -25,12 +25,6 @@ public class DreamController(
     IFundingRoundService fundingRoundService
 ) : Controller
 {
-    private const string InvalidCommentBodyTempDataKey = "InvalidCommentBody";
-    private const string InvalidCommentErrorTempDataKey = "InvalidCommentError";
-    private const string InvalidReplyBodyTempDataKey = "InvalidReplyBody";
-    private const string InvalidReplyErrorTempDataKey = "InvalidReplyError";
-    private const string InvalidReplyParentTempDataKey = "InvalidReplyParent";
-
     // GET: Dream
     [AllowAnonymous]
     public async Task<IActionResult> Index(
@@ -98,11 +92,11 @@ public class DreamController(
     private void RestoreCommentForm(int dreamId)
     {
         var commentForm = new CommentPostViewModel { DreamId = dreamId };
-        if (TempData.TryGetValue(InvalidCommentBodyTempDataKey, out var savedCommentBody)
+        if (TempData.TryGetValue(CommentTempDataKeys.InvalidCommentBody, out var savedCommentBody)
             && savedCommentBody is string body)
         {
             commentForm.Body = body;
-            if (TempData.TryGetValue(InvalidCommentErrorTempDataKey, out var savedCommentError)
+            if (TempData.TryGetValue(CommentTempDataKeys.InvalidCommentError, out var savedCommentError)
                 && savedCommentError is string errorMessage)
             {
                 commentForm.ErrorMessage = errorMessage;
@@ -119,9 +113,9 @@ public class DreamController(
     /// <param name="comments">The loaded top-level comments and their replies.</param>
     private void RestoreReplyForm(int dreamId, IReadOnlyList<CommentViewModel> comments)
     {
-        if (!TempData.TryGetValue(InvalidReplyBodyTempDataKey, out var savedBody)
+        if (!TempData.TryGetValue(CommentTempDataKeys.InvalidReplyBody, out var savedBody)
             || savedBody is not string body
-            || !TempData.TryGetValue(InvalidReplyParentTempDataKey, out var savedParentId)
+            || !TempData.TryGetValue(CommentTempDataKeys.InvalidReplyParent, out var savedParentId)
             || !int.TryParse(savedParentId?.ToString(), out var parentCommentId))
         {
             return;
@@ -133,7 +127,7 @@ public class DreamController(
         if (target == null)
             return;
 
-        var errorMessage = TempData.TryGetValue(InvalidReplyErrorTempDataKey, out var savedError)
+        var errorMessage = TempData.TryGetValue(CommentTempDataKeys.InvalidReplyError, out var savedError)
             ? savedError as string
             : null;
         target.ReplyForm = new CommentPostViewModel
@@ -143,87 +137,6 @@ public class DreamController(
             Body = body,
             ErrorMessage = errorMessage
         };
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PostComment(int dreamId, [Bind("Body")] CommentPostViewModel input)
-    {
-        var authorId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("Not logged in");
-        var result = await commentService.Post(dreamId, authorId, input.Body);
-        return result.Status switch
-        {
-            CommentServiceStatus.Success => RedirectToComment(dreamId, result.CommentId!.Value),
-            CommentServiceStatus.DreamNotFound => NotFound(),
-            CommentServiceStatus.NotMember => Forbid(),
-            CommentServiceStatus.InvalidBody => ReturnInvalidComment(dreamId, input, result.ErrorMessage!),
-            _ => BadRequest("Unable to post comment.")
-        };
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ReplyToComment(
-        int dreamId,
-        int parentCommentId,
-        [Bind("Body")] CommentPostViewModel input)
-    {
-        var authorId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("Not logged in");
-        var result = await commentService.Reply(dreamId, parentCommentId, authorId, input.Body);
-        return result.Status switch
-        {
-            CommentServiceStatus.Success => RedirectToComment(dreamId, result.CommentId!.Value),
-            CommentServiceStatus.DreamNotFound => NotFound(),
-            CommentServiceStatus.InvalidParent => NotFound(),
-            CommentServiceStatus.NotMember => Forbid(),
-            CommentServiceStatus.InvalidBody => ReturnInvalidReply(
-                dreamId,
-                parentCommentId,
-                input,
-                result.ErrorMessage!),
-            _ => BadRequest("Unable to post reply.")
-        };
-    }
-
-    /// <summary>
-    /// Redirects to the dream details page, anchored at the newly posted comment.
-    /// </summary>
-    private RedirectResult RedirectToComment(int dreamId, int commentId)
-    {
-        var dreamUrl = Url.Action(nameof(Details), new { id = dreamId })
-            ?? throw new InvalidOperationException("Unable to create the dream URL.");
-        return Redirect($"{dreamUrl}#comment-{commentId}");
-    }
-
-    /// <summary>
-    /// Preserves the invalid comment and its validation message, then redirects back to the dream.
-    /// </summary>
-    private RedirectResult ReturnInvalidComment(int dreamId, CommentPostViewModel input, string errorMessage)
-    {
-        TempData[InvalidCommentBodyTempDataKey] = input.Body?.Trim() ?? string.Empty;
-        TempData[InvalidCommentErrorTempDataKey] = errorMessage;
-
-        var detailsUrl = Url.Action(nameof(Details), new { id = dreamId })
-            ?? throw new InvalidOperationException("Unable to create the dream URL.");
-        return Redirect($"{detailsUrl}#comments");
-    }
-
-    /// <summary>
-    /// Preserves a rejected reply and redirects to the comment form that received it.
-    /// </summary>
-    private RedirectResult ReturnInvalidReply(
-        int dreamId,
-        int parentCommentId,
-        CommentPostViewModel input,
-        string errorMessage)
-    {
-        TempData[InvalidReplyBodyTempDataKey] = input.Body?.Trim() ?? string.Empty;
-        TempData[InvalidReplyErrorTempDataKey] = errorMessage;
-        TempData[InvalidReplyParentTempDataKey] = parentCommentId;
-
-        var detailsUrl = Url.Action(nameof(Details), new { id = dreamId })
-            ?? throw new InvalidOperationException("Unable to create the dream URL.");
-        return Redirect($"{detailsUrl}#comment-{parentCommentId}");
     }
 
     // GET: Dream/Create

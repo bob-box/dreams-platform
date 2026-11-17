@@ -8,6 +8,7 @@
 
 <form id="reply-form-@parentCommentId"
       class="comment-form mt-2"
+      asp-controller="Comment"
       asp-action="ReplyToComment"
       asp-route-dreamId="@Model.DreamId"
       asp-route-parentCommentId="@parentCommentId"

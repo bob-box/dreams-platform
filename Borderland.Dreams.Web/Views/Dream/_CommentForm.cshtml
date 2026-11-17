@@ -1,6 +1,6 @@
 @model Borderland.Dreams.ViewModels.CommentPostViewModel
 
-<form id="commentForm" class="comment-form" asp-action="PostComment" asp-route-dreamId="@Model.DreamId" method="post">
+<form id="commentForm" class="comment-form" asp-controller="Comment" asp-action="PostComment" asp-route-dreamId="@Model.DreamId" method="post">
     @Html.AntiForgeryToken()
     <div class="mb-3">
         <label asp-for="Body" class="form-label">Your comment</label>
