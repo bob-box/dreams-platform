@@ -111,6 +111,9 @@ public class ApplicationDbContext : IdentityDbContext<User>
         base.OnModelCreating(modelBuilder);
     }
 
+    /// <summary>
+    /// Ensures every entity with a <c>CreatedAtUtc</c> property has the interface for auto populating that field.
+    /// </summary>
     private void ValidateCreatedAtInterfaces()
     {
         var entityTypes = Model.GetEntityTypes();
@@ -126,6 +129,16 @@ public class ApplicationDbContext : IdentityDbContext<User>
                 $"The following entities have a CreatedAt property but are missing IAutoPopulateCreatedAtOnAdd: {names}");
         }
     }
+
+    /// <summary>
+    /// Applies creation timestamps and saves tracked entity changes, recording their audit entries when needed.
+    /// </summary>
+    /// <returns>The total number of state entries written, including audit entries.</returns>
+    /// <remarks>
+    /// Entity changes are saved first so generated keys are available to the audit rows. For relational providers,
+    /// both saves use the current transaction or a new transaction, preventing a failed audit write from leaving
+    /// unaudited entity changes. If there are no auditable changes, EF Core saves once without a second save.
+    /// </remarks>
     public override int SaveChanges()
     {
         ApplyCreatedAt();
@@ -145,6 +158,16 @@ public class ApplicationDbContext : IdentityDbContext<User>
         return result;
     }
 
+    /// <summary>
+    /// Asynchronously applies creation timestamps and saves tracked entity changes, recording audit entries when needed.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can cancel the save operation.</param>
+    /// <returns>The total number of state entries written, including audit entries.</returns>
+    /// <remarks>
+    /// Entity changes are saved first so generated keys are available to the audit rows. For relational providers,
+    /// both saves use the current transaction or a new transaction, preventing a failed audit write from leaving
+    /// unaudited entity changes. If there are no auditable changes, EF Core saves once without a second save.
+    /// </remarks>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ApplyCreatedAt();
@@ -165,6 +188,15 @@ public class ApplicationDbContext : IdentityDbContext<User>
         return result;
     }
 
+    /// <summary>
+    /// Converts the current tracked entity changes into audit data before the changes are persisted.
+    /// </summary>
+    /// <returns>Audit entries containing the action and changed values for supported entity types.</returns>
+    /// <remarks>
+    /// Many-to-many tag join rows are represented as Dream tag changes, and soft-delete state transitions are
+    /// represented as delete or restore actions rather than ordinary updates. Unchanged updates are omitted, and
+    /// multiple changes for the same entity and action are combined into one audit entry.
+    /// </remarks>
     private List<PendingAuditEntry> CreatePendingAuditEntries()
     {
         ChangeTracker.DetectChanges();
@@ -263,13 +295,22 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .ToList();
     }
 
+    /// <summary>
+    /// Adds the captured audit data to the context after entity changes have been saved.
+    /// </summary>
+    /// <param name="pendingAudit">The audit data captured before persistence.</param>
+    /// <remarks>
+    /// Entity metadata is resolved again after saving so generated IDs and current names are available; captured
+    /// values are retained as fallbacks. The actor comes from the current HTTP user, with the identity ID used
+    /// when no display name is available and System used when there is no user ID.
+    /// </remarks>
     private void AddAuditEntries(IReadOnlyList<PendingAuditEntry> pendingAudit)
     {
         var user = _httpContextAccessor.HttpContext?.User;
         var userId = user?.FindFirstValue(ClaimTypes.NameIdentifier);
         var userName = user?.Identity?.Name;
         if (string.IsNullOrWhiteSpace(userName))
-            userName = userId == null ? "System" : userId;
+            userName = userId ?? "System";
 
         foreach (var pending in pendingAudit)
         {
@@ -290,6 +331,14 @@ public class ApplicationDbContext : IdentityDbContext<User>
         }
     }
 
+    /// <summary>
+    /// Maps a supported entity to the identifying information needed for a cloud-scoped audit row.
+    /// </summary>
+    /// <param name="entity">The changed entity.</param>
+    /// <returns>
+    /// The audit type, entity ID, owning cloud ID, optional display name, and optional property-name prefix;
+    /// an unsupported entity has a null type.
+    /// </returns>
     private (string? EntityType, int EntityID, int CloudID, string? EntityName, string? Prefix)
         GetAuditEntityInfo(object entity)
     {
@@ -315,6 +364,15 @@ public class ApplicationDbContext : IdentityDbContext<User>
         };
     }
 
+    /// <summary>
+    /// Resolves a dream's cloud from tracked entities or the database, including soft-deleted dreams.
+    /// </summary>
+    /// <param name="dreamId">The dream whose owning cloud is needed.</param>
+    /// <returns>The owning cloud ID, or zero if the dream cannot be found.</returns>
+    /// <remarks>
+    /// Looking in the change tracker first avoids an extra query; ignoring query filters lets deletion audit
+    /// entries retain their cloud association after a dream has been soft-deleted.
+    /// </remarks>
     private int GetDreamCloudID(int dreamId)
     {
         var trackedDream = ChangeTracker.Entries<Dream>()
@@ -328,10 +386,20 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .FirstOrDefault();
     }
 
+    /// <summary>
+    /// Gets a dream's tracked name for use in a related entity's audit label.
+    /// </summary>
+    /// <param name="dreamId">The dream whose name is needed.</param>
+    /// <returns>The tracked dream name, or a readable ID-based label when the dream is not tracked.</returns>
     private string GetDreamName(int dreamId) =>
         ChangeTracker.Entries<Dream>()
             .FirstOrDefault(dream => dream.Entity.ID == dreamId)?.Entity.Name ?? $"Dream {dreamId}";
 
+    /// <summary>
+    /// Resolves a fund's cloud through its tracked dream, funding round, or wallet relationship.
+    /// </summary>
+    /// <param name="fund">The fund being audited.</param>
+    /// <returns>The related cloud ID, or zero if it cannot be resolved.</returns>
     private int GetFundCloudID(Fund fund)
     {
         var dreamCloudId = GetDreamCloudID(fund.DreamID);
@@ -349,13 +417,29 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .FirstOrDefault(wallet => wallet.Entity.UserID == fund.UserID)?.Entity.CloudID ?? 0;
     }
 
+    /// <summary>
+    /// Looks up a user's display name without issuing a database query.
+    /// </summary>
+    /// <param name="userId">The user's identity ID.</param>
+    /// <returns>The tracked user's name, or <see langword="null"/> when the user is not tracked.</returns>
     private string? GetTrackedUserName(string userId) =>
-        ChangeTracker.Entries<User>()
-            .FirstOrDefault(user => user.Entity.Id == userId)?.Entity.Name;
+        ChangeTracker.Entries<User>().FirstOrDefault(user => user.Entity.Id == userId)?.Entity.Name;
 
+    /// <summary>
+    /// Adds a parent-property prefix for changes originating from a nested entity.
+    /// </summary>
+    /// <param name="prefix">The optional parent-property name.</param>
+    /// <param name="propertyName">The changed property name.</param>
     private static string PropertyName(string? prefix, string propertyName) =>
         prefix == null ? propertyName : $"{prefix}.{propertyName}";
 
+    /// <summary>
+    /// Formats a property value consistently for storage in the audit log.
+    /// </summary>
+    /// <returns>
+    /// <see langword="null"/> for a null value, an ISO 8601 string for date/time values, or an invariant string
+    /// for other values.
+    /// </returns>
     private static string? FormatValue(object? value) =>
         value switch
         {
@@ -384,7 +468,8 @@ public class ApplicationDbContext : IdentityDbContext<User>
         Dictionary<string, AuditChange> Changes);
 
     /// <summary>
-    /// Sets CreatedAt to current time for all newly added entities that implement IAutoPopulateCreatedAtOnAdd.
+    /// Sets <c>CreatedAtUtc</c> on added entities that implement <see cref="IAutoPopulateCreatedAtOnAdd"/>
+    /// and prevents the timestamp from being changed on existing entities.
     /// </summary>
     private void ApplyCreatedAt()
     {
