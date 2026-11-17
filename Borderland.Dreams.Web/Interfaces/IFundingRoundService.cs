@@ -19,6 +19,7 @@ public interface IFundingRoundService
 {
     Task<List<FundingRoundViewModel>> GetAll();
     Task<FundingRoundViewModel> BuildCreateViewModel();
+    Task PopulateAllocationSummaryAsync(FundingRoundViewModel viewModel);
     Task<FundingRoundServiceResult> Create(FundingRoundViewModel viewModel);
     Task<FundingRoundServiceResult> GetForEdit(int id);
     Task<FundingRoundServiceResult> Update(FundingRoundViewModel viewModel);

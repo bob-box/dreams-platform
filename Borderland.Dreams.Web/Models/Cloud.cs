@@ -27,10 +27,6 @@ public class Cloud : IAutoPopulateCreatedAtOnAdd
 
     [DataType(DataType.Currency)]
     [Column(TypeName = "decimal(18, 2)")]
-    public decimal TotalFundsRemaining { get; set; } = 0;
-
-    [DataType(DataType.Currency)]
-    [Column(TypeName = "decimal(18, 2)")]
     public decimal TotalFundsSpent { get; set; } = 0;
     
     public bool IsDeleted { get; set; } = false;

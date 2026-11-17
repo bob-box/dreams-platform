@@ -297,7 +297,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
         {
             Dream dream => ("Dream", dream.ID, dream.CloudID, dream.Name, null),
             Cloud cloud => ("Cloud", cloud.ID, cloud.ID, cloud.Name, null),
-            FundingRound round => ("Funding round", round.ID, round.CloudID, round.Title, null),
+            FundingRound round => ("Funding round", round.ID, round.CloudID, null, null),
             CloudInfo info => ("Cloud", info.CloudID, info.CloudID, "Cloud info", "Info"),
             BudgetItem item => ("Budget item", item.ID, GetDreamCloudID(item.DreamID), item.Name, null),
             Dreamer dreamer => ("Dreamer", dreamer.ID, GetDreamCloudID(dreamer.DreamID),

@@ -38,8 +38,8 @@ public class FundingRoundSchedulerService(
         fundingRound.EndJobId = endJobId;
 
         logger.LogInformation(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): scheduled allocation job {StartJobId} for {StartDate} and end job {EndJobId} for {EndDate}",
-            fundingRound.Title, fundingRound.ID, fundingRound.CloudID, startJobId, fundingRound.StartDateUtc, endJobId, fundingRound.EndDateUtc);
+            "Funding round (ID {FundingRoundId}, cloud ID {CloudId}): scheduled allocation job {StartJobId} for {StartDate} and end job {EndJobId} for {EndDate}",
+            fundingRound.ID, fundingRound.CloudID, startJobId, fundingRound.StartDateUtc, endJobId, fundingRound.EndDateUtc);
     }
 
     /// <summary>
@@ -52,7 +52,6 @@ public class FundingRoundSchedulerService(
             fundingRound.StartJobId,
             fundingRound.EndJobId,
             fundingRound.ID,
-            fundingRound.Title,
             fundingRound.CloudID);
     }
 
@@ -64,28 +63,27 @@ public class FundingRoundSchedulerService(
     /// <param name="fundingRoundId">The ID used to identify the round in logs.</param>
     public void CancelFundingRoundJobs(string? startJobId, string? endJobId, int fundingRoundId)
     {
-        CancelFundingRoundJobs(startJobId, endJobId, fundingRoundId, null, null);
+        CancelFundingRoundJobs(startJobId, endJobId, fundingRoundId, null);
     }
 
     private void CancelFundingRoundJobs(
         string? startJobId,
         string? endJobId,
         int fundingRoundId,
-        string? fundingRoundTitle,
         int? cloudId)
     {
         if (!string.IsNullOrEmpty(startJobId))
         {
             logger.LogInformation(
-                "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): cancelling allocation job {JobId}",
-                fundingRoundTitle, fundingRoundId, cloudId, startJobId);
+                "Funding round (ID {FundingRoundId}, cloud ID {CloudId}): cancelling allocation job {JobId}",
+                fundingRoundId, cloudId, startJobId);
             backgroundJobs.Delete(startJobId);
         }
         if (!string.IsNullOrEmpty(endJobId))
         {
             logger.LogInformation(
-                "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}, cloud ID {CloudId}): cancelling end job {JobId}",
-                fundingRoundTitle, fundingRoundId, cloudId, endJobId);
+                "Funding round (ID {FundingRoundId}, cloud ID {CloudId}): cancelling end job {JobId}",
+                fundingRoundId, cloudId, endJobId);
             backgroundJobs.Delete(endJobId);
         }
     }
@@ -115,8 +113,8 @@ public class FundingRoundSchedulerService(
 
         var cloud = fundingRound.Cloud;
         logger.LogInformation(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): starting wallet allocation",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID);
+            "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): starting wallet allocation",
+            fundingRound.ID, cloud.Name, cloud.ID);
 
         if (ShouldSkipAllocation(fundingRound, cloud))
             return;
@@ -127,23 +125,23 @@ public class FundingRoundSchedulerService(
         {
             // Warning because this is a business problem that needs admin attention
             logger.LogWarning(
-                "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): insufficient funds for allocation; required {Required}, available {Available}",
-                fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, totalAllocation, cloud.TotalFundsAvailable);
+                "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): insufficient funds for allocation; required {Required}, available {Available}",
+                fundingRound.ID, cloud.Name, cloud.ID, totalAllocation, cloud.TotalFundsAvailable);
             return;
         }
 
         var activatedDreamCount = await ActivateReadyDreamsAsync(context, cloud.ID);
         logger.LogInformation(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): activated {DreamCount} ready dreams",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, activatedDreamCount);
+            "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): activated {DreamCount} ready dreams",
+            fundingRound.ID, cloud.Name, cloud.ID, activatedDreamCount);
 
         SetWalletBalances(wallets, fundingRound.AllocationPerUser);
         fundingRound.TotalFundsAllocated = totalAllocation;
         await context.SaveChangesAsync();
 
         logger.LogInformation(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): allocation complete; funded {UserCount} wallets with {TotalAllocation} total",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, wallets.Count, totalAllocation);
+            "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): allocation complete; funded {UserCount} wallets with {TotalAllocation} total",
+            fundingRound.ID, cloud.Name, cloud.ID, wallets.Count, totalAllocation);
     }
 
     [AutomaticRetry(Attempts = 3)]
@@ -173,14 +171,14 @@ public class FundingRoundSchedulerService(
         if (cloud == null)
         {
             logger.LogError(
-                "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}): cloud ID {CloudId} was not found during end processing",
-                fundingRound.Title, fundingRound.ID, fundingRound.CloudID);
+                "Funding round (ID {FundingRoundId}): cloud ID {CloudId} was not found during end processing",
+                fundingRound.ID, fundingRound.CloudID);
             return;
         }
 
         logger.LogInformation(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): starting end processing",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID);
+            "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): starting end processing",
+            fundingRound.ID, cloud.Name, cloud.ID);
 
         if (ShouldSkipEndProcessing(fundingRound, cloud))
             return;
@@ -193,8 +191,7 @@ public class FundingRoundSchedulerService(
         {
             var finalizedDreamCounts = await FinalizeActiveDreamsAsync(context, cloud.ID);
             logger.LogInformation(
-                "Last funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): finalized dreams — {CanceledDreamCount} canceled, {PartiallyFundedDreamCount} partially funded, {FullyFundedDreamCount} fully funded",
-                fundingRound.Title,
+                "Last funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): finalized dreams — {CanceledDreamCount} canceled, {PartiallyFundedDreamCount} partially funded, {FullyFundedDreamCount} fully funded",
                 fundingRound.ID,
                 cloud.Name,
                 cloud.ID,
@@ -206,8 +203,8 @@ public class FundingRoundSchedulerService(
         await context.SaveChangesAsync();
         // Summary log at the end is useful for financial auditing
         logger.LogInformation(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): end processing complete; spent {TotalSpent}, remaining funds {Remaining}",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, totalSpent, cloud.TotalFundsRemaining);
+            "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): end processing complete; spent {TotalSpent}",
+            fundingRound.ID, cloud.Name, cloud.ID, totalSpent);
     }
 
     private static Task<FundingRound?> GetFundingRoundForAllocationAsync(ApplicationDbContext context, int fundingRoundId)
@@ -222,24 +219,24 @@ public class FundingRoundSchedulerService(
         if (fundingRound.AllocationPerUser <= 0)
         {
             logger.LogWarning(
-                "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): allocation per user is zero; skipping allocation",
-                fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID);
+                "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): allocation per user is zero; skipping allocation",
+                fundingRound.ID, cloud.Name, cloud.ID);
             return true;
         }
 
         if (fundingRound.TotalFundsAllocated > 0)
         {
             logger.LogWarning(
-                "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): funds are already allocated; skipping duplicate allocation",
-                fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID);
+                "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): funds are already allocated; skipping duplicate allocation",
+                fundingRound.ID, cloud.Name, cloud.ID);
             return true;
         }
 
         if (fundingRound.ProcessedDateUtc != null)
         {
             logger.LogWarning(
-                "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): already processed at {ProcessedDate}; skipping allocation",
-                fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDateUtc);
+                "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): already processed at {ProcessedDate}; skipping allocation",
+                fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDateUtc);
             return true;
         }
 
@@ -260,7 +257,7 @@ public class FundingRoundSchedulerService(
 
     private static bool HasFundsForAllocation(Cloud cloud, decimal totalAllocation)
     {
-        return cloud.TotalFundsAvailable >= totalAllocation;
+        return cloud.TotalFundsAvailable - cloud.TotalFundsSpent >= totalAllocation;
     }
 
     private static async Task<int> ActivateReadyDreamsAsync(ApplicationDbContext context, int cloudId)
@@ -287,8 +284,8 @@ public class FundingRoundSchedulerService(
             return false;
 
         logger.LogWarning(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): already processed at {ProcessedDate}; skipping duplicate end processing",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDateUtc);
+            "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): already processed at {ProcessedDate}; skipping duplicate end processing",
+            fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDateUtc);
         return true;
     }
 
@@ -299,8 +296,8 @@ public class FundingRoundSchedulerService(
     {
         var wallets = await GetCloudWalletsAsync(context, fundingRound.CloudID);
         logger.LogInformation(
-            "Funding round '{FundingRoundTitle}' (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): clearing {WalletCount} wallet balances",
-            fundingRound.Title, fundingRound.ID, cloud.Name, cloud.ID, wallets.Count);
+            "Funding round (ID {FundingRoundId}) for cloud '{CloudName}' (ID {CloudId}): clearing {WalletCount} wallet balances",
+            fundingRound.ID, cloud.Name, cloud.ID, wallets.Count);
         SetWalletBalances(wallets, 0);
     }
 
@@ -358,7 +355,6 @@ public class FundingRoundSchedulerService(
     private void UpdateFundingRoundEndTotals(FundingRound fundingRound, Cloud cloud, decimal totalSpent)
     {
         cloud.TotalFundsSpent += totalSpent;
-        cloud.TotalFundsRemaining = cloud.TotalFundsAvailable - cloud.TotalFundsSpent;
         fundingRound.ProcessedDateUtc = appTime.UtcNow;
     }
 }

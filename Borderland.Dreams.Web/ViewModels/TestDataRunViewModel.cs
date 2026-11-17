@@ -58,7 +58,6 @@ public sealed class TestDataAccountViewModel
 
 public sealed class TestDataFundingRoundViewModel
 {
-    public string Title { get; set; } = "";
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 }

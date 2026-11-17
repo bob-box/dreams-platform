@@ -7,7 +7,6 @@ public class FundingRoundViewModel
 {
     public int ID { get; set; }
     public int CloudID { get; set; }
-    public string Title { get; set; }
 
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm}", ApplyFormatInEditMode = true)]
     [DataType(DataType.DateTime)]
@@ -29,6 +28,8 @@ public class FundingRoundViewModel
     public decimal TotalFundsAllocated { get; set; }
 
     public int UsersInCloudCount { get; set; }
+    [DataType(DataType.Currency)]
+    public decimal TotalFundsRemaining { get; set; }
 
     public bool IsActiveOrPassed(IAppTime appTime) => IsActive(appTime) || HasPassed(appTime);
     public bool IsActive(IAppTime appTime) => StartDate <= appTime.Now && EndDate >= appTime.Now;

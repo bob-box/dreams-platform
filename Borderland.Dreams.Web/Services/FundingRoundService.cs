@@ -50,16 +50,27 @@ public class FundingRoundService(
     /// <returns>A pre-populated view model that reflects the current cloud state and recommended dates.</returns>
     public async Task<FundingRoundViewModel> BuildCreateViewModel()
     {
-        var userCount = await userService.Count();
         var defaultStartDate = await GetDefaultStartDate();
-
-        return new FundingRoundViewModel
+        var viewModel = new FundingRoundViewModel
         {
             CloudID = cloudNameResolver.CloudID,
             StartDate = defaultStartDate,
-            EndDate = defaultStartDate.Date.AddDays(2).EndOfDay(),
-            UsersInCloudCount = userCount
+            EndDate = defaultStartDate.Date.AddDays(2).EndOfDay()
         };
+        await PopulateAllocationSummaryAsync(viewModel);
+        return viewModel;
+    }
+
+    /// <summary>
+    /// Refreshes server-calculated user and available-funds totals used by the funding-round form.
+    /// </summary>
+    public async Task PopulateAllocationSummaryAsync(FundingRoundViewModel viewModel)
+    {
+        var cloud = await context.Cloud.SingleOrDefaultAsync(cloud => cloud.ID == cloudNameResolver.CloudID)
+            ?? throw new InvalidOperationException("The active cloud could not be found.");
+
+        viewModel.UsersInCloudCount = await userService.Count();
+        viewModel.TotalFundsRemaining = cloud.TotalFundsAvailable - cloud.TotalFundsSpent;
     }
 
     /// <summary>
@@ -184,7 +195,6 @@ public class FundingRoundService(
             AddErrors(errors, ValidateLastRoundSetting(viewModel, existingRounds));
             if (errors.Count > 0)
             {
-                viewModel.Title = roundToUpdate.Title;
                 viewModel.StartDate = roundToUpdate.StartDateUtc;
                 viewModel.AllocationPerUser = roundToUpdate.AllocationPerUser;
 
@@ -209,7 +219,6 @@ public class FundingRoundService(
             if (errors.Count > 0)
                 return new FundingRoundServiceResult(FundingRoundServiceStatus.Error, Errors: errors);
 
-            roundToUpdate.Title = viewModel.Title;
             roundToUpdate.StartDateUtc = viewModel.StartDate;
             roundToUpdate.EndDateUtc = viewModel.EndDate;
             roundToUpdate.IsLastRound = viewModel.IsLastRound;
@@ -325,9 +334,11 @@ public class FundingRoundService(
                 Message: "Cannot delete a funding round that is active or has already passed.");
         }
 
-        return new FundingRoundServiceResult(
-            FundingRoundServiceStatus.Success,
-            mapper.ToViewModel(fundingRound));
+        var viewModel = mapper.ToViewModel(fundingRound);
+        if (mode == FundingRoundLoadMode.Edit)
+            await PopulateAllocationSummaryAsync(viewModel);
+
+        return new FundingRoundServiceResult(FundingRoundServiceStatus.Success, viewModel);
     }
 
     private Dictionary<string, List<string>> ValidateActiveRoundUpdate(

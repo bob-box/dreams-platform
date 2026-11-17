@@ -72,7 +72,6 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Round</th>
                         <th>Starts</th>
                         <th>Ends</th>
                     </tr>
@@ -81,7 +80,6 @@
                     @foreach (var round in Model.FundingRounds)
                     {
                         <tr>
-                            <td>@round.Title</td>
                             <td>@round.StartDate</td>
                             <td>@round.EndDate</td>
                         </tr>

@@ -51,7 +51,6 @@ public sealed class TestDataService(
             Name = cloudName,
             Slug = CloudSlugGenerator.Generate(cloudName),
             TotalFundsAvailable = settings.CloudFundsAvailable,
-            TotalFundsRemaining = settings.CloudFundsAvailable,
             TotalFundsSpent = 0m,
             DreamCreatePeriodStartUtc = now.AddMinutes(-1),
             DreamCreatePeriodEndUtc = now.AddDays(30),
@@ -101,7 +100,6 @@ public sealed class TestDataService(
         var firstRound = new FundingRound
         {
             CloudID = cloud.ID,
-            Title = $"Playground round 1 {runId}",
             StartDateUtc = now.AddMinutes(settings.FundingRoundStartInMinutes),
             EndDateUtc = now.AddMinutes(settings.FundingRoundStartInMinutes + settings.FirstFundingRoundLengthInMinutes),
             AllocationPerUser = settings.AllocationPerUser,
@@ -110,7 +108,6 @@ public sealed class TestDataService(
         var secondRound = new FundingRound
         {
             CloudID = cloud.ID,
-            Title = $"Playground round 2 {runId}",
             StartDateUtc = firstRound.EndDateUtc.AddMinutes(settings.BreakBetweenFundingRoundsInMinutes),
             EndDateUtc = firstRound.EndDateUtc
                 .AddMinutes(settings.BreakBetweenFundingRoundsInMinutes + settings.SecondFundingRoundLengthInMinutes),
@@ -141,13 +138,11 @@ public sealed class TestDataService(
             [
                 new TestDataFundingRoundViewModel
                 {
-                    Title = firstRound.Title,
                     StartDate = firstRound.StartDateUtc.ToLocalTime(),
                     EndDate = firstRound.EndDateUtc.ToLocalTime()
                 },
                 new TestDataFundingRoundViewModel
                 {
-                    Title = secondRound.Title,
                     StartDate = secondRound.StartDateUtc.ToLocalTime(),
                     EndDate = secondRound.EndDateUtc.ToLocalTime()
                 }

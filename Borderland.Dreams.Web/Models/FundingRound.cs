@@ -11,7 +11,6 @@ public class FundingRound : IAutoPopulateCreatedAtOnAdd
     [DataType(DataType.DateTime)]
     public DateTime CreatedAtUtc { get; set; }
 
-    public string Title { get; set; } = string.Empty;
     public int CloudID { get; set; }
     public DateTime StartDateUtc { get; set; }
     public DateTime EndDateUtc { get; set; }

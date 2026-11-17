@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Edit Funding Round";
+    var potentialAllocation = Model.UsersInCloudCount * Model.AllocationPerUser;
+    var allocationExceedsFunds = potentialAllocation > Model.TotalFundsRemaining;
 }
 
 <h1>Edit Funding Round</h1>
@@ -19,19 +21,6 @@
             <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="ID" />
             <input type="hidden" asp-for="CloudID" />
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                @if (Model.IsActive(appTime))
-                {
-                    <input type="hidden" asp-for="Title" />
-                    <input asp-for="Title" class="form-control" disabled />
-                }
-                else
-                {
-                    <input asp-for="Title" class="form-control" />
-                    <span asp-validation-for="Title" class="text-danger"></span>
-                }
-            </div>
             <div class="form-group">
                 <label asp-for="StartDate" class="control-label"></label>
                 @if (Model.IsActive(appTime))
@@ -79,12 +68,92 @@
             </div>
         </form>
     </div>
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Users in Cloud</h5>
+                        <p class="card-text h4">@Model.UsersInCloudCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Potential Allocation</h5>
+                        <p class="card-text h4 allocation-highlight" id="totalAllocation">
+                            @potentialAllocation.ToString("C")
+                        </p>
+                        <small class="form-text text-muted">
+                            Total amount to be allocated in this funding round (based on the number of <u>current</u> users in the cloud).
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Funds Remaining</h5>
+                        <p class="card-text h4">@Model.TotalFundsRemaining.ToString("C")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-warning mt-3" id="allocationWarning" role="alert"
+             hidden="@(!allocationExceedsFunds)">
+            The total potential allocation currently exceeds the cloud's funds remaining. Add funds or reduce the
+            allocation per user. The balance may change before the round starts.
+        </div>
+        <div class="alert alert-info mt-3" role="alert">
+            Funds are checked when the funding round starts. If the cloud does not have enough remaining funds for
+            the total potential allocation at that time, the allocation will be skipped and the funding round will
+            not start.
+        </div>
+    </div>
 </div>
 
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
 
+@section Styles {
+    <style>
+        .allocation-highlight {
+            transition: background-color 50ms ease-in, background-color 1s ease-out;
+        }
+
+        .allocation-changed {
+            background-color: #ffdf78 !important;
+        }
+    </style>
+}
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function updateTotalAllocation(event) {
+            const usersCount = @Model.UsersInCloudCount;
+            const fundsRemaining = @Model.TotalFundsRemaining.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const allocation = parseFloat(event.target.value) || 0;
+            const totalAmount = usersCount * allocation;
+            const total = totalAmount.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK' });
+            const totalElement = document.getElementById('totalAllocation');
+            const warningElement = document.getElementById('allocationWarning');
+
+            warningElement.hidden = totalAmount <= fundsRemaining;
+
+            if (totalElement.textContent !== total) {
+                totalElement.textContent = total;
+                totalElement.classList.add('allocation-changed');
+
+                setTimeout(() => {
+                    totalElement.classList.remove('allocation-changed');
+                }, 1000);
+            }
+        }
+
+        document.querySelector('input[name="AllocationPerUser"]').addEventListener('input', updateTotalAllocation);
+    </script>
 }

@@ -140,9 +140,6 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<decimal>("TotalFundsAvailable")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<decimal>("TotalFundsRemaining")
-                        .HasColumnType("decimal(18, 2)");
-
                     b.Property<decimal>("TotalFundsSpent")
                         .HasColumnType("decimal(18, 2)");
 
@@ -449,10 +446,6 @@ namespace Borderland.Dreams.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("StartJobId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("TotalFundsAllocated")

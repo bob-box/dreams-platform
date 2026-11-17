@@ -122,7 +122,6 @@ public static class DataSeeder
                 Name = "test",
                 Slug = CloudSlugGenerator.Generate("test"),
                 TotalFundsAvailable = 1000m,
-                TotalFundsRemaining = 1000m,
                 TotalFundsSpent = 0m,
                 DreamCreatePeriodStartUtc = _appTime.UtcNow,
                 DreamCreatePeriodEndUtc = _appTime.UtcNow.AddDays(7),
@@ -232,30 +231,23 @@ public static class DataSeeder
     {
         var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var fundingRound = await context.FundingRound
-            .SingleOrDefaultAsync(fr => fr.CloudID == cloudId && fr.Title == "Test Round");
-        if (fundingRound == null)
+        var fundingRound = new FundingRound
         {
-            fundingRound = new FundingRound
-            {
-                CloudID = cloudId,
-                Title = "Test Round",
-                StartDateUtc = _appTime.UtcNow.AddDays(-1),
-                EndDateUtc = _appTime.UtcNow.AddDays(30),
-                MaxPercentagePerDream = 10m, // 10% of per-user allocation
-                AllocationPerUser = 100m // each user receives 100 units
-            };
-            await using var transaction = await context.Database.BeginTransactionAsync();
-            context.FundingRound.Add(fundingRound);
-            await context.SaveChangesAsync();
+            CloudID = cloudId,
+            StartDateUtc = _appTime.UtcNow.AddDays(-1),
+            EndDateUtc = _appTime.UtcNow.AddDays(30),
+            MaxPercentagePerDream = 10m, // 10% of per-user allocation
+            AllocationPerUser = 100m // each user receives 100 units
+        };
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        context.FundingRound.Add(fundingRound);
+        await context.SaveChangesAsync();
 
-            var schedulerService = serviceProvider.GetRequiredService<FundingRoundSchedulerService>();
-            schedulerService.ScheduleFundingRoundJobs(fundingRound);
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
+        var schedulerService = serviceProvider.GetRequiredService<FundingRoundSchedulerService>();
+        schedulerService.ScheduleFundingRoundJobs(fundingRound);
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
-            return fundingRound.ID;
-        }
         return fundingRound.ID;
     }
 

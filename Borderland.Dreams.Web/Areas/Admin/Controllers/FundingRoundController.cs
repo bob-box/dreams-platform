@@ -34,6 +34,7 @@ public class FundingRoundController(
     {
         if (!ModelState.IsValid)
         {
+            await fundingRoundService.PopulateAllocationSummaryAsync(viewModel);
             return View(viewModel);
         }
 
@@ -41,6 +42,7 @@ public class FundingRoundController(
         if (result.Status == FundingRoundServiceStatus.Error)
         {
             AddErrorsToModelState(ModelState, result.Errors);
+            await fundingRoundService.PopulateAllocationSummaryAsync(viewModel);
             return View(viewModel);
         }
 
@@ -79,7 +81,10 @@ public class FundingRoundController(
         }
 
         if (!ModelState.IsValid)
+        {
+            await fundingRoundService.PopulateAllocationSummaryAsync(viewModel);
             return View(viewModel);
+        }
 
         var result = await fundingRoundService.Update(viewModel);
         if (result.Status == FundingRoundServiceStatus.NotFound)
@@ -90,6 +95,7 @@ public class FundingRoundController(
         if (result.Status == FundingRoundServiceStatus.Error)
         {
             AddErrorsToModelState(ModelState, result.Errors);
+            await fundingRoundService.PopulateAllocationSummaryAsync(viewModel);
             return View(viewModel);
         }
 

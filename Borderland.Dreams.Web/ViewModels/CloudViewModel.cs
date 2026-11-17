@@ -18,7 +18,7 @@ public class CloudViewModel : IValidatableObject
     [DataType(DataType.Currency)]
     public decimal TotalFundsAvailable { get; set; }
     [DataType(DataType.Currency)]
-    public decimal TotalFundsRemaining { get; set; } = 0;
+    public decimal TotalFundsRemaining => TotalFundsAvailable - TotalFundsSpent;
     [DataType(DataType.Currency)]
     public decimal TotalFundsSpent { get; set; }
 

@@ -12,7 +12,6 @@ public class FundingRoundMapper(IAppTime appTime)
         {
             ID = model.ID,
             CloudID = model.CloudID,
-            Title = model.Title,
             StartDate = appTime.ToLocal(model.StartDateUtc),
             EndDate = appTime.ToLocal(model.EndDateUtc),
             IsLastRound = model.IsLastRound,
@@ -28,7 +27,6 @@ public class FundingRoundMapper(IAppTime appTime)
         {
             ID = vm.ID,
             CloudID = vm.CloudID,
-            Title = vm.Title,
             StartDateUtc = appTime.ToUtc(vm.StartDate),
             EndDateUtc = appTime.ToUtc(vm.EndDate),
             IsLastRound = vm.IsLastRound,
