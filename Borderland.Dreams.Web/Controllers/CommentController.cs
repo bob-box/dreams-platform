@@ -53,6 +53,30 @@ public class CommentController(
         };
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(
+        int dreamId,
+        int commentId,
+        [Bind("Body")] CommentPostViewModel input)
+    {
+        var authorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
+        var result = await commentService.Edit(dreamId, commentId, authorId, input.Body);
+        return result.Status switch
+        {
+            CommentServiceStatus.Success => RedirectToComment(dreamId, result.CommentId!.Value),
+            CommentServiceStatus.CommentNotFound => NotFound(),
+            CommentServiceStatus.NotAuthor => Forbid(),
+            CommentServiceStatus.NotMember => Forbid(),
+            CommentServiceStatus.InvalidBody => ReturnInvalidEdit(
+                dreamId,
+                commentId,
+                input,
+                result.ErrorMessage!),
+            _ => BadRequest("Unable to edit comment.")
+        };
+    }
+
     private RedirectResult RedirectToComment(int dreamId, int commentId) =>
         Redirect($"{GetDreamDetailsUrl(dreamId)}#comment-{commentId}");
 
@@ -75,6 +99,18 @@ public class CommentController(
         return Redirect($"{GetDreamDetailsUrl(dreamId)}#comment-{parentCommentId}");
     }
 
+    private RedirectResult ReturnInvalidEdit(
+        int dreamId,
+        int commentId,
+        CommentPostViewModel input,
+        string errorMessage)
+    {
+        TempData[CommentTempDataKeys.InvalidEditBody] = input.Body?.Trim() ?? string.Empty;
+        TempData[CommentTempDataKeys.InvalidEditError] = errorMessage;
+        TempData[CommentTempDataKeys.InvalidEditComment] = commentId;
+        return Redirect($"{GetDreamDetailsUrl(dreamId)}#comment-{commentId}");
+    }
+
     private string GetDreamDetailsUrl(int dreamId) =>
         Url.Action(nameof(DreamController.Details), "Dream", new { id = dreamId })
         ?? throw new InvalidOperationException("Unable to create the dream URL.");
@@ -87,4 +123,7 @@ internal static class CommentTempDataKeys
     internal const string InvalidReplyBody = "InvalidReplyBody";
     internal const string InvalidReplyError = "InvalidReplyError";
     internal const string InvalidReplyParent = "InvalidReplyParent";
+    internal const string InvalidEditBody = "InvalidEditBody";
+    internal const string InvalidEditError = "InvalidEditError";
+    internal const string InvalidEditComment = "InvalidEditComment";
 }

@@ -15,6 +15,9 @@ public class Comment : IAutoPopulateCreatedAtOnAdd
     [DataType(DataType.DateTime)]
     public DateTime CreatedAtUtc { get; set; }
 
+    [DataType(DataType.DateTime)]
+    public DateTime? EditedUtc { get; set; }
+
     public Dream Dream { get; set; } = null!;
     public User? Author { get; set; }
     public Comment? ParentComment { get; set; }

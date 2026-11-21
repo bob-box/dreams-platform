@@ -6,6 +6,7 @@ public class CommentPostViewModel
 {
     public int DreamId { get; set; }
     public int? ParentCommentId { get; set; }
+    public int? CommentId { get; set; }
     public string? ErrorMessage { get; set; }
 
     [Required(ErrorMessage = "No comment written.")]

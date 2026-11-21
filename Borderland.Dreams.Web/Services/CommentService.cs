@@ -67,29 +67,12 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         if (dream == null)
             return new CommentServiceResult(CommentServiceStatus.DreamNotFound);
 
-        var cloudId = dream.CloudID.ToString();
-        var isCloudMember = await context.UserClaims.AnyAsync(claim =>
-            claim.UserId == authorId &&
-            claim.ClaimType == Constants.JOINED_CLOUD_CLAIM &&
-            claim.ClaimValue == cloudId);
-
-        if (!isCloudMember)
+        if (!await IsCloudMemberAsync(dream.CloudID, authorId))
             return new CommentServiceResult(CommentServiceStatus.NotMember);
 
-        var trimmedBody = body?.Trim() ?? string.Empty;
-        if (trimmedBody.Length == 0)
-        {
-            return new CommentServiceResult(
-                CommentServiceStatus.InvalidBody,
-                ErrorMessage: "A comment is required.");
-        }
-
-        if (trimmedBody.Length > MaxBodyLength)
-        {
-            return new CommentServiceResult(
-                CommentServiceStatus.InvalidBody,
-                ErrorMessage: "Comments must be 1000 characters or fewer.");
-        }
+        var (trimmedBody, bodyError) = ValidateBody(body);
+        if (bodyError != null)
+            return new CommentServiceResult(CommentServiceStatus.InvalidBody, ErrorMessage: bodyError);
 
         if (parentCommentId.HasValue)
         {
@@ -127,5 +110,48 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         await context.SaveChangesAsync();
 
         return new CommentServiceResult(CommentServiceStatus.Success, comment.ID);
+    }
+
+    public async Task<CommentServiceResult> Edit(int dreamId, int commentId, string authorId, string? body)
+    {
+        var comment = await context.Comment
+            .Include(comment => comment.Dream)
+            .SingleOrDefaultAsync(comment => comment.ID == commentId && comment.DreamID == dreamId);
+        if (comment == null)
+            return new CommentServiceResult(CommentServiceStatus.CommentNotFound);
+
+        if (comment.AuthorID != authorId)
+            return new CommentServiceResult(CommentServiceStatus.NotAuthor);
+
+        if (!await IsCloudMemberAsync(comment.Dream.CloudID, authorId))
+            return new CommentServiceResult(CommentServiceStatus.NotMember);
+
+        var (trimmedBody, bodyError) = ValidateBody(body);
+        if (bodyError != null)
+            return new CommentServiceResult(CommentServiceStatus.InvalidBody, ErrorMessage: bodyError);
+
+        comment.Body = trimmedBody;
+        comment.EditedUtc = appTime.UtcNow;
+        await context.SaveChangesAsync();
+
+        return new CommentServiceResult(CommentServiceStatus.Success, comment.ID);
+    }
+
+    private Task<bool> IsCloudMemberAsync(int cloudId, string userId) =>
+        context.UserClaims.AnyAsync(claim =>
+            claim.UserId == userId &&
+            claim.ClaimType == Constants.JOINED_CLOUD_CLAIM &&
+            claim.ClaimValue == cloudId.ToString());
+
+    private static (string Body, string? Error) ValidateBody(string? body)
+    {
+        var trimmedBody = body?.Trim() ?? string.Empty;
+        if (trimmedBody.Length == 0)
+            return (trimmedBody, "A comment is required.");
+
+        if (trimmedBody.Length > MaxBodyLength)
+            return (trimmedBody, "Comments must be 1000 characters or fewer.");
+
+        return (trimmedBody, null);
     }
 }

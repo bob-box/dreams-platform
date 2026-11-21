@@ -1,0 +1,25 @@
+@model Borderland.Dreams.ViewModels.CommentPostViewModel
+
+@{
+    var commentId = Model.CommentId
+        ?? throw new InvalidOperationException("An edit form requires a comment ID.");
+}
+
+<form class="comment-form mt-2"
+      asp-controller="Comment"
+      asp-action="Edit"
+      asp-route-dreamId="@Model.DreamId"
+      asp-route-commentId="@commentId"
+      method="post">
+    @Html.AntiForgeryToken()
+    <div class="mb-2">
+        <label for="edit-body-@commentId" class="form-label">Edit your comment</label>
+        <textarea name="Body" id="edit-body-@commentId" class="form-control" rows="3" maxlength="1000">@Model.Body</textarea>
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <span class="text-danger">@Model.ErrorMessage</span>
+        }
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Save edit</button>
+    <button type="button" class="btn btn-secondary btn-sm comment-form-cancel">Cancel</button>
+</form>

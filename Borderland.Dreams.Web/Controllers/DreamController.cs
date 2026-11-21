@@ -77,11 +77,13 @@ public class DreamController(
         ViewBag.IsReturnToDraftAllowed = result.Dream.Status == DreamStatus.ReadyForFunding
             && isBeforeDreamEditDeadline;
         result.Dream.Comments = (await commentService.GetForDream(result.Dream.ID)).ToList();
+        ViewBag.CurrentUserId = userId;
         ViewBag.CanComment = !string.IsNullOrWhiteSpace(userId)
             && await cloudService.UserHasJoinedCloud(User);
 
         RestoreCommentForm(result.Dream.ID);
         RestoreReplyForm(result.Dream.ID, result.Dream.Comments);
+        RestoreEditForm(result.Dream.ID, result.Dream.Comments);
 
         return View(result.Dream);
     }
@@ -134,6 +136,38 @@ public class DreamController(
         {
             DreamId = dreamId,
             ParentCommentId = parentCommentId,
+            Body = body,
+            ErrorMessage = errorMessage
+        };
+    }
+
+    /// <summary>
+    /// Restores an invalid edit form on the comment it targeted.
+    /// </summary>
+    private void RestoreEditForm(int dreamId, IReadOnlyList<CommentViewModel> comments)
+    {
+        if (!TempData.TryGetValue(CommentTempDataKeys.InvalidEditComment, out var savedCommentId)
+            || !int.TryParse(savedCommentId?.ToString(), out var commentId)
+            || !TempData.TryGetValue(CommentTempDataKeys.InvalidEditBody, out var savedBody)
+            || savedBody is not string body)
+        {
+            return;
+        }
+
+        var currentUserId = GetCurrentUserId();
+        var target = comments
+            .SelectMany(comment => new[] { comment }.Concat(comment.Replies))
+            .FirstOrDefault(comment => comment.Id == commentId);
+        if (target == null || target.AuthorId != currentUserId)
+            return;
+
+        var errorMessage = TempData.TryGetValue(CommentTempDataKeys.InvalidEditError, out var savedError)
+            ? savedError as string
+            : null;
+        target.EditForm = new CommentPostViewModel
+        {
+            DreamId = dreamId,
+            CommentId = commentId,
             Body = body,
             ErrorMessage = errorMessage
         };

@@ -198,6 +198,9 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("EditedUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("ParentCommentID")
                         .HasColumnType("INTEGER");
 

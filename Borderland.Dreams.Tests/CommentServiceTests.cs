@@ -154,6 +154,140 @@ public class CommentServiceTests
     }
 
     [Fact]
+    public async Task EditUpdatesOwnCommentAndSetsEditedTimestamp()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Original");
+        database.AppTime.Advance(TimeSpan.FromMinutes(1));
+
+        var result = await service.Edit(
+            database.DreamId,
+            posted.CommentId!.Value,
+            database.UserId,
+            "  Corrected comment  ");
+        var comment = await database.Context.Comment.SingleAsync();
+        var viewModel = Assert.Single(await service.GetForDream(database.DreamId));
+
+        Assert.Equal(CommentServiceStatus.Success, result.Status);
+        Assert.Equal("Corrected comment", comment.Body);
+        Assert.Equal(database.AppTime.UtcNow, comment.EditedUtc);
+        Assert.Equal(database.AppTime.UtcNow, viewModel.EditedAt);
+    }
+
+    [Fact]
+    public async Task EditAllowsAuthorToEditAReply()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var parent = await service.Post(database.DreamId, database.UserId, "Parent");
+        var reply = await service.Reply(
+            database.DreamId,
+            parent.CommentId!.Value,
+            database.UserId,
+            "Original reply");
+
+        var result = await service.Edit(
+            database.DreamId,
+            reply.CommentId!.Value,
+            database.UserId,
+            "Edited reply");
+
+        Assert.Equal(CommentServiceStatus.Success, result.Status);
+        Assert.Equal("Edited reply", await database.Context.Comment
+            .Where(comment => comment.ID == reply.CommentId)
+            .Select(comment => comment.Body)
+            .SingleAsync());
+    }
+
+    [Fact]
+    public async Task EditRejectsAnotherAuthor()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Original");
+        var otherUserId = await database.AddUserAsync("other-member-id", "Other member", isMember: true);
+
+        var result = await service.Edit(
+            database.DreamId,
+            posted.CommentId!.Value,
+            otherUserId,
+            "Changed by someone else");
+        var comment = await database.Context.Comment.SingleAsync();
+
+        Assert.Equal(CommentServiceStatus.NotAuthor, result.Status);
+        Assert.Equal("Original", comment.Body);
+        Assert.Null(comment.EditedUtc);
+    }
+
+    [Fact]
+    public async Task EditRejectsFormerMemberButCommentRemainsVisible()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Original");
+        var membershipClaim = await database.Context.UserClaims.SingleAsync(claim =>
+            claim.UserId == database.UserId &&
+            claim.ClaimType == Constants.JOINED_CLOUD_CLAIM);
+        database.Context.UserClaims.Remove(membershipClaim);
+        await database.Context.SaveChangesAsync();
+
+        var result = await service.Edit(
+            database.DreamId,
+            posted.CommentId!.Value,
+            database.UserId,
+            "Changed after leaving");
+        var visibleComment = Assert.Single(await service.GetForDream(database.DreamId));
+
+        Assert.Equal(CommentServiceStatus.NotMember, result.Status);
+        Assert.Equal("Original", visibleComment.Body);
+        Assert.Null(visibleComment.EditedAt);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" \t\r\n ")]
+    public async Task EditRejectsEmptyBodies(string? body)
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Original");
+
+        var result = await service.Edit(
+            database.DreamId,
+            posted.CommentId!.Value,
+            database.UserId,
+            body);
+
+        Assert.Equal(CommentServiceStatus.InvalidBody, result.Status);
+        Assert.Equal("Original", await database.Context.Comment
+            .Where(comment => comment.ID == posted.CommentId)
+            .Select(comment => comment.Body)
+            .SingleAsync());
+    }
+
+    [Fact]
+    public async Task EditRejectsBodiesLongerThan1000Characters()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Original");
+
+        var result = await service.Edit(
+            database.DreamId,
+            posted.CommentId!.Value,
+            database.UserId,
+            new string('x', 1001));
+
+        Assert.Equal(CommentServiceStatus.InvalidBody, result.Status);
+        Assert.Equal("Original", await database.Context.Comment
+            .Where(comment => comment.ID == posted.CommentId)
+            .Select(comment => comment.Body)
+            .SingleAsync());
+    }
+
+    [Fact]
     public async Task MigrationPreservesExistingComments()
     {
         await using var database = await TestDatabase.Create(
@@ -165,6 +299,7 @@ public class CommentServiceTests
         Assert.Equal("Legacy comment", comment.Body);
         Assert.Equal(database.UserId, comment.AuthorID);
         Assert.Equal(database.AppTime.UtcNow, comment.CreatedAtUtc);
+        Assert.Null(comment.EditedUtc);
     }
 
     [Fact]
@@ -251,6 +386,30 @@ public class CommentServiceTests
         public int DreamId { get; }
         public string UserId { get; }
 
+        public async Task<string> AddUserAsync(string userId, string name, bool isMember)
+        {
+            var user = new User { Id = userId, Name = name, UserName = userId };
+            Context.Users.Add(user);
+            await Context.SaveChangesAsync();
+
+            if (isMember)
+            {
+                var cloudId = await Context.Dream
+                    .Where(dream => dream.ID == DreamId)
+                    .Select(dream => dream.CloudID)
+                    .SingleAsync();
+                Context.UserClaims.Add(new IdentityUserClaim<string>
+                {
+                    UserId = userId,
+                    ClaimType = Constants.JOINED_CLOUD_CLAIM,
+                    ClaimValue = cloudId.ToString()
+                });
+                await Context.SaveChangesAsync();
+            }
+
+            return userId;
+        }
+
         public static async Task<TestDatabase> Create(
             bool isMember,
             bool applyMigrations = false,
@@ -269,7 +428,9 @@ public class CommentServiceTests
                 appTime,
                 new HttpContextAccessor(),
                 new ServiceCollection().BuildServiceProvider());
-            if (applyMigrations)
+            if (migrateLegacyComment)
+                await context.Database.MigrateAsync("20261117201839_RemoveTotalFundsRemaningCloud");
+            else if (applyMigrations)
                 await context.Database.MigrateAsync();
             else
                 await context.Database.EnsureCreatedAsync();
@@ -301,14 +462,9 @@ public class CommentServiceTests
 
             if (migrateLegacyComment)
             {
-                context.Comment.Add(new Comment
-                {
-                    DreamID = dream.ID,
-                    AuthorID = user.Id,
-                    Body = "Legacy comment",
-                    CreatedAtUtc = appTime.UtcNow
-                });
-                await context.SaveChangesAsync();
+                await context.Database.ExecuteSqlInterpolatedAsync(
+                    $"INSERT INTO Comment (DreamID, AuthorID, Body, CreatedAtUtc) VALUES ({dream.ID}, {user.Id}, {"Legacy comment"}, {appTime.UtcNow})");
+                await context.Database.MigrateAsync();
             }
 
             return new TestDatabase(connection, context, appTime, queryCounter, dream.ID, user.Id);

@@ -15,6 +15,7 @@
       method="post">
     @Html.AntiForgeryToken()
     <div class="mb-2">
+        <label for="@bodyId" class="form-label">Your reply</label>
         <textarea asp-for="Body" id="@bodyId" class="form-control" rows="3" maxlength="1000"></textarea>
         <span asp-validation-for="Body" class="text-danger"></span>
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))
@@ -22,5 +23,6 @@
             <span class="text-danger">@Model.ErrorMessage</span>
         }
     </div>
-    <button type="submit" class="btn btn-outline-primary btn-sm">Reply</button>
+    <button type="submit" class="btn btn-primary btn-sm">Reply</button>
+    <button type="button" class="btn btn-secondary btn-sm comment-form-cancel">Cancel</button>
 </form>

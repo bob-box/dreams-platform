@@ -1,11 +1,38 @@
 @model Borderland.Dreams.ViewModels.CommentViewModel
 
+@{
+    var currentUserId = ViewBag.CurrentUserId as string;
+}
+
 <li id="comment-@Model.Id" class="border-bottom py-3">
     <p class="mb-1">
         <strong>@Model.AuthorName</strong>
         <time>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</time>
+        @if (Model.EditedAt.HasValue)
+        {
+            <span class="text-muted small">(edited @Model.EditedAt)</span>
+        }
     </p>
     <div class="comment-body">@Model.Body</div>
+
+    @if (ViewBag.CanComment == true && currentUserId != null && Model.AuthorId == currentUserId)
+    {
+        var editForm = Model.EditForm ?? new Borderland.Dreams.ViewModels.CommentPostViewModel
+        {
+            DreamId = Model.DreamId,
+            CommentId = Model.Id,
+            Body = Model.Body
+        };
+        var isEditFormOpen = Model.EditForm != null;
+        var editFormContainerId = $"edit-form-container-{Model.Id}";
+        <button type="button"
+                class="btn btn-link p-0 edit-toggle"
+                aria-expanded="@(isEditFormOpen ? "true" : "false")"
+                aria-controls="@editFormContainerId">Edit</button>
+        <div id="@editFormContainerId" data-comment-form-container hidden="@(isEditFormOpen ? null : "hidden")">
+            @await Html.PartialAsync("_CommentEditForm", editForm)
+        </div>
+    }
 
     @if (ViewBag.CanComment == true)
     {
@@ -20,7 +47,7 @@
                 class="btn btn-link p-0 reply-toggle"
                 aria-expanded="@(isReplyFormOpen ? "true" : "false")"
                 aria-controls="@replyFormContainerId">Reply</button>
-        <div id="@replyFormContainerId" hidden="@(isReplyFormOpen ? null : "hidden")">
+        <div id="@replyFormContainerId" data-comment-form-container hidden="@(isReplyFormOpen ? null : "hidden")">
             @await Html.PartialAsync("_ReplyForm", replyForm)
         </div>
     }
