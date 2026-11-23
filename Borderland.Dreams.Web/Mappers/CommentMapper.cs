@@ -17,7 +17,8 @@ public class CommentMapper(IAppTime appTime)
             AuthorName = model.Author?.Name ?? "[deleted user]",
             Body = model.Body,
             CreatedAt = appTime.ToLocal(model.CreatedAtUtc),
-            EditedAt = appTime.ToLocal(model.EditedUtc)
+            EditedAt = appTime.ToLocal(model.EditedUtc),
+            IsDeleted = model.DeletedUtc.HasValue
         };
     }
 

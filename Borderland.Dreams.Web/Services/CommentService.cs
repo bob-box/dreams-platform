@@ -39,6 +39,10 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
                 parent.Replies.Add(comment);
         }
 
+        foreach (var comment in topLevelComments)
+            comment.Replies.RemoveAll(reply => reply.IsDeleted);
+
+        topLevelComments.RemoveAll(comment => comment.IsDeleted && comment.Replies.Count == 0);
         return topLevelComments;
     }
 
@@ -74,6 +78,10 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         if (bodyError != null)
             return new CommentServiceResult(CommentServiceStatus.InvalidBody, ErrorMessage: bodyError);
 
+        // Serialize parent validation and insertion with comment deletion in SQLite.
+        await using var transaction = parentCommentId.HasValue
+            ? await context.Database.BeginTransactionAsync()
+            : null;
         if (parentCommentId.HasValue)
         {
             var parent = await context.Comment
@@ -84,6 +92,9 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
 
             if (parent == null || parent.DreamID != dreamId)
                 return new CommentServiceResult(CommentServiceStatus.InvalidParent);
+
+            if (parent.DeletedUtc.HasValue || parent.ParentComment?.DeletedUtc != null)
+                return new CommentServiceResult(CommentServiceStatus.CommentDeleted);
 
             if (parent.ParentCommentID.HasValue)
             {
@@ -108,12 +119,15 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         };
         context.Comment.Add(comment);
         await context.SaveChangesAsync();
+        if (transaction != null)
+            await transaction.CommitAsync();
 
         return new CommentServiceResult(CommentServiceStatus.Success, comment.ID);
     }
 
     public async Task<CommentServiceResult> Edit(int dreamId, int commentId, string authorId, string? body)
     {
+        await using var transaction = await context.Database.BeginTransactionAsync();
         var comment = await context.Comment
             .Include(comment => comment.Dream)
             .SingleOrDefaultAsync(comment => comment.ID == commentId && comment.DreamID == dreamId);
@@ -122,6 +136,9 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
 
         if (comment.AuthorID != authorId)
             return new CommentServiceResult(CommentServiceStatus.NotAuthor);
+
+        if (comment.DeletedUtc.HasValue)
+            return new CommentServiceResult(CommentServiceStatus.CommentDeleted);
 
         if (!await IsCloudMemberAsync(comment.Dream.CloudID, authorId))
             return new CommentServiceResult(CommentServiceStatus.NotMember);
@@ -133,7 +150,31 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         comment.Body = trimmedBody;
         comment.EditedUtc = appTime.UtcNow;
         await context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
+        return new CommentServiceResult(CommentServiceStatus.Success, comment.ID);
+    }
+
+    public async Task<CommentServiceResult> Delete(int dreamId, int commentId, string authorId)
+    {
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        var comment = await context.Comment
+            .SingleOrDefaultAsync(comment => comment.ID == commentId && comment.DreamID == dreamId);
+        if (comment == null)
+            return new CommentServiceResult(CommentServiceStatus.CommentNotFound);
+
+        if (comment.AuthorID != authorId)
+            return new CommentServiceResult(CommentServiceStatus.NotAuthor);
+
+        if (!comment.DeletedUtc.HasValue)
+        {
+            comment.Body = string.Empty;
+            comment.DeletedUtc = appTime.UtcNow;
+            comment.DeletedByUserId = authorId;
+            await context.SaveChangesAsync();
+        }
+
+        await transaction.CommitAsync();
         return new CommentServiceResult(CommentServiceStatus.Success, comment.ID);
     }
 

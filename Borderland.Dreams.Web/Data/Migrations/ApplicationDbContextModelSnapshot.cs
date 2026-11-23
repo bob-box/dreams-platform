@@ -195,6 +195,12 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DeletedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("DreamID")
                         .HasColumnType("INTEGER");
 

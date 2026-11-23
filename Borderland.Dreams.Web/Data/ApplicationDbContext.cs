@@ -237,8 +237,12 @@ public class ApplicationDbContext : IdentityDbContext<User>
             if (entityType == null)
                 continue;
 
-            // Soft-deleted dreams and clouds remain Modified in EF, but should read as deletions in the log.
-            var deleted = entry.State == EntityState.Deleted ||
+            var commentDeleted = entity is Comment && entry.State == EntityState.Modified &&
+                                 entry.Properties.Any(p => p.Metadata.Name == nameof(Models.Comment.DeletedUtc) &&
+                                     p.IsModified && p.OriginalValue is null && p.CurrentValue is DateTime);
+
+            // Soft-deleted entities remain Modified in EF, but should read as deletions in the log.
+            var deleted = entry.State == EntityState.Deleted || commentDeleted ||
                           (entry.State == EntityState.Modified &&
                            entry.Properties.Any(p => p.Metadata.Name == "IsDeleted" &&
                                p.IsModified && p.CurrentValue is true));
@@ -253,7 +257,9 @@ public class ApplicationDbContext : IdentityDbContext<User>
             var values = new Dictionary<string, AuditChange>();
             foreach (var property in entry.Properties)
             {
-                if (property.Metadata.IsPrimaryKey())
+                // Keep removed comment text out of the deletion event.
+                if (property.Metadata.IsPrimaryKey() ||
+                    (commentDeleted && property.Metadata.Name == nameof(Models.Comment.Body)))
                     continue;
 
                 if (entry.State == EntityState.Added)

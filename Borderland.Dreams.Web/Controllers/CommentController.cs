@@ -43,6 +43,7 @@ public class CommentController(
             CommentServiceStatus.Success => RedirectToComment(dreamId, result.CommentId!.Value),
             CommentServiceStatus.DreamNotFound => NotFound(),
             CommentServiceStatus.InvalidParent => NotFound(),
+            CommentServiceStatus.CommentDeleted => Conflict("This thread is closed to new replies."),
             CommentServiceStatus.NotMember => Forbid(),
             CommentServiceStatus.InvalidBody => ReturnInvalidReply(
                 dreamId,
@@ -66,6 +67,7 @@ public class CommentController(
         {
             CommentServiceStatus.Success => RedirectToComment(dreamId, result.CommentId!.Value),
             CommentServiceStatus.CommentNotFound => NotFound(),
+            CommentServiceStatus.CommentDeleted => Conflict("This comment has been deleted."),
             CommentServiceStatus.NotAuthor => Forbid(),
             CommentServiceStatus.NotMember => Forbid(),
             CommentServiceStatus.InvalidBody => ReturnInvalidEdit(
@@ -74,6 +76,21 @@ public class CommentController(
                 input,
                 result.ErrorMessage!),
             _ => BadRequest("Unable to edit comment.")
+        };
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int dreamId, int commentId)
+    {
+        var authorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
+        var result = await commentService.Delete(dreamId, commentId, authorId);
+        return result.Status switch
+        {
+            CommentServiceStatus.Success => Redirect($"{GetDreamDetailsUrl(dreamId)}#comments"),
+            CommentServiceStatus.CommentNotFound => NotFound(),
+            CommentServiceStatus.NotAuthor => StatusCode(StatusCodes.Status403Forbidden),
+            _ => BadRequest("Unable to delete comment.")
         };
     }
 

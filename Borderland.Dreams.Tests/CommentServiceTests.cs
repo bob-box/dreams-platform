@@ -288,6 +288,141 @@ public class CommentServiceTests
     }
 
     [Fact]
+    public async Task DeleteClearsBodyAndPreservesOriginalDeletionMetadataOnRetry()
+    {
+        await using var database = await TestDatabase.Create(isMember: true, applyMigrations: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Private text");
+        var commentId = posted.CommentId!.Value;
+        var deletedAt = database.AppTime.UtcNow;
+
+        var result = await service.Delete(database.DreamId, commentId, database.UserId);
+        database.AppTime.Advance(TimeSpan.FromMinutes(1));
+        var repeated = await service.Delete(database.DreamId, commentId, database.UserId);
+
+        Assert.Equal(CommentServiceStatus.Success, result.Status);
+        Assert.Equal(CommentServiceStatus.Success, repeated.Status);
+        var comment = await database.Context.Comment.AsNoTracking().SingleAsync();
+        Assert.Equal(commentId, comment.ID);
+        Assert.Empty(comment.Body);
+        Assert.Equal(deletedAt, comment.DeletedUtc);
+        Assert.Equal(database.UserId, comment.DeletedByUserId);
+        var deletionAudit = await database.Context.AuditLog.SingleAsync(entry =>
+            entry.EntityType == "Comment" && entry.EntityID == commentId && entry.Action == "Deleted");
+        Assert.DoesNotContain("Private text", deletionAudit.Changes);
+        Assert.Empty(await service.GetForDream(database.DreamId));
+    }
+
+    [Fact]
+    public async Task DeleteAllowsFormerCloudMemberToDeleteOwnReply()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Parent");
+        var reply = await service.Reply(database.DreamId, posted.CommentId!.Value, database.UserId, "Reply");
+        database.Context.UserClaims.Remove(await database.Context.UserClaims.SingleAsync());
+        await database.Context.SaveChangesAsync();
+
+        var result = await service.Delete(database.DreamId, reply.CommentId!.Value, database.UserId);
+
+        Assert.Equal(CommentServiceStatus.Success, result.Status);
+        var parent = Assert.Single(await service.GetForDream(database.DreamId));
+        Assert.Empty(parent.Replies);
+    }
+
+    [Fact]
+    public async Task DeleteRejectsAnotherAuthorAndMismatchedDream()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Original");
+        var otherUser = await database.AddUserAsync("other-id", "Other", isMember: true);
+        var commentId = posted.CommentId!.Value;
+
+        var otherAuthor = await service.Delete(database.DreamId, commentId, otherUser);
+        var wrongDream = await service.Delete(database.DreamId + 1, commentId, database.UserId);
+
+        Assert.Equal(CommentServiceStatus.NotAuthor, otherAuthor.Status);
+        Assert.Equal(CommentServiceStatus.CommentNotFound, wrongDream.Status);
+        var comment = await database.Context.Comment.AsNoTracking().SingleAsync();
+        Assert.Equal("Original", comment.Body);
+        Assert.Null(comment.DeletedUtc);
+        Assert.Null(comment.DeletedByUserId);
+    }
+
+    [Fact]
+    public async Task DeletedParentKeepsVisibleRepliesAndRejectsEditsAndNewReplies()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Parent");
+        var commentId = posted.CommentId!.Value;
+        var replyAuthor = await database.AddUserAsync("reply-author", "Reply author", isMember: true);
+        var reply = await service.Reply(database.DreamId, commentId, replyAuthor, "Visible reply");
+        var replyId = reply.CommentId!.Value;
+        var deletedReply = await service.Reply(database.DreamId, commentId, database.UserId, "Hidden reply");
+        await service.Delete(database.DreamId, deletedReply.CommentId!.Value, database.UserId);
+        await service.Delete(database.DreamId, commentId, database.UserId);
+
+        var parent = Assert.Single(await service.GetForDream(database.DreamId));
+        Assert.True(parent.IsDeleted);
+        Assert.Empty(parent.Body);
+        Assert.Equal(replyId, Assert.Single(parent.Replies).Id);
+
+        var edit = await service.Edit(database.DreamId, commentId, database.UserId, "Restore");
+        var replyToDeleted = await service.Reply(database.DreamId, commentId, database.UserId, "New reply");
+        var replyThroughChild = await service.Reply(database.DreamId, replyId, database.UserId, "New reply");
+        Assert.Equal(CommentServiceStatus.CommentDeleted, edit.Status);
+        Assert.Equal(CommentServiceStatus.CommentDeleted, replyToDeleted.Status);
+        Assert.Equal(CommentServiceStatus.CommentDeleted, replyThroughChild.Status);
+        Assert.Equal(3, await database.Context.Comment.CountAsync());
+
+        await service.Delete(database.DreamId, replyId, replyAuthor);
+        Assert.Empty(await service.GetForDream(database.DreamId));
+    }
+
+    [Fact]
+    public async Task DeletedReplyRejectsEditsAndRepliesWhileItsParentRemainsOpen()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var parent = await service.Post(database.DreamId, database.UserId, "Parent");
+        var parentId = parent.CommentId!.Value;
+        var reply = await service.Reply(database.DreamId, parentId, database.UserId, "Reply to delete");
+        var replyId = reply.CommentId!.Value;
+        Assert.Equal(CommentServiceStatus.Success,
+            (await service.Delete(database.DreamId, replyId, database.UserId)).Status);
+
+        var edit = await service.Edit(database.DreamId, replyId, database.UserId, "Restore");
+        var replyToDeleted = await service.Reply(database.DreamId, replyId, database.UserId, "Invalid reply");
+        var replyToParent = await service.Reply(database.DreamId, parentId, database.UserId, "New reply");
+
+        Assert.Equal(CommentServiceStatus.CommentDeleted, edit.Status);
+        Assert.Equal(CommentServiceStatus.CommentDeleted, replyToDeleted.Status);
+        Assert.Equal(CommentServiceStatus.Success, replyToParent.Status);
+        var visibleParent = Assert.Single(await service.GetForDream(database.DreamId));
+        Assert.Equal(replyToParent.CommentId, Assert.Single(visibleParent.Replies).Id);
+    }
+
+    [Fact]
+    public async Task DeleteStillRejectsNonAuthorAfterCommentHasBeenDeleted()
+    {
+        await using var database = await TestDatabase.Create(isMember: true);
+        var service = CreateService(database);
+        var posted = await service.Post(database.DreamId, database.UserId, "Original");
+        var commentId = posted.CommentId!.Value;
+        var otherUser = await database.AddUserAsync("other-id", "Other", isMember: true);
+        Assert.Equal(CommentServiceStatus.Success,
+            (await service.Delete(database.DreamId, commentId, database.UserId)).Status);
+
+        var result = await service.Delete(database.DreamId, commentId, otherUser);
+
+        Assert.Equal(CommentServiceStatus.NotAuthor, result.Status);
+        var comment = await database.Context.Comment.AsNoTracking().SingleAsync();
+        Assert.Equal(database.UserId, comment.DeletedByUserId);
+    }
+
+    [Fact]
     public async Task MigrationPreservesExistingComments()
     {
         await using var database = await TestDatabase.Create(
@@ -300,6 +435,8 @@ public class CommentServiceTests
         Assert.Equal(database.UserId, comment.AuthorID);
         Assert.Equal(database.AppTime.UtcNow, comment.CreatedAtUtc);
         Assert.Null(comment.EditedUtc);
+        Assert.Null(comment.DeletedUtc);
+        Assert.Null(comment.DeletedByUserId);
     }
 
     [Fact]
