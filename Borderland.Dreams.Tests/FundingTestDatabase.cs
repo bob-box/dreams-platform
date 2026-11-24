@@ -48,6 +48,7 @@ internal sealed class FundingTestDatabase : IAsyncDisposable
         registrations.AddScoped<ICloudNameResolver, CloudNameResolver>();
         registrations.AddScoped<IDreamFundingService, DreamFundingService>();
         registrations.AddScoped<IDreamService, DreamService>();
+        registrations.AddScoped<ICommentService, CommentService>();
         registrations.AddScoped<IFundingRoundService, FundingRoundService>();
         registrations.AddScoped<ICloudService, CloudService>();
         registrations.AddScoped<ITagService, TagService>();

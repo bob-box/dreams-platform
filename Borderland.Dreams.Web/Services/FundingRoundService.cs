@@ -292,14 +292,22 @@ public class FundingRoundService(
     /// <returns>The active round view model, or null when no round is currently running.</returns>
     public async Task<FundingRoundViewModel?> GetActiveRound(int cloudId)
     {
-        var utcNow = appTime.UtcNow;
-        var activeRound = await context.FundingRound
-            .AsNoTracking()
-            .SingleOrDefaultAsync(fr => fr.CloudID == cloudId && fr.ProcessedDateUtc == null &&
-                                     fr.StartDateUtc <= utcNow && fr.EndDateUtc >= utcNow);
-        if (activeRound == null) return null;
-        return mapper.ToViewModel(activeRound);
+        var activeRound = await ActiveRoundQuery(context, cloudId, appTime.UtcNow).SingleOrDefaultAsync();
+        return activeRound == null ? null : mapper.ToViewModel(activeRound);
     }
+
+    internal static IQueryable<FundingRound> ActiveRoundQuery(
+        ApplicationDbContext context, int cloudId, DateTime utcNow) =>
+        WalletOwningRoundQuery(context, cloudId)
+            .Where(round => round.ProcessedDateUtc == null &&
+                            round.StartDateUtc <= utcNow && round.EndDateUtc >= utcNow);
+
+    internal static IQueryable<FundingRound> WalletOwningRoundQuery(ApplicationDbContext context, int cloudId) =>
+        context.FundingRound.AsNoTracking()
+            .Where(round => round.CloudID == cloudId && round.StartedAtUtc != null)
+            .OrderByDescending(round => round.StartDateUtc)
+            .ThenByDescending(round => round.ID)
+            .Take(1);
 
     /// <summary>
     /// Determines whether a cloud has any funding round that has started, regardless of whether it is still active.

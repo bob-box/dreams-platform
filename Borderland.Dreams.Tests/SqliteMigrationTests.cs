@@ -1,5 +1,6 @@
 using Borderland.Dreams.Data;
 using Borderland.Dreams.Enums;
+using Borderland.Dreams.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +27,7 @@ public class SqliteMigrationTests
     }
 
     [Fact]
-    public async Task PreviousSchemaUpgradePreservesDreamsWalletsAndContributions()
+    public async Task PreviousSchemaUpgradePreservesFundingDataAndEditedComments()
     {
         await using var database = new FundingTestDatabase();
         await using (var scope = database.CreateScope())
@@ -47,6 +48,9 @@ public class SqliteMigrationTests
 
                 INSERT INTO Dream (ID, Name, Description, Status, CloudID, IsDeleted, CreatedAtUtc)
                 VALUES (20, 'Fixture dream', 'A synthetic dream', 1, 10, 0, '2026-11-21');
+
+                INSERT INTO Comment (ID, DreamID, AuthorID, Body, CreatedAtUtc, EditedUtc)
+                VALUES (25, 20, 'fixture-user', 'Edited fixture comment', '2026-11-21', '2026-11-22 12:30:00');
 
                 INSERT INTO FundingRound (ID, CloudID, StartDateUtc, EndDateUtc, MaxPercentagePerDream,
                     AllocationPerUser, TotalFundsAllocated, IsLastRound, CreatedAtUtc)
@@ -73,7 +77,16 @@ public class SqliteMigrationTests
         var contribution = await current.Fund.SingleAsync();
         Assert.Equal((50, 20, "fixture-user", (int?)30, 25.25m),
             (contribution.ID, contribution.DreamID, contribution.UserID, contribution.FundingRoundID, contribution.Amount));
-        Assert.Equal(10, (await current.FundingRound.SingleAsync()).CloudID);
+        var round = await current.FundingRound.SingleAsync();
+        Assert.Equal(10, round.CloudID);
+        Assert.Equal(round.StartDateUtc, round.StartedAtUtc);
+
+        var comments = upgraded.ServiceProvider.GetRequiredService<ICommentService>();
+        var comment = Assert.Single(await comments.GetForDream(dream.ID));
+        Assert.Equal(25, comment.Id);
+        Assert.Equal("Edited fixture comment", comment.Body);
+        Assert.Equal(new DateTime(2026, 11, 22, 12, 30, 0, DateTimeKind.Utc), comment.EditedAt);
+        Assert.False(comment.IsDeleted);
     }
 
     private static async Task AssertAllMigrationsApplied(ApplicationDbContext context)

@@ -146,7 +146,7 @@ public class FundingWorkflowTests
         await Seed(database);
         await StartRound(database);
 
-        // Both requests load the original wallet before either can enter the write transaction.
+        // Both requests reach membership verification before either can enter the write transaction.
         var bothCheckingMembership = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var arrivals = 0;
         database.Membership.Check = async () =>
@@ -178,6 +178,84 @@ public class FundingWorkflowTests
         Assert.Equal(17m, await Balance(context, 2));
     }
 
+    [Theory]
+    [InlineData(75)]
+    [InlineData(0)]
+    public async Task StartingTheNextRoundSettlesThePreviousRoundBeforeAllocating(int allocation)
+    {
+        await using var database = new FundingTestDatabase();
+        await Seed(database, nextAllocation: allocation);
+        await StartRound(database);
+        await using var scope = database.CreateScope();
+        var services = scope.ServiceProvider;
+        var scheduler = services.GetRequiredService<FundingRoundSchedulerService>();
+        var funding = services.GetRequiredService<IDreamFundingService>();
+        var context = services.GetRequiredService<ApplicationDbContext>();
+
+        Assert.Equal(FundDreamServiceStatus.Success, (await funding.FundDream(1, 35m, "main")).Status);
+        database.Clock.UtcNow = database.Clock.UtcNow.AddHours(2);
+        Assert.Equal(FundDreamServiceStatus.NoActiveFundingRound, (await funding.FundDream(1, 5m, "main")).Status);
+        Assert.Equal(65m, await Balance(context, 1));
+
+        await scheduler.ProcessFundingRoundStart(2);
+        var rounds = await context.FundingRound.AsNoTracking().OrderBy(round => round.ID).ToListAsync();
+        Assert.Equal(database.Clock.UtcNow, rounds[0].ProcessedDateUtc);
+        Assert.Equal(database.Clock.UtcNow, rounds[1].StartedAtUtc);
+        Assert.Equal((decimal)allocation, rounds[1].TotalFundsAllocated);
+        Assert.Equal((decimal)allocation, await Balance(context, 1));
+
+        await scheduler.ProcessFundingRoundEnd(1);
+        await scheduler.ProcessFundingRoundStart(2);
+        Assert.Equal((decimal)allocation, await Balance(context, 1));
+        Assert.Equal(17m, await Balance(context, 2));
+        Assert.Equal(35m, await context.Cloud.Where(cloud => cloud.ID == 1)
+            .Select(cloud => cloud.TotalFundsSpent).SingleAsync());
+        Assert.Equal(2, (await services.GetRequiredService<IFundingRoundService>().GetActiveRound(1))?.ID);
+    }
+
+    [Fact]
+    public async Task ContributionWaitingOnMembershipCannotSpendFromTheNextRound()
+    {
+        await using var database = new FundingTestDatabase();
+        await Seed(database, nextAllocation: 75m);
+        await StartRound(database);
+        await using var scope = database.CreateScope();
+        var services = scope.ServiceProvider;
+        var scheduler = services.GetRequiredService<FundingRoundSchedulerService>();
+        var context = services.GetRequiredService<ApplicationDbContext>();
+
+        var membershipEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var membershipResult = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        database.Membership.Check = () =>
+        {
+            membershipEntered.TrySetResult();
+            return membershipResult.Task;
+        };
+
+        var request = services.GetRequiredService<IDreamFundingService>().FundDream(1, 15m, "main");
+        try
+        {
+            await membershipEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            database.Clock.UtcNow = database.Clock.UtcNow.AddHours(2);
+            await scheduler.ProcessFundingRoundEnd(1);
+            await scheduler.ProcessFundingRoundStart(2);
+        }
+        finally
+        {
+            membershipResult.TrySetResult(true);
+        }
+
+        var result = await request;
+        Assert.Equal(FundDreamServiceStatus.NoActiveFundingRound, result.Status);
+        Assert.Empty(await context.Fund.ToListAsync());
+        Assert.Equal(75m, await Balance(context, 1));
+
+        var currentRequest = services.GetRequiredService<IDreamFundingService>();
+        Assert.Equal(FundDreamServiceStatus.Success, (await currentRequest.FundDream(1, 15m, "main")).Status);
+        Assert.Equal(60m, await Balance(context, 1));
+        Assert.Equal(2, (await context.Fund.SingleAsync()).FundingRoundID);
+    }
+
     private static async Task StartRound(FundingTestDatabase database)
     {
         await using var scope = database.CreateScope();
@@ -191,7 +269,8 @@ public class FundingWorkflowTests
         context.Dream.Where(dream => dream.ID == dreamId).Select(dream => dream.Status).SingleAsync();
 
     private static async Task Seed(
-        FundingTestDatabase database, DreamStatus firstDreamStatus = DreamStatus.ReadyForFunding)
+        FundingTestDatabase database, DreamStatus firstDreamStatus = DreamStatus.ReadyForFunding,
+        decimal? nextAllocation = null)
     {
         await using var scope = database.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -219,9 +298,18 @@ public class FundingWorkflowTests
             new Dreamer { DreamID = 1, UserID = "co" });
         context.FundingRound.Add(new FundingRound
         {
-            ID = 1, CloudID = 1, AllocationPerUser = 100m, IsLastRound = true,
+            ID = 1, CloudID = 1, AllocationPerUser = 100m, IsLastRound = nextAllocation == null,
             StartDateUtc = database.Clock.UtcNow, EndDateUtc = database.Clock.UtcNow.AddHours(1)
         });
+        if (nextAllocation is decimal allocation)
+        {
+            context.FundingRound.Add(new FundingRound
+            {
+                ID = 2, CloudID = 1, AllocationPerUser = allocation, IsLastRound = true,
+                StartDateUtc = database.Clock.UtcNow.AddHours(2), EndDateUtc = database.Clock.UtcNow.AddHours(3)
+            });
+        }
+
         await context.SaveChangesAsync();
     }
 
