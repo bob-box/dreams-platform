@@ -65,6 +65,9 @@ builder.Services.AddDefaultIdentity<User>(options =>
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddRateLimiter(options =>
+    options.AddPolicy<string, CommentPostingRateLimitPolicy>(CommentPostingRateLimitPolicy.Name));
+
 // Configure time services and options.
 builder.Services.Configure<TimeOptions>(builder.Configuration.GetSection("Time"));
 builder.Services.AddSingleton(TimeProvider.System);
@@ -174,7 +177,9 @@ app.UseWhen(context =>
     appBuilder.UseMiddleware<CloudNameResolverMiddleware>();
 });
 
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {

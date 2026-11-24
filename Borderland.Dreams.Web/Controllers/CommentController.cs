@@ -6,6 +6,7 @@ using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -18,6 +19,7 @@ public class CommentController(
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(CommentPostingRateLimitPolicy.Name)]
     public async Task<IActionResult> PostComment(int dreamId, [Bind("Body")] CommentPostViewModel input)
     {
         var authorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
@@ -34,6 +36,7 @@ public class CommentController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(CommentPostingRateLimitPolicy.Name)]
     public async Task<IActionResult> ReplyToComment(
         int dreamId,
         int parentCommentId,
@@ -106,6 +109,7 @@ public class CommentController(
 
     private RedirectResult ReturnInvalidComment(int dreamId, CommentPostViewModel input, string errorMessage)
     {
+        TempData[CommentTempDataKeys.InvalidCommentDream] = dreamId;
         TempData[CommentTempDataKeys.InvalidCommentBody] = input.Body?.Trim() ?? string.Empty;
         TempData[CommentTempDataKeys.InvalidCommentError] = errorMessage;
         return Redirect($"{GetDreamDetailsUrl(dreamId)}#comments");
@@ -117,6 +121,7 @@ public class CommentController(
         CommentPostViewModel input,
         string errorMessage)
     {
+        TempData[CommentTempDataKeys.InvalidReplyDream] = dreamId;
         TempData[CommentTempDataKeys.InvalidReplyBody] = input.Body?.Trim() ?? string.Empty;
         TempData[CommentTempDataKeys.InvalidReplyError] = errorMessage;
         TempData[CommentTempDataKeys.InvalidReplyParent] = parentCommentId;
@@ -142,8 +147,10 @@ public class CommentController(
 
 internal static class CommentTempDataKeys
 {
+    internal const string InvalidCommentDream = "InvalidCommentDream";
     internal const string InvalidCommentBody = "InvalidCommentBody";
     internal const string InvalidCommentError = "InvalidCommentError";
+    internal const string InvalidReplyDream = "InvalidReplyDream";
     internal const string InvalidReplyBody = "InvalidReplyBody";
     internal const string InvalidReplyError = "InvalidReplyError";
     internal const string InvalidReplyParent = "InvalidReplyParent";

@@ -9,8 +9,6 @@ namespace Borderland.Dreams.Services;
 
 public class CommentService(ApplicationDbContext context, IMapperFacade mapper, IAppTime appTime) : ICommentService
 {
-    private const int MaxBodyLength = 1000;
-
     public async Task<IReadOnlyList<CommentViewModel>> GetForDream(int dreamId)
     {
         var comments = await context.Comment
@@ -197,7 +195,7 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         if (trimmedBody.Length == 0)
             return (trimmedBody, "A comment is required.");
 
-        if (trimmedBody.Length > MaxBodyLength)
+        if (trimmedBody.Length > CommentPostViewModel.MaxBodyLength)
             return (trimmedBody, "Comments must be 1000 characters or fewer.");
 
         return (trimmedBody, null);
