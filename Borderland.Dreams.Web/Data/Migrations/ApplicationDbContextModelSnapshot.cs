@@ -457,6 +457,9 @@ namespace Borderland.Dreams.Data.Migrations
                     b.Property<string>("StartJobId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("StartedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("TotalFundsAllocated")
                         .HasColumnType("decimal(18, 2)");
 

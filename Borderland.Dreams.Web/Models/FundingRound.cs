@@ -15,6 +15,7 @@ public class FundingRound : IAutoPopulateCreatedAtOnAdd
     public DateTime StartDateUtc { get; set; }
     public DateTime EndDateUtc { get; set; }
     public bool IsLastRound { get; set; }
+    public DateTime? StartedAtUtc { get; set; }
     public DateTime? ProcessedDateUtc { get; set; }
 
     [Range(0, 100, ErrorMessage = "Percentage must be between 0 and 100")]

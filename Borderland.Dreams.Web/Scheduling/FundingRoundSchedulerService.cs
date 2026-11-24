@@ -2,6 +2,7 @@ using Borderland.Dreams.Data;
 using Borderland.Dreams.Enums;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Models;
+using Borderland.Dreams.Services;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
@@ -96,6 +97,7 @@ public class FundingRoundSchedulerService(
 
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         var fundingRound = await GetFundingRoundForAllocationAsync(context, fundingRoundId);
 
         if (fundingRound == null)
@@ -104,128 +106,81 @@ public class FundingRoundSchedulerService(
             return;
         }
 
-        // if (fundingRound.StartDate > appTime.UtcNow)
-        // {
-        //     logger.LogInformation(
-        //         "Funding round ID {FundingRoundId} now starts at {StartDate}; skipping an outdated allocation job",
-        //         fundingRoundId,
-        //         fundingRound.StartDate);
-        //     return;
-        // }
+        var utcNow = appTime.UtcNow;
+        if (fundingRound.StartedAtUtc != null || fundingRound.ProcessedDateUtc != null ||
+            utcNow < fundingRound.StartDateUtc || utcNow >= fundingRound.EndDateUtc)
+            return;
 
         var cloud = fundingRound.Cloud;
-        if (ShouldRunAllocation(fundingRound, cloud))
-        {
-            var wallets = await GetCloudWalletsAsync(context, cloud.ID);
-            var totalAllocation = CalculateTotalAllocation(wallets.Count, fundingRound.AllocationPerUser);
-            if (!HasFundsForAllocation(cloud, totalAllocation))
-            {
-                // Warning because this is a business problem that needs admin attention
-                logger.LogWarning(
-                    "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) has insufficient funds for allocation; required {Required}, available {Available}",
-                    fundingRound.ID, cloud.Name, cloud.ID, totalAllocation, cloud.TotalFundsAvailable);
-                return;
-            }
+        var precedingRounds = await context.FundingRound
+            .Where(round => round.CloudID == cloud.ID && round.EndDateUtc < fundingRound.StartDateUtc &&
+                            round.ProcessedDateUtc == null)
+            .OrderBy(round => round.EndDateUtc)
+            .ToListAsync();
 
+        // Keep settlement and allocation under the same SQLite writer lock.
+        var walletOwnerId = await GetWalletOwnerId(context, cloud.ID);
+        foreach (var precedingRound in precedingRounds)
+            await SettleRound(context, precedingRound, walletOwnerId, utcNow);
+
+        var wallets = await GetCloudWalletsAsync(context, cloud.ID);
+        var totalAllocation = wallets.Count * fundingRound.AllocationPerUser;
+        if (fundingRound.AllocationPerUser > 0 && !HasFundsForAllocation(cloud, totalAllocation))
+        {
+            logger.LogWarning(
+                "Funding round {FundingRoundId} in Cloud {CloudId} needs {Required} to allocate but only {Remaining} remains",
+                fundingRound.ID, cloud.ID, totalAllocation, cloud.TotalFundsAvailable - cloud.TotalFundsSpent);
+        }
+        else
+        {
             SetWalletBalances(wallets, fundingRound.AllocationPerUser);
             fundingRound.TotalFundsAllocated = totalAllocation;
-            await context.SaveChangesAsync();
-
-            logger.LogInformation(
-                "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) allocation complete; funded {UserCount} wallets with {TotalAllocation} total",
-                fundingRound.ID, cloud.Name, cloud.ID, wallets.Count, totalAllocation);
+            fundingRound.StartedAtUtc = utcNow;
+            await ActivateReadyDreamsAsync(context, cloud.ID);
         }
 
-        var activatedDreamCount = await ActivateReadyDreamsAsync(context, cloud.ID);
         await context.SaveChangesAsync();
-        logger.LogInformation(
-            "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) activated {DreamCount} ready dreams",
-            fundingRound.ID, cloud.Name, cloud.ID, activatedDreamCount);
-
-        logger.LogInformation("Funding round (ID {FundingRoundId}): Finished processing start sequence", fundingRoundId);
+        await transaction.CommitAsync();
+        if (fundingRound.StartedAtUtc != null)
+            logger.LogInformation("Funding round {FundingRoundId} started with {TotalAllocation} allocated",
+                fundingRound.ID, fundingRound.TotalFundsAllocated);
     }
 
     [AutomaticRetry(Attempts = 3)]
-    [DisableConcurrentExecution(300)] // Prevent overlapping executions for the same funding round
+    [DisableConcurrentExecution(300)]
     public async Task ProcessFundingRoundEnd(int fundingRoundId)
     {
-        logger.LogInformation("Funding round (ID {FundingRoundId}): Started processing end sequence", fundingRoundId);
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
+        await using var transaction = await context.Database.BeginTransactionAsync();
         var fundingRound = await GetFundingRoundForAllocationAsync(context, fundingRoundId);
-        if (fundingRound == null)
-        {
-            logger.LogWarning("Funding round (ID {FundingRoundId}): Not found. Stopping..", fundingRoundId);
+        var utcNow = appTime.UtcNow;
+        if (fundingRound == null || fundingRound.ProcessedDateUtc != null || utcNow < fundingRound.EndDateUtc)
             return;
-        }
 
-        // if (fundingRound.EndDate > appTime.UtcNow)
-        // {
-        //     logger.LogInformation(
-        //         "Funding round ID {FundingRoundId} now ends at {EndDate}; skipping an outdated end job",
-        //         fundingRoundId,
-        //         fundingRound.EndDate);
-        //     return;
-        // }
-
-        var cloud = fundingRound.Cloud;
-        if (ShouldRunEndProcessing(fundingRound, cloud))
-        {
-            await ClearWalletBalancesAsync(context, fundingRound, cloud);
-            var totalSpent = await GetTotalSpentAsync(context, fundingRound.ID);
-            UpdateFundingRoundEndTotals(fundingRound, cloud, totalSpent);
-
-            if (fundingRound.IsLastRound)
-            {
-                var finalizedDreamCounts = await FinalizeActiveDreamsAsync(context, cloud.ID);
-                logger.LogInformation(
-                    "Funding round (ID {FundingRoundId}): This was the last funding round for Cloud '{CloudName}' (ID {CloudId}) finalized dreams — {CanceledDreamCount} canceled, {PartiallyFundedDreamCount} partially funded, {FullyFundedDreamCount} fully funded",
-                    fundingRound.ID,
-                    cloud.Name,
-                    cloud.ID,
-                    finalizedDreamCounts.Canceled,
-                    finalizedDreamCounts.PartiallyFunded,
-                    finalizedDreamCounts.FullyFunded);
-            }
-
-            await context.SaveChangesAsync();
-            // Summary log at the end is useful for financial auditing
-            logger.LogInformation(
-                "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) end processing complete; spent {TotalSpent}",
-                fundingRound.ID, cloud.Name, cloud.ID, totalSpent);
-        }
-
-        logger.LogInformation("Funding round (ID {FundingRoundId}): Finished processing end sequence", fundingRoundId);
+        var walletOwnerId = await GetWalletOwnerId(context, fundingRound.CloudID);
+        await SettleRound(context, fundingRound, walletOwnerId, utcNow);
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        logger.LogInformation("Funding round {FundingRoundId} closed", fundingRound.ID);
     }
 
-    private bool ShouldRunAllocation(FundingRound fundingRound, Cloud cloud)
+    private static Task<int?> GetWalletOwnerId(ApplicationDbContext context, int cloudId) =>
+        FundingRoundService.WalletOwningRoundQuery(context, cloudId)
+            .Select(round => (int?)round.ID)
+            .FirstOrDefaultAsync();
+
+    private static async Task SettleRound(
+        ApplicationDbContext context, FundingRound round, int? walletOwnerId, DateTime utcNow)
     {
-        if (fundingRound.AllocationPerUser <= 0)
-        {
-            logger.LogWarning(
-                "Funding round (ID {FundingRoundId}) allocation per user is zero; skipping allocation",
-                fundingRound.ID);
-            return false;
-        }
+        if (round.ID == walletOwnerId)
+            SetWalletBalances(await GetCloudWalletsAsync(context, round.CloudID), 0);
 
-        if (fundingRound.TotalFundsAllocated > 0)
-        {
-            logger.LogWarning(
-                "Funding round (ID {FundingRoundId}): funds are already allocated; skipping duplicate allocation",
-                fundingRound.ID);
-            return false;
-        }
+        round.Cloud.TotalFundsSpent += await GetTotalSpentAsync(context, round.ID);
+        round.ProcessedDateUtc = utcNow;
 
-        if (fundingRound.ProcessedDateUtc != null)
-        {
-            logger.LogWarning(
-                "Funding round (ID {FundingRoundId}): already processed at {ProcessedDate}; skipping allocation",
-                fundingRound.ID, fundingRound.ProcessedDateUtc);
-            return false;
-        }
-
-        return true;
+        if (round.IsLastRound)
+            await FinalizeActiveDreamsAsync(context, round.CloudID);
     }
 
     private static Task<FundingRound?> GetFundingRoundForAllocationAsync(ApplicationDbContext context, int fundingRoundId)
@@ -242,17 +197,12 @@ public class FundingRoundSchedulerService(
             .ToListAsync();
     }
 
-    private static decimal CalculateTotalAllocation(int walletCount, decimal allocationPerUser)
-    {
-        return walletCount * allocationPerUser;
-    }
-
     private static bool HasFundsForAllocation(Cloud cloud, decimal totalAllocation)
     {
         return cloud.TotalFundsAvailable - cloud.TotalFundsSpent >= totalAllocation;
     }
 
-    private static async Task<int> ActivateReadyDreamsAsync(ApplicationDbContext context, int cloudId)
+    private static async Task ActivateReadyDreamsAsync(ApplicationDbContext context, int cloudId)
     {
         var dreams = await context.Dream
             .Where(dream => dream.CloudID == cloudId && dream.Status == DreamStatus.ReadyForFunding)
@@ -260,34 +210,12 @@ public class FundingRoundSchedulerService(
 
         foreach (var dream in dreams)
             dream.Status = DreamStatus.Active;
-
-        return dreams.Count;
     }
 
     private static void SetWalletBalances(IEnumerable<Wallet> wallets, decimal allocationPerUser)
     {
         foreach (var wallet in wallets)
             wallet.Balance = allocationPerUser;
-    }
-
-    private bool ShouldRunEndProcessing(FundingRound fundingRound, Cloud cloud)
-    {
-        if (fundingRound.ProcessedDateUtc == null)
-            return true;
-
-        logger.LogWarning(
-            "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) already processed at {ProcessedDate}; skipping duplicate end processing",
-            fundingRound.ID, cloud.Name, cloud.ID, fundingRound.ProcessedDateUtc);
-        return false;
-    }
-
-    private async Task ClearWalletBalancesAsync(ApplicationDbContext context, FundingRound fundingRound, Cloud cloud)
-    {
-        var wallets = await GetCloudWalletsAsync(context, fundingRound.CloudID);
-        logger.LogInformation(
-            "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) clearing {WalletCount} wallet balances",
-            fundingRound.ID, cloud.Name, cloud.ID, wallets.Count);
-        SetWalletBalances(wallets, 0);
     }
 
     private static Task<decimal> GetTotalSpentAsync(ApplicationDbContext context, int fundingRoundId)
@@ -300,7 +228,7 @@ public class FundingRoundSchedulerService(
     /// <summary>
     /// Finalizes active dreams after the last round based on their total funding and minimum requested budget.
     /// </summary>
-    private static async Task<(int Canceled, int PartiallyFunded, int FullyFunded)> FinalizeActiveDreamsAsync(
+    private static async Task FinalizeActiveDreamsAsync(
         ApplicationDbContext context,
         int cloudId)
     {
@@ -310,10 +238,6 @@ public class FundingRoundSchedulerService(
             .Where(dream => dream.CloudID == cloudId && dream.Status == DreamStatus.Active)
             .ToListAsync();
 
-        var canceledCount = 0;
-        var partiallyFundedCount = 0;
-        var fullyFundedCount = 0;
-
         foreach (var dream in activeDreams)
         {
             var totalFunded = dream.Funds.Sum(fund => fund.Amount);
@@ -322,28 +246,11 @@ public class FundingRoundSchedulerService(
                 .Sum(item => item.MinAmount);
 
             if (totalFunded <= 0)
-            {
                 dream.Status = DreamStatus.Canceled;
-                canceledCount++;
-            }
             else if (totalFunded >= minimumGoal)
-            {
                 dream.Status = DreamStatus.FullyFunded;
-                fullyFundedCount++;
-            }
             else
-            {
                 dream.Status = DreamStatus.PartiallyFunded;
-                partiallyFundedCount++;
-            }
         }
-
-        return (canceledCount, partiallyFundedCount, fullyFundedCount);
-    }
-
-    private void UpdateFundingRoundEndTotals(FundingRound fundingRound, Cloud cloud, decimal totalSpent)
-    {
-        cloud.TotalFundsSpent += totalSpent;
-        fundingRound.ProcessedDateUtc = appTime.UtcNow;
     }
 }
