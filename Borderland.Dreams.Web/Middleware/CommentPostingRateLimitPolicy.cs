@@ -77,6 +77,7 @@ internal sealed class CommentPostingRateLimitPolicy(
                 return;
             }
 
+            tempData[CommentTempDataKeys.InvalidReplyDream] = dreamId;
             tempData[CommentTempDataKeys.InvalidReplyBody] = body;
             tempData[CommentTempDataKeys.InvalidReplyError] = RejectionMessage;
             tempData[CommentTempDataKeys.InvalidReplyParent] = parentId;
@@ -84,6 +85,7 @@ internal sealed class CommentPostingRateLimitPolicy(
         }
         else
         {
+            tempData[CommentTempDataKeys.InvalidCommentDream] = dreamId;
             tempData[CommentTempDataKeys.InvalidCommentBody] = body;
             tempData[CommentTempDataKeys.InvalidCommentError] = RejectionMessage;
             response.Redirect($"{dreamPath}#comments");

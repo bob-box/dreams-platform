@@ -136,17 +136,20 @@ public class CommentRequestTests
             using var rejectedReply = await SubmitAsync(client, replyForm, replyDraft);
             Assert.Equal(HttpStatusCode.Redirect, rejectedReply.StatusCode);
             Assert.Equal($"{dreamPath}#comment-{reply.ID}", rejectedReply.Headers.Location?.OriginalString);
+            AssertNoDraft(await client.GetStringAsync(otherDreamPath));
             var returnedPage = await client.GetStringAsync(rejectedReply.Headers.Location);
             AssertDraft(Form(returnedPage, $"reply-form-{reply.ID}"), replyDraft);
             Assert.Contains($"id=\"reply-form-container-{reply.ID}\" data-comment-form-container>", returnedPage);
             Assert.DoesNotContain(RateLimitMessage, Form(returnedPage, $"reply-form-{post.ID}"));
-            Assert.DoesNotContain(RateLimitMessage, await client.GetStringAsync(dreamPath));
+            AssertNoDraft(await client.GetStringAsync(dreamPath));
 
             const string commentDraft = "Other Cloud <draft & text>\nSecond line";
             using var rejectedComment = await SubmitAsync(secondLogin, Form(secondLoginPage, "commentForm"), commentDraft);
             Assert.Equal(HttpStatusCode.Redirect, rejectedComment.StatusCode);
             Assert.Equal($"{otherDreamPath}#comments", rejectedComment.Headers.Location?.OriginalString);
+            AssertNoDraft(await secondLogin.GetStringAsync(dreamPath));
             AssertDraft(Form(await secondLogin.GetStringAsync(rejectedComment.Headers.Location), "commentForm"), commentDraft);
+            AssertNoDraft(await secondLogin.GetStringAsync(otherDreamPath));
 
             using var invalidToken = await SubmitAsync(client, replyForm, "Invalid token", token: "invalid");
             Assert.Equal(HttpStatusCode.BadRequest, invalidToken.StatusCode);
@@ -284,6 +287,12 @@ public class CommentRequestTests
         var textarea = Regex.Match(form, """<textarea\b[^>]*>(.*?)</textarea>""", RegexOptions.Singleline);
         Assert.True(textarea.Success, "Expected a draft textarea.");
         Assert.Equal(draft, WebUtility.HtmlDecode(textarea.Groups[1].Value).TrimStart('\r', '\n'));
+    }
+
+    private static void AssertNoDraft(string page)
+    {
+        Assert.DoesNotContain(RateLimitMessage, page);
+        Assert.DoesNotContain("&lt;draft &amp; text&gt;", page);
     }
 
     private static Task<HttpResponseMessage> DeleteAsync(HttpClient client, string path, string page, int dreamId, int commentId) =>

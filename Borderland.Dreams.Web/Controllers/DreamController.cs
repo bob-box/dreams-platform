@@ -94,15 +94,11 @@ public class DreamController(
     private void RestoreCommentForm(int dreamId)
     {
         var commentForm = new CommentPostViewModel { DreamId = dreamId };
-        if (TempData.TryGetValue(CommentTempDataKeys.InvalidCommentBody, out var savedCommentBody)
-            && savedCommentBody is string body)
+        if (TempData.Peek(CommentTempDataKeys.InvalidCommentDream) is int savedDreamId && savedDreamId == dreamId)
         {
-            commentForm.Body = body;
-            if (TempData.TryGetValue(CommentTempDataKeys.InvalidCommentError, out var savedCommentError)
-                && savedCommentError is string errorMessage)
-            {
-                commentForm.ErrorMessage = errorMessage;
-            }
+            TempData.Remove(CommentTempDataKeys.InvalidCommentDream);
+            commentForm.Body = TempData[CommentTempDataKeys.InvalidCommentBody] as string;
+            commentForm.ErrorMessage = TempData[CommentTempDataKeys.InvalidCommentError] as string;
         }
 
         ViewBag.CommentForm = commentForm;
@@ -115,6 +111,11 @@ public class DreamController(
     /// <param name="comments">The loaded top-level comments and their replies.</param>
     private void RestoreReplyForm(int dreamId, IReadOnlyList<CommentViewModel> comments)
     {
+        if (TempData.Peek(CommentTempDataKeys.InvalidReplyDream) is not int savedDreamId || savedDreamId != dreamId)
+            return;
+
+        TempData.Remove(CommentTempDataKeys.InvalidReplyDream);
+        var errorMessage = TempData[CommentTempDataKeys.InvalidReplyError] as string;
         if (!TempData.TryGetValue(CommentTempDataKeys.InvalidReplyBody, out var savedBody)
             || savedBody is not string body
             || !TempData.TryGetValue(CommentTempDataKeys.InvalidReplyParent, out var savedParentId)
@@ -129,9 +130,6 @@ public class DreamController(
         if (target == null)
             return;
 
-        var errorMessage = TempData.TryGetValue(CommentTempDataKeys.InvalidReplyError, out var savedError)
-            ? savedError as string
-            : null;
         target.ReplyForm = new CommentPostViewModel
         {
             DreamId = dreamId,
