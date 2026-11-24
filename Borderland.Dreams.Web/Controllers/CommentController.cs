@@ -6,6 +6,7 @@ using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Borderland.Dreams.Controllers;
 
@@ -18,6 +19,7 @@ public class CommentController(
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(CommentPostingRateLimitPolicy.Name)]
     public async Task<IActionResult> PostComment(int dreamId, [Bind("Body")] CommentPostViewModel input)
     {
         var authorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
@@ -34,6 +36,7 @@ public class CommentController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(CommentPostingRateLimitPolicy.Name)]
     public async Task<IActionResult> ReplyToComment(
         int dreamId,
         int parentCommentId,
