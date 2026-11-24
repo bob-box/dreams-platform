@@ -296,9 +296,9 @@ public class CommentServiceTests
         var commentId = posted.CommentId!.Value;
         var deletedAt = database.AppTime.UtcNow;
 
-        var result = await service.Delete(database.DreamId, commentId, database.UserId);
+        var result = await service.Delete(database.CloudId, database.DreamId, commentId, database.UserId);
         database.AppTime.Advance(TimeSpan.FromMinutes(1));
-        var repeated = await service.Delete(database.DreamId, commentId, database.UserId);
+        var repeated = await service.Delete(database.CloudId, database.DreamId, commentId, database.UserId);
 
         Assert.Equal(CommentServiceStatus.Success, result.Status);
         Assert.Equal(CommentServiceStatus.Success, repeated.Status);
@@ -310,6 +310,9 @@ public class CommentServiceTests
         var deletionAudit = await database.Context.AuditLog.SingleAsync(entry =>
             entry.EntityType == "Comment" && entry.EntityID == commentId && entry.Action == "Deleted");
         Assert.DoesNotContain("Private text", deletionAudit.Changes);
+        var creationAudit = await database.Context.AuditLog.SingleAsync(entry =>
+            entry.EntityType == "Comment" && entry.EntityID == commentId && entry.Action == "Created");
+        Assert.Contains("Private text", creationAudit.Changes);
         Assert.Empty(await service.GetForDream(database.DreamId));
     }
 
@@ -323,7 +326,7 @@ public class CommentServiceTests
         database.Context.UserClaims.Remove(await database.Context.UserClaims.SingleAsync());
         await database.Context.SaveChangesAsync();
 
-        var result = await service.Delete(database.DreamId, reply.CommentId!.Value, database.UserId);
+        var result = await service.Delete(database.CloudId, database.DreamId, reply.CommentId!.Value, database.UserId);
 
         Assert.Equal(CommentServiceStatus.Success, result.Status);
         var parent = Assert.Single(await service.GetForDream(database.DreamId));
@@ -331,7 +334,7 @@ public class CommentServiceTests
     }
 
     [Fact]
-    public async Task DeleteRejectsAnotherAuthorAndMismatchedDream()
+    public async Task DeleteRejectsAnotherAuthorAndMismatchedDreamOrCloud()
     {
         await using var database = await TestDatabase.Create(isMember: true);
         var service = CreateService(database);
@@ -339,9 +342,12 @@ public class CommentServiceTests
         var otherUser = await database.AddUserAsync("other-id", "Other", isMember: true);
         var commentId = posted.CommentId!.Value;
 
-        var otherAuthor = await service.Delete(database.DreamId, commentId, otherUser);
-        var wrongDream = await service.Delete(database.DreamId + 1, commentId, database.UserId);
+        var otherAuthor = await service.Delete(database.CloudId, database.DreamId, commentId, otherUser);
+        var wrongDream = await service.Delete(database.CloudId, database.DreamId + 1, commentId, database.UserId);
 
+        var wrongCloud = await service.Delete(database.CloudId + 1, database.DreamId, commentId, database.UserId);
+
+        Assert.Equal(CommentServiceStatus.CommentNotFound, wrongCloud.Status);
         Assert.Equal(CommentServiceStatus.NotAuthor, otherAuthor.Status);
         Assert.Equal(CommentServiceStatus.CommentNotFound, wrongDream.Status);
         var comment = await database.Context.Comment.AsNoTracking().SingleAsync();
@@ -361,13 +367,16 @@ public class CommentServiceTests
         var reply = await service.Reply(database.DreamId, commentId, replyAuthor, "Visible reply");
         var replyId = reply.CommentId!.Value;
         var deletedReply = await service.Reply(database.DreamId, commentId, database.UserId, "Hidden reply");
-        await service.Delete(database.DreamId, deletedReply.CommentId!.Value, database.UserId);
-        await service.Delete(database.DreamId, commentId, database.UserId);
+        await service.Delete(database.CloudId, database.DreamId, deletedReply.CommentId!.Value, database.UserId);
+        await service.Delete(database.CloudId, database.DreamId, commentId, database.UserId);
 
         var parent = Assert.Single(await service.GetForDream(database.DreamId));
         Assert.True(parent.IsDeleted);
         Assert.Empty(parent.Body);
-        Assert.Equal(replyId, Assert.Single(parent.Replies).Id);
+        Assert.False(parent.IsReplyAllowed);
+        var visibleReply = Assert.Single(parent.Replies);
+        Assert.Equal(replyId, visibleReply.Id);
+        Assert.False(visibleReply.IsReplyAllowed);
 
         var edit = await service.Edit(database.DreamId, commentId, database.UserId, "Restore");
         var replyToDeleted = await service.Reply(database.DreamId, commentId, database.UserId, "New reply");
@@ -377,7 +386,7 @@ public class CommentServiceTests
         Assert.Equal(CommentServiceStatus.CommentDeleted, replyThroughChild.Status);
         Assert.Equal(3, await database.Context.Comment.CountAsync());
 
-        await service.Delete(database.DreamId, replyId, replyAuthor);
+        await service.Delete(database.CloudId, database.DreamId, replyId, replyAuthor);
         Assert.Empty(await service.GetForDream(database.DreamId));
     }
 
@@ -391,7 +400,7 @@ public class CommentServiceTests
         var reply = await service.Reply(database.DreamId, parentId, database.UserId, "Reply to delete");
         var replyId = reply.CommentId!.Value;
         Assert.Equal(CommentServiceStatus.Success,
-            (await service.Delete(database.DreamId, replyId, database.UserId)).Status);
+            (await service.Delete(database.CloudId, database.DreamId, replyId, database.UserId)).Status);
 
         var edit = await service.Edit(database.DreamId, replyId, database.UserId, "Restore");
         var replyToDeleted = await service.Reply(database.DreamId, replyId, database.UserId, "Invalid reply");
@@ -401,7 +410,10 @@ public class CommentServiceTests
         Assert.Equal(CommentServiceStatus.CommentDeleted, replyToDeleted.Status);
         Assert.Equal(CommentServiceStatus.Success, replyToParent.Status);
         var visibleParent = Assert.Single(await service.GetForDream(database.DreamId));
-        Assert.Equal(replyToParent.CommentId, Assert.Single(visibleParent.Replies).Id);
+        Assert.True(visibleParent.IsReplyAllowed);
+        var visibleReply = Assert.Single(visibleParent.Replies);
+        Assert.Equal(replyToParent.CommentId, visibleReply.Id);
+        Assert.True(visibleReply.IsReplyAllowed);
     }
 
     [Fact]
@@ -413,9 +425,9 @@ public class CommentServiceTests
         var commentId = posted.CommentId!.Value;
         var otherUser = await database.AddUserAsync("other-id", "Other", isMember: true);
         Assert.Equal(CommentServiceStatus.Success,
-            (await service.Delete(database.DreamId, commentId, database.UserId)).Status);
+            (await service.Delete(database.CloudId, database.DreamId, commentId, database.UserId)).Status);
 
-        var result = await service.Delete(database.DreamId, commentId, otherUser);
+        var result = await service.Delete(database.CloudId, database.DreamId, commentId, otherUser);
 
         Assert.Equal(CommentServiceStatus.NotAuthor, result.Status);
         var comment = await database.Context.Comment.AsNoTracking().SingleAsync();
@@ -506,6 +518,7 @@ public class CommentServiceTests
             ApplicationDbContext context,
             FixedAppTime appTime,
             QueryCounter queryCounter,
+            int cloudId,
             int dreamId,
             string userId)
         {
@@ -513,6 +526,7 @@ public class CommentServiceTests
             Context = context;
             AppTime = appTime;
             QueryCounter = queryCounter;
+            CloudId = cloudId;
             DreamId = dreamId;
             UserId = userId;
         }
@@ -520,6 +534,7 @@ public class CommentServiceTests
         public ApplicationDbContext Context { get; }
         public FixedAppTime AppTime { get; }
         public QueryCounter QueryCounter { get; }
+        public int CloudId { get; }
         public int DreamId { get; }
         public string UserId { get; }
 
@@ -604,7 +619,7 @@ public class CommentServiceTests
                 await context.Database.MigrateAsync();
             }
 
-            return new TestDatabase(connection, context, appTime, queryCounter, dream.ID, user.Id);
+            return new TestDatabase(connection, context, appTime, queryCounter, cloud.ID, dream.ID, user.Id);
         }
 
         public async ValueTask DisposeAsync()

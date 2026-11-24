@@ -167,7 +167,7 @@ app.UseWhen(context =>
 {
     var controller = context.Request.RouteValues["controller"]?.ToString();
     var area = context.Request.RouteValues["area"]?.ToString();
-    return new[] { "Dream", "Cloud", "Info" }.Contains(controller) || area == "Admin";
+    return new[] { "Dream", "Cloud", "Info", "Comment" }.Contains(controller) || area == "Admin";
 }, appBuilder =>
 {
     // Custom middleware to resolve CloudName to CloudID. Must be placed after UseRouting to get route data.

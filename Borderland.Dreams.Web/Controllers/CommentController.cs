@@ -1,4 +1,5 @@
 using Borderland.Dreams.Interfaces;
+using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,8 @@ namespace Borderland.Dreams.Controllers;
 [Authorize]
 public class CommentController(
     UserManager<User> userManager,
-    ICommentService commentService
+    ICommentService commentService,
+    ICloudNameResolver cloudResolver
 ) : Controller
 {
     [HttpPost]
@@ -84,7 +86,10 @@ public class CommentController(
     public async Task<IActionResult> Delete(int dreamId, int commentId)
     {
         var authorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
-        var result = await commentService.Delete(dreamId, commentId, authorId);
+        if (cloudResolver.CloudID <= 0)
+            return NotFound();
+
+        var result = await commentService.Delete(cloudResolver.CloudID, dreamId, commentId, authorId);
         return result.Status switch
         {
             CommentServiceStatus.Success => Redirect($"{GetDreamDetailsUrl(dreamId)}#comments"),

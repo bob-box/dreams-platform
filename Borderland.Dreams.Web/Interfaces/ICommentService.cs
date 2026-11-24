@@ -25,5 +25,5 @@ public interface ICommentService
     Task<CommentServiceResult> Post(int dreamId, string authorId, string? body);
     Task<CommentServiceResult> Reply(int dreamId, int parentCommentId, string authorId, string? body);
     Task<CommentServiceResult> Edit(int dreamId, int commentId, string authorId, string? body);
-    Task<CommentServiceResult> Delete(int dreamId, int commentId, string authorId);
+    Task<CommentServiceResult> Delete(int cloudId, int dreamId, int commentId, string authorId);
 }

@@ -40,7 +40,12 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         }
 
         foreach (var comment in topLevelComments)
+        {
+            comment.IsReplyAllowed = !comment.IsDeleted;
             comment.Replies.RemoveAll(reply => reply.IsDeleted);
+            foreach (var reply in comment.Replies)
+                reply.IsReplyAllowed = comment.IsReplyAllowed;
+        }
 
         topLevelComments.RemoveAll(comment => comment.IsDeleted && comment.Replies.Count == 0);
         return topLevelComments;
@@ -155,11 +160,13 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         return new CommentServiceResult(CommentServiceStatus.Success, comment.ID);
     }
 
-    public async Task<CommentServiceResult> Delete(int dreamId, int commentId, string authorId)
+    public async Task<CommentServiceResult> Delete(int cloudId, int dreamId, int commentId, string authorId)
     {
         await using var transaction = await context.Database.BeginTransactionAsync();
         var comment = await context.Comment
-            .SingleOrDefaultAsync(comment => comment.ID == commentId && comment.DreamID == dreamId);
+            .SingleOrDefaultAsync(comment => comment.ID == commentId
+                && comment.DreamID == dreamId
+                && comment.Dream.CloudID == cloudId);
         if (comment == null)
             return new CommentServiceResult(CommentServiceStatus.CommentNotFound);
 

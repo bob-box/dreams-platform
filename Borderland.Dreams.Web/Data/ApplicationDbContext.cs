@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Borderland.Dreams.Models;
 using Borderland.Dreams.Interfaces;
 using System.Security.Claims;
@@ -237,12 +238,10 @@ public class ApplicationDbContext : IdentityDbContext<User>
             if (entityType == null)
                 continue;
 
-            var commentDeleted = entity is Comment && entry.State == EntityState.Modified &&
-                                 entry.Properties.Any(p => p.Metadata.Name == nameof(Models.Comment.DeletedUtc) &&
-                                     p.IsModified && p.OriginalValue is null && p.CurrentValue is DateTime);
+            var (actionOverride, omittedProperty) = GetCommentAuditRule(entry);
 
             // Soft-deleted entities remain Modified in EF, but should read as deletions in the log.
-            var deleted = entry.State == EntityState.Deleted || commentDeleted ||
+            var deleted = entry.State == EntityState.Deleted ||
                           (entry.State == EntityState.Modified &&
                            entry.Properties.Any(p => p.Metadata.Name == "IsDeleted" &&
                                p.IsModified && p.CurrentValue is true));
@@ -250,16 +249,14 @@ public class ApplicationDbContext : IdentityDbContext<User>
             var restored = entry.State == EntityState.Modified &&
                            entry.Properties.Any(p => p.Metadata.Name == "IsDeleted" &&
                                p.IsModified && p.OriginalValue is true && p.CurrentValue is false);
-            var action = entry.State == EntityState.Added
+            var action = actionOverride ?? (entry.State == EntityState.Added
                 ? "Created"
-                : deleted ? "Deleted" : restored ? "Restored" : "Updated";
+                : deleted ? "Deleted" : restored ? "Restored" : "Updated");
 
             var values = new Dictionary<string, AuditChange>();
             foreach (var property in entry.Properties)
             {
-                // Keep removed comment text out of the deletion event.
-                if (property.Metadata.IsPrimaryKey() ||
-                    (commentDeleted && property.Metadata.Name == nameof(Models.Comment.Body)))
+                if (property.Metadata.IsPrimaryKey() || property.Metadata.Name == omittedProperty)
                     continue;
 
                 if (entry.State == EntityState.Added)
@@ -299,6 +296,19 @@ public class ApplicationDbContext : IdentityDbContext<User>
                 group.Key.Action,
                 group.SelectMany(x => x.Changes).ToDictionary(x => x.Key, x => x.Value)))
             .ToList();
+    }
+
+    private static (string? Action, string? OmittedProperty) GetCommentAuditRule(
+        EntityEntry entry)
+    {
+        if (entry.Entity is not Models.Comment || entry.State != EntityState.Modified)
+            return default;
+
+        var deletedUtc = entry.Property(nameof(Models.Comment.DeletedUtc));
+        // Omit the body from the deletion entry. Earlier create and edit entries retain their text.
+        return deletedUtc.IsModified && deletedUtc.OriginalValue is null && deletedUtc.CurrentValue is DateTime
+            ? ("Deleted", nameof(Models.Comment.Body))
+            : default;
     }
 
     /// <summary>

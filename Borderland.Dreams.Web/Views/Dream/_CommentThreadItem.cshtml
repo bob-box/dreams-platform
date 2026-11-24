@@ -3,7 +3,6 @@
 @{
     var currentUserId = ViewBag.CurrentUserId as string;
     var isAuthor = currentUserId != null && Model.AuthorId == currentUserId;
-    var threadIsDeleted = ViewData["ThreadIsDeleted"] is true || Model.IsDeleted;
     var canComment = ViewBag.CanComment == true;
 }
 
@@ -43,7 +42,7 @@
             </div>
         }
 
-        @if (canComment && !threadIsDeleted)
+        @if (canComment && Model.IsReplyAllowed)
         {
             var replyForm = Model.ReplyForm ?? new Borderland.Dreams.ViewModels.CommentPostViewModel
             {
@@ -77,10 +76,7 @@
         <ul class="list-unstyled ms-4 border-start ps-3">
             @foreach (var reply in Model.Replies)
             {
-                @await Html.PartialAsync("_CommentThreadItem", reply, new ViewDataDictionary(ViewData)
-                {
-                    ["ThreadIsDeleted"] = threadIsDeleted
-                })
+                @await Html.PartialAsync("_CommentThreadItem", reply)
             }
         </ul>
     }
