@@ -1,3 +1,4 @@
+using Borderland.Dreams.Authorization;
 using Borderland.Dreams.Interfaces;
 using Borderland.Dreams.Middleware;
 using Borderland.Dreams.Models;
@@ -85,11 +86,12 @@ public class CommentController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int dreamId, int commentId)
     {
-        var authorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
+        var actorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
         if (cloudResolver.CloudID <= 0)
             return NotFound();
 
-        var result = await commentService.Delete(cloudResolver.CloudID, dreamId, commentId, authorId);
+        var isAdmin = User.IsInRole(Constants.AdminRole);
+        var result = await commentService.Delete(cloudResolver.CloudID, dreamId, commentId, actorId, isAdmin);
         return result.Status switch
         {
             CommentServiceStatus.Success => Redirect($"{GetDreamDetailsUrl(dreamId)}#comments"),

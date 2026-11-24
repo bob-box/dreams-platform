@@ -160,7 +160,7 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         return new CommentServiceResult(CommentServiceStatus.Success, comment.ID);
     }
 
-    public async Task<CommentServiceResult> Delete(int cloudId, int dreamId, int commentId, string authorId)
+    public async Task<CommentServiceResult> Delete(int cloudId, int dreamId, int commentId, string actorId, bool isAdmin)
     {
         await using var transaction = await context.Database.BeginTransactionAsync();
         var comment = await context.Comment
@@ -170,14 +170,14 @@ public class CommentService(ApplicationDbContext context, IMapperFacade mapper, 
         if (comment == null)
             return new CommentServiceResult(CommentServiceStatus.CommentNotFound);
 
-        if (comment.AuthorID != authorId)
+        if (comment.AuthorID != actorId && !isAdmin)
             return new CommentServiceResult(CommentServiceStatus.NotAuthor);
 
         if (!comment.DeletedUtc.HasValue)
         {
             comment.Body = string.Empty;
             comment.DeletedUtc = appTime.UtcNow;
-            comment.DeletedByUserId = authorId;
+            comment.DeletedByUserId = actorId;
             await context.SaveChangesAsync();
         }
 
