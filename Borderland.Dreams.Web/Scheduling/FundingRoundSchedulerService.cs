@@ -96,6 +96,7 @@ public class FundingRoundSchedulerService(
 
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         var fundingRound = await GetFundingRoundForAllocationAsync(context, fundingRoundId);
 
         if (fundingRound == null)
@@ -103,6 +104,9 @@ public class FundingRoundSchedulerService(
             logger.LogWarning("Funding round (ID {FundingRoundId}): Not found. Stopping..", fundingRoundId);
             return;
         }
+
+        if (fundingRound.ProcessedDateUtc != null)
+            return;
 
         // if (fundingRound.StartDate > appTime.UtcNow)
         // {
@@ -129,15 +133,14 @@ public class FundingRoundSchedulerService(
 
             SetWalletBalances(wallets, fundingRound.AllocationPerUser);
             fundingRound.TotalFundsAllocated = totalAllocation;
-            await context.SaveChangesAsync();
-
             logger.LogInformation(
-                "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) allocation complete; funded {UserCount} wallets with {TotalAllocation} total",
-                fundingRound.ID, cloud.Name, cloud.ID, wallets.Count, totalAllocation);
+                "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) allocating {TotalAllocation} total across {UserCount} wallets",
+                fundingRound.ID, cloud.Name, cloud.ID, totalAllocation, wallets.Count);
         }
 
         var activatedDreamCount = await ActivateReadyDreamsAsync(context, cloud.ID);
         await context.SaveChangesAsync();
+        await transaction.CommitAsync();
         logger.LogInformation(
             "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) activated {DreamCount} ready dreams",
             fundingRound.ID, cloud.Name, cloud.ID, activatedDreamCount);
@@ -153,6 +156,7 @@ public class FundingRoundSchedulerService(
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        await using var transaction = await context.Database.BeginTransactionAsync();
         var fundingRound = await GetFundingRoundForAllocationAsync(context, fundingRoundId);
         if (fundingRound == null)
         {
@@ -190,6 +194,7 @@ public class FundingRoundSchedulerService(
             }
 
             await context.SaveChangesAsync();
+            await transaction.CommitAsync();
             // Summary log at the end is useful for financial auditing
             logger.LogInformation(
                 "Funding round (ID {FundingRoundId}): Cloud '{CloudName}' (ID {CloudId}) end processing complete; spent {TotalSpent}",
@@ -214,14 +219,6 @@ public class FundingRoundSchedulerService(
             logger.LogWarning(
                 "Funding round (ID {FundingRoundId}): funds are already allocated; skipping duplicate allocation",
                 fundingRound.ID);
-            return false;
-        }
-
-        if (fundingRound.ProcessedDateUtc != null)
-        {
-            logger.LogWarning(
-                "Funding round (ID {FundingRoundId}): already processed at {ProcessedDate}; skipping allocation",
-                fundingRound.ID, fundingRound.ProcessedDateUtc);
             return false;
         }
 

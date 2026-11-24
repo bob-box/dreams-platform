@@ -294,7 +294,8 @@ public class FundingRoundService(
     {
         var utcNow = appTime.UtcNow;
         var activeRound = await context.FundingRound
-            .SingleOrDefaultAsync(fr => fr.CloudID == cloudId &&
+            .AsNoTracking()
+            .SingleOrDefaultAsync(fr => fr.CloudID == cloudId && fr.ProcessedDateUtc == null &&
                                      fr.StartDateUtc <= utcNow && fr.EndDateUtc >= utcNow);
         if (activeRound == null) return null;
         return mapper.ToViewModel(activeRound);

@@ -15,8 +15,7 @@ public class DreamFundingService(
     IFundingRoundService fundingRoundService,
     UserManager<User> userManager,
     ICloudService cloudService,
-    IMembershipCheckService membershipCheckService,
-    IMapperFacade mapper
+    IMembershipCheckService membershipCheckService
 ) : IDreamFundingService
 {
     public async Task<FundDreamServiceResult> GetFundingModal(int dreamId, string userId)
@@ -53,19 +52,35 @@ public class DreamFundingService(
         var (ctx, error) = await GetFundingContext(dreamId, userId);
         if (error != null) return error;
 
-        if (ctx!.Wallet.Balance < amountToFund)
+        // Hold the SQLite writer lock while checking current balances and recording the contribution.
+        // Membership verification above can call an external service and must finish before taking the lock.
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        var (round, roundError) = await GetFundableRound(dreamId);
+        if (roundError != null) return roundError;
+
+        var activeRound = round!;
+        if (activeRound.ID != ctx!.ActiveFundingRound.ID)
+            return new FundDreamServiceResult(FundDreamServiceStatus.NoActiveFundingRound,
+                "The funding round changed. Please try again.");
+
+        var wallet = ctx.Wallet;
+        await context.Entry(wallet).ReloadAsync();
+        if (context.Entry(wallet).State == EntityState.Detached)
+            return new FundDreamServiceResult(FundDreamServiceStatus.WalletNotFound, "User wallet not found.");
+
+        if (wallet.Balance < amountToFund)
             return new FundDreamServiceResult(FundDreamServiceStatus.InsufficientFunds, "Insufficient funds.");
 
         var existingFund = await context.Fund
             .SingleOrDefaultAsync(f => f.DreamID == dreamId &&
                                        f.UserID == userId &&
-                                       f.FundingRoundID == ctx.ActiveFundingRound.ID);
+                                       f.FundingRoundID == activeRound.ID);
 
         var currentAmountFunded = existingFund?.Amount ?? 0m;
-        if (currentAmountFunded + amountToFund > ctx.ActiveFundingRound.MaxPerDream)
+        if (currentAmountFunded + amountToFund > activeRound.MaxPerDream)
             return new FundDreamServiceResult(
                 FundDreamServiceStatus.ExceedsRoundLimit,
-                $"Exceeds round limit ({ctx.ActiveFundingRound.MaxPercentagePerDream}%). Already funded: {currentAmountFunded:C}.");
+                $"Exceeds round limit ({activeRound.MaxPercentagePerDream}%). Already funded: {currentAmountFunded:C}.");
 
         if (existingFund != null)
             existingFund.Amount += amountToFund;
@@ -75,31 +90,20 @@ public class DreamFundingService(
                 DreamID = dreamId,
                 UserID = userId,
                 Amount = amountToFund,
-                FundingRoundID = ctx.ActiveFundingRound.ID
+                FundingRoundID = activeRound.ID
             });
 
-        ctx.Wallet.Balance -= amountToFund;
+        wallet.Balance -= amountToFund;
         await context.SaveChangesAsync();
+        await transaction.CommitAsync();
         return new FundDreamServiceResult(FundDreamServiceStatus.Success);
     }
 
     private async Task<(FundingContext? Context, FundDreamServiceResult? Error)> GetFundingContext(
         int dreamId, string userId)
     {
-        var dreamFromDb = await context.Dream
-            .AsNoTracking()
-            .SingleOrDefaultAsync(d => d.ID == dreamId && d.CloudID == cloudNameService.CloudID);
-        
-        var dream = mapper.ToViewModel(dreamFromDb);
-        
-        if (dream == null || dream.Status != DreamStatus.Active)
-            return (null, new FundDreamServiceResult(FundDreamServiceStatus.CantFundDream,
-                "Dream not found or not fundable."));
-
-        var activeFundingRound = await fundingRoundService.GetActiveRound(cloudNameService.CloudID);
-        if (activeFundingRound == null)
-            return (null, new FundDreamServiceResult(FundDreamServiceStatus.NoActiveFundingRound,
-                "There is no active funding round now."));
+        var (activeFundingRound, error) = await GetFundableRound(dreamId);
+        if (error != null) return (null, error);
 
         var user = await userManager.FindByIdAsync(userId);
         if (user == null)
@@ -122,11 +126,26 @@ public class DreamFundingService(
             return (null, new FundDreamServiceResult(FundDreamServiceStatus.WalletNotFound,
                 "User wallet not found."));
 
-        return (new FundingContext(user, wallet, activeFundingRound), null);
+        return (new FundingContext(wallet, activeFundingRound!), null);
+    }
+
+    private async Task<(FundingRoundViewModel? Round, FundDreamServiceResult? Error)> GetFundableRound(int dreamId)
+    {
+        var isFundable = await context.Dream.AnyAsync(d =>
+            d.ID == dreamId && d.CloudID == cloudNameService.CloudID && d.Status == DreamStatus.Active);
+        if (!isFundable)
+            return (null, new FundDreamServiceResult(FundDreamServiceStatus.CantFundDream,
+                "Dream not found or not fundable."));
+
+        var activeFundingRound = await fundingRoundService.GetActiveRound(cloudNameService.CloudID);
+        if (activeFundingRound == null)
+            return (null, new FundDreamServiceResult(FundDreamServiceStatus.NoActiveFundingRound,
+                "There is no active funding round now."));
+
+        return (activeFundingRound, null);
     }
 
     private sealed record FundingContext(
-        User User,
         Wallet Wallet,
         FundingRoundViewModel ActiveFundingRound);
 }
