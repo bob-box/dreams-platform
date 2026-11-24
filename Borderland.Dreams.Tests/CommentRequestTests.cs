@@ -223,7 +223,9 @@ public class CommentRequestTests
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite($"Data Source={Path.Combine(directory.FullName, "dreams.db")};Pooling=False"));
             services.RemoveAll<JobStorage>();
-            services.AddSingleton<JobStorage>(_ => new SQLiteStorage(Path.Combine(directory.FullName, "hangfire.db")));
+            services.AddSingleton<JobStorage>(_ => new SQLiteStorage(
+                Path.Combine(directory.FullName, "hangfire.db"),
+                new SQLiteStorageOptions { PoolSize = 0 }));
         });
     });
 
