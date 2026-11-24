@@ -17,17 +17,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Pin .NET SDK for this run
-        run: |
-          cat > global.json <<'JSON'
-          {
-            "sdk": {
-              "version": "10.0.404",
-              "rollForward": "disable"
-            }
-          }
-          JSON
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:

@@ -44,7 +44,7 @@ Admin can
 
 ### Prerequisites
 
-- [.NET 10](https://dotnet.microsoft.com/download)
+- Install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) version specified in [global.json](global.json). Run `dotnet --version` from the repository root to verify the selected SDK.
 
 ### Build and Run
 
