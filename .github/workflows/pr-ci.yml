@@ -10,8 +10,12 @@ permissions:
 
 jobs:
   build-and-test:
-    name: PR CI / Build and test
-    runs-on: ubuntu-latest
+    name: PR CI / Build and test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,5 +39,5 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: test-results-${{ matrix.os }}
           path: TestResults/*.trx
