@@ -10,6 +10,8 @@ public class CommentViewModel
     public string Body { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? EditedAt { get; set; }
+    public bool IsDeleted { get; set; }
+    public bool IsReplyAllowed { get; set; }
     public List<CommentViewModel> Replies { get; set; } = [];
     public CommentPostViewModel? ReplyForm { get; set; }
     public CommentPostViewModel? EditForm { get; set; }
