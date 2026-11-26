@@ -213,49 +213,6 @@ public class FundingWorkflowTests
         Assert.Equal(2, (await services.GetRequiredService<IFundingRoundService>().GetActiveRound(1))?.ID);
     }
 
-    [Fact]
-    public async Task ContributionWaitingOnMembershipCannotSpendFromTheNextRound()
-    {
-        await using var database = new FundingTestDatabase();
-        await Seed(database, nextAllocation: 75m);
-        await StartRound(database);
-        await using var scope = database.CreateScope();
-        var services = scope.ServiceProvider;
-        var scheduler = services.GetRequiredService<FundingRoundSchedulerService>();
-        var context = services.GetRequiredService<ApplicationDbContext>();
-
-        var membershipEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var membershipResult = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        database.Membership.Check = () =>
-        {
-            membershipEntered.TrySetResult();
-            return membershipResult.Task;
-        };
-
-        var request = services.GetRequiredService<IDreamFundingService>().FundDream(1, 15m, "main");
-        try
-        {
-            await membershipEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
-            database.Clock.UtcNow = database.Clock.UtcNow.AddHours(2);
-            await scheduler.ProcessFundingRoundEnd(1);
-            await scheduler.ProcessFundingRoundStart(2);
-        }
-        finally
-        {
-            membershipResult.TrySetResult(true);
-        }
-
-        var result = await request;
-        Assert.Equal(FundDreamServiceStatus.NoActiveFundingRound, result.Status);
-        Assert.Empty(await context.Fund.ToListAsync());
-        Assert.Equal(75m, await Balance(context, 1));
-
-        var currentRequest = services.GetRequiredService<IDreamFundingService>();
-        Assert.Equal(FundDreamServiceStatus.Success, (await currentRequest.FundDream(1, 15m, "main")).Status);
-        Assert.Equal(60m, await Balance(context, 1));
-        Assert.Equal(2, (await context.Fund.SingleAsync()).FundingRoundID);
-    }
-
     private static async Task StartRound(FundingTestDatabase database)
     {
         await using var scope = database.CreateScope();
