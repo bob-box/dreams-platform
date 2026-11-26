@@ -20,7 +20,9 @@ public class CommentController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting(CommentPostingRateLimitPolicy.Name)]
-    public async Task<IActionResult> PostComment(int dreamId, [Bind("Body")] CommentPostViewModel input)
+    public async Task<IActionResult> PostComment(
+        [ModelBinder(Name = CommentRequestParameterNames.DreamId)] int dreamId,
+        [Bind("Body")] CommentPostViewModel input)
     {
         var authorId = userManager.GetUserId(User) ?? throw new UnauthorizedAccessException("Not logged in");
         var result = await commentService.Post(dreamId, authorId, input.Body);
@@ -38,7 +40,7 @@ public class CommentController(
     [ValidateAntiForgeryToken]
     [EnableRateLimiting(CommentPostingRateLimitPolicy.Name)]
     public async Task<IActionResult> ReplyToComment(
-        int dreamId,
+        [ModelBinder(Name = CommentRequestParameterNames.DreamId)] int dreamId,
         int parentCommentId,
         [Bind("Body")] CommentPostViewModel input)
     {

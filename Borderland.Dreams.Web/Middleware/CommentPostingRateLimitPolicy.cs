@@ -11,6 +11,16 @@ using Microsoft.Extensions.Options;
 
 namespace Borderland.Dreams.Middleware;
 
+
+internal static class CommentRequestParameterNames
+{
+    /// <summary>
+    /// This is here to remove magic strings 
+    /// and reduce the risk of updating one place will make the other place stop working.
+    /// </summary>
+    internal const string DreamId = "dreamId";
+}
+
 internal sealed class CommentPostingRateLimitPolicy(
     IOptions<IdentityOptions> identityOptions,
     IAntiforgery antiforgery,
@@ -56,7 +66,7 @@ internal sealed class CommentPostingRateLimitPolicy(
         }
 
         var form = request.HasFormContentType ? await request.ReadFormAsync(cancellationToken) : null;
-        if (!TryGetId(form, request, "dreamId", out var dreamId))
+        if (!TryGetId(form, request, CommentRequestParameterNames.DreamId, out var dreamId))
         {
             response.StatusCode = StatusCodes.Status404NotFound;
             return;

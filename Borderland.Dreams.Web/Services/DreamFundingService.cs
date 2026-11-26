@@ -20,6 +20,7 @@ public class DreamFundingService(
     {
         var (round, error) = await GetFundableRound(dreamId);
         if (error != null) return error;
+
         var membershipError = await CheckMembership(userId);
         if (membershipError != null) return membershipError;
 
@@ -52,22 +53,16 @@ public class DreamFundingService(
         if (amountToFund <= 0)
             return new FundDreamServiceResult(FundDreamServiceStatus.InvalidAmount, "Amount must be positive.");
 
-        var (expectedRoundId, error) = await GetFundableRoundId(dreamId);
-        if (error != null) return error;
-        var membershipError = await CheckMembership(userId);
-        if (membershipError != null) return membershipError;
-
-        // Hold the SQLite writer lock while checking current balances and recording the contribution.
-        // Membership verification above can call an external service and must finish before taking the lock.
-        await using var transaction = await context.Database.BeginTransactionAsync();
         var (round, roundError) = await GetFundableRound(dreamId);
         if (roundError != null) return roundError;
 
-        var activeRound = round!;
-        if (activeRound.ID != expectedRoundId)
-            return new FundDreamServiceResult(FundDreamServiceStatus.NoActiveFundingRound,
-                "The funding round changed. Please try again.");
+        var membershipError = await CheckMembership(userId);
+        if (membershipError != null) return membershipError;
 
+        var activeRound = round!;
+        // Hold the SQLite writer lock while checking current balances and recording the contribution.
+        // Membership verification above can call an external service and must finish before taking the lock.
+        await using var transaction = await context.Database.BeginTransactionAsync();
         var wallet = await WalletQuery(userId).SingleOrDefaultAsync();
         if (wallet == null) return WalletNotFound();
 
@@ -130,12 +125,6 @@ public class DreamFundingService(
 
     private static decimal GetRoundLimit(FundingRound round) =>
         round.AllocationPerUser * (round.MaxPercentagePerDream / 100m);
-
-    private async Task<(int? RoundId, FundDreamServiceResult? Error)> GetFundableRoundId(int dreamId)
-    {
-        var (round, error) = await GetFundableRound(dreamId);
-        return (round?.ID, error);
-    }
 
     private async Task<(FundingRound? Round, FundDreamServiceResult? Error)> GetFundableRound(int dreamId)
     {

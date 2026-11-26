@@ -3,6 +3,11 @@ using Borderland.Dreams.Interfaces;
 
 namespace Borderland.Dreams.Services;
 
+/// <summary>
+/// Will most probably be a database lookup instead of API call.
+/// We can get the active members list once per funding round start and keep the data in a table.
+/// See issue #8
+/// </summary>
 public class MembershipCheckService(IHttpClientFactory factory) : IMembershipCheckService
 {
     private const string ApiUrl = "https://api.example.com/membership"; // Replace with actual API URL

@@ -44,51 +44,34 @@ public class FundingRoundSchedulerService(
     }
 
     /// <summary>
-    /// Cancels the scheduled start and end jobs recorded on a funding round.
+    /// Cancels any scheduled start and end jobs recorded on a funding round, preventing stale
+    /// Hangfire jobs from running after its schedule is replaced or the round is deleted.
     /// </summary>
     /// <param name="fundingRound">The round containing the Hangfire job IDs.</param>
     public void CancelFundingRoundJobs(FundingRound fundingRound)
     {
-        CancelFundingRoundJobs(
-            fundingRound.StartJobId,
-            fundingRound.EndJobId,
-            fundingRound.ID,
-            fundingRound.CloudID);
-    }
-
-    /// <summary>
-    /// Cancels scheduled jobs by their IDs when the funding-round record has already been deleted.
-    /// </summary>
-    /// <param name="startJobId">The scheduled allocation job ID, if any.</param>
-    /// <param name="endJobId">The scheduled end-processing job ID, if any.</param>
-    /// <param name="fundingRoundId">The ID used to identify the round in logs.</param>
-    public void CancelFundingRoundJobs(string? startJobId, string? endJobId, int fundingRoundId)
-    {
-        CancelFundingRoundJobs(startJobId, endJobId, fundingRoundId, null);
-    }
-
-    private void CancelFundingRoundJobs(
-        string? startJobId,
-        string? endJobId,
-        int fundingRoundId,
-        int? cloudId)
-    {
-        if (!string.IsNullOrEmpty(startJobId))
+        if (!string.IsNullOrEmpty(fundingRound.StartJobId))
         {
             logger.LogInformation(
                 "Funding round (ID {FundingRoundId}: Cloud ID {CloudId}) cancelling allocation job {JobId}",
-                fundingRoundId, cloudId, startJobId);
-            backgroundJobs.Delete(startJobId);
+                fundingRound.ID, fundingRound.CloudID, fundingRound.StartJobId);
+            backgroundJobs.Delete(fundingRound.StartJobId);
         }
-        if (!string.IsNullOrEmpty(endJobId))
+        if (!string.IsNullOrEmpty(fundingRound.EndJobId))
         {
             logger.LogInformation(
                 "Funding round (ID {FundingRoundId}: Cloud ID {CloudId}) cancelling end job {JobId}",
-                fundingRoundId, cloudId, endJobId);
-            backgroundJobs.Delete(endJobId);
+                fundingRound.ID, fundingRound.CloudID, fundingRound.EndJobId);
+            backgroundJobs.Delete(fundingRound.EndJobId);
         }
     }
 
+    /// <summary>
+    /// Starts an eligible round by settling earlier ended rounds, then allocating its per-user funds and
+    /// activating ready dreams if the cloud has enough funds. Settlement and allocation share a transaction
+    /// so old balances and spending are reconciled before the new allocation; insufficient funds leave
+    /// the round unstarted and are logged.
+    /// </summary>
     [DisableConcurrentExecution(300)] // Prevent overlapping executions for the same funding round
     [AutomaticRetry(Attempts = 3)]
     public async Task ProcessFundingRoundStart(int fundingRoundId)
@@ -146,6 +129,11 @@ public class FundingRoundSchedulerService(
                 fundingRound.ID, fundingRound.TotalFundsAllocated);
     }
 
+    /// <summary>
+    /// Settles an unprocessed round after its end time, recording its actual spending and clearing its
+    /// wallet balance if it still owns it. A last round also finalizes active dreams; the transaction
+    /// keeps these updates consistent, even when no later round starts.
+    /// </summary>
     [AutomaticRetry(Attempts = 3)]
     [DisableConcurrentExecution(300)]
     public async Task ProcessFundingRoundEnd(int fundingRoundId)
@@ -165,11 +153,20 @@ public class FundingRoundSchedulerService(
         logger.LogInformation("Funding round {FundingRoundId} closed", fundingRound.ID);
     }
 
+    /// <summary>
+    /// Finds which started round currently owns the cloud's shared wallet balances, so settlement
+    /// only clears balances belonging to that round.
+    /// </summary>
+    /// <returns>The owning round ID, or <see langword="null"/> if no round has started.</returns>
     private static Task<int?> GetWalletOwnerId(ApplicationDbContext context, int cloudId) =>
         FundingRoundService.WalletOwningRoundQuery(context, cloudId)
             .Select(round => (int?)round.ID)
             .FirstOrDefaultAsync();
 
+    /// <summary>
+    /// Records a round's settlement: clears its wallet allocation if it still owns the
+    /// wallets, records actual contributions as spent, and finalizes dreams when this is the last round.
+    /// </summary>
     private static async Task SettleRound(
         ApplicationDbContext context, FundingRound round, int? walletOwnerId, DateTime utcNow)
     {
@@ -197,6 +194,10 @@ public class FundingRoundSchedulerService(
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Checks that the cloud's available funds cover the complete allocation.
+    /// </summary>
+    /// <returns><see langword="true"/> if the cloud can cover the allocation.</returns>
     private static bool HasFundsForAllocation(Cloud cloud, decimal totalAllocation)
     {
         return cloud.TotalFundsAvailable - cloud.TotalFundsSpent >= totalAllocation;
@@ -212,12 +213,16 @@ public class FundingRoundSchedulerService(
             dream.Status = DreamStatus.Active;
     }
 
-    private static void SetWalletBalances(IEnumerable<Wallet> wallets, decimal allocationPerUser)
+    private static void SetWalletBalances(IEnumerable<Wallet> wallets, decimal balance)
     {
         foreach (var wallet in wallets)
-            wallet.Balance = allocationPerUser;
+            wallet.Balance = balance;
     }
 
+    /// <summary>
+    /// Totals contributions recorded against one round (funds actually spent).
+    /// </summary>
+    /// <returns>The total contributed amount for the round.</returns>
     private static Task<decimal> GetTotalSpentAsync(ApplicationDbContext context, int fundingRoundId)
     {
         return context.Fund
@@ -226,7 +231,8 @@ public class FundingRoundSchedulerService(
     }
 
     /// <summary>
-    /// Finalizes active dreams after the last round based on their total funding and minimum requested budget.
+    /// Ends the funding lifecycle for active dreams after the last round, classifying each by its
+    /// total funding across rounds and its minimum requested budget.
     /// </summary>
     private static async Task FinalizeActiveDreamsAsync(
         ApplicationDbContext context,
